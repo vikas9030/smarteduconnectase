@@ -86,6 +86,11 @@ export default function ExamResultsView() {
 
   // === Regular exam logic ===
   const examNames = useMemo(() => [...new Set(results.map(r => r.exams?.name).filter(Boolean))], [results]);
+
+  // Check if any filter is active (for regular exams)
+  const isRegularFilterActive = selectedExamName !== 'all' || selectedClass !== 'all' || selectedStudent !== 'all' || searchQuery.trim() !== '';
+  // Check if any filter is active (for weekly/competitive)
+  const isWeeklyFilterActive = weeklyExamNameFilter !== 'all' || weeklyClassFilter !== 'all' || weeklyDateFilter !== 'all' || weeklySearchQuery.trim() !== '';
   
   const filteredResults = useMemo(() => {
     return results.filter(r => {
@@ -433,11 +438,17 @@ export default function ExamResultsView() {
                 <CardTitle className="text-base flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
                   Results
-                  <Badge variant="secondary" className="ml-1">{filteredResults.length} records</Badge>
+                  {isRegularFilterActive && <Badge variant="secondary" className="ml-1">{filteredResults.length} records</Badge>}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {filteredResults.length === 0 ? (
+                {!isRegularFilterActive ? (
+                  <div className="text-center py-12">
+                    <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
+                    <p className="text-muted-foreground font-medium">Use filters to view results</p>
+                    <p className="text-sm text-muted-foreground mt-1">Select an exam, class, student or search to display results.</p>
+                  </div>
+                ) : filteredResults.length === 0 ? (
                   <div className="text-center py-12">
                     <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
                     <p className="text-muted-foreground">No results found. Adjust filters or enter marks first.</p>
@@ -564,58 +575,69 @@ export default function ExamResultsView() {
           </CardContent>
         </Card>
 
-        {/* Summary Stats */}
-        {typeResults.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="py-3 text-center">
-                <p className="text-2xl font-bold">{typeResults.length}</p>
-                <p className="text-xs text-muted-foreground">Total Records</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="py-3 text-center">
-                <p className="text-2xl font-bold">{new Set(typeResults.map(r => r.student_id)).size}</p>
-                <p className="text-xs text-muted-foreground">Students</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="py-3 text-center">
-                {(() => {
-                  const avg = typeResults.reduce((s, r) => s + (r.percentage || 0), 0) / typeResults.length;
-                  return <p className={`text-2xl font-bold ${getPctColor(avg)}`}>{avg.toFixed(1)}%</p>;
-                })()}
-                <p className="text-xs text-muted-foreground">Avg Percentage</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="py-3 text-center">
-                {(() => {
-                  const max = Math.max(...typeResults.map(r => r.percentage || 0));
-                  return <p className={`text-2xl font-bold ${getPctColor(max)}`}>{max.toFixed(1)}%</p>;
-                })()}
-                <p className="text-xs text-muted-foreground">Highest %</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Results Table */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              {type === 'competitive' ? <FlaskConical className="h-4 w-4 text-primary" /> : <BarChart3 className="h-4 w-4 text-primary" />}
-              {type === 'competitive' ? 'Competitive' : 'Weekly'} Exam Results
-              <Badge variant="secondary" className="ml-1">{typeResults.length} records</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {typeResults.length === 0 ? (
-              <div className="text-center py-12">
-                {type === 'competitive' ? <FlaskConical className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" /> : <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />}
-                <p className="text-muted-foreground">No {type} exam results found.</p>
-                <p className="text-sm text-muted-foreground mt-1">Enter marks in the {type === 'competitive' ? 'W.Marks' : 'W.Marks'} tab first.</p>
+        {/* Show results only when filter is active */}
+        {!isWeeklyFilterActive ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
+              <p className="text-muted-foreground font-medium">Use filters to view results</p>
+              <p className="text-sm text-muted-foreground mt-1">Select an exam name, class, date or search to display results.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Summary Stats */}
+            {typeResults.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Card>
+                  <CardContent className="py-3 text-center">
+                    <p className="text-2xl font-bold">{typeResults.length}</p>
+                    <p className="text-xs text-muted-foreground">Total Records</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="py-3 text-center">
+                    <p className="text-2xl font-bold">{new Set(typeResults.map(r => r.student_id)).size}</p>
+                    <p className="text-xs text-muted-foreground">Students</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="py-3 text-center">
+                    {(() => {
+                      const avg = typeResults.reduce((s, r) => s + (r.percentage || 0), 0) / typeResults.length;
+                      return <p className={`text-2xl font-bold ${getPctColor(avg)}`}>{avg.toFixed(1)}%</p>;
+                    })()}
+                    <p className="text-xs text-muted-foreground">Avg Percentage</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="py-3 text-center">
+                    {(() => {
+                      const max = Math.max(...typeResults.map(r => r.percentage || 0));
+                      return <p className={`text-2xl font-bold ${getPctColor(max)}`}>{max.toFixed(1)}%</p>;
+                    })()}
+                    <p className="text-xs text-muted-foreground">Highest %</p>
+                  </CardContent>
+                </Card>
               </div>
+            )}
+
+            {/* Results Table */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  {type === 'competitive' ? <FlaskConical className="h-4 w-4 text-primary" /> : <BarChart3 className="h-4 w-4 text-primary" />}
+                  {type === 'competitive' ? 'Competitive' : 'Weekly'} Exam Results
+                  <Badge variant="secondary" className="ml-1">{typeResults.length} records</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {typeResults.length === 0 ? (
+                  <div className="text-center py-12">
+                    {type === 'competitive' ? <FlaskConical className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" /> : <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />}
+                    <p className="text-muted-foreground">No {type} exam results found.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Enter marks in the W.Marks tab first.</p>
+                  </div>
             ) : (
               <ScrollArea className="h-[500px]">
                 <Table>
@@ -673,6 +695,8 @@ export default function ExamResultsView() {
             )}
           </CardContent>
         </Card>
+          </>
+        )}
       </>
     );
   }
