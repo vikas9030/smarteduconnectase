@@ -307,7 +307,7 @@ export default function WeeklyExamsSection() {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Exam Type Label</Label>
-          {formData.exam_type_label === '__custom__' || !examTypeLabels.includes(formData.exam_type_label) && formData.exam_type_label !== '' ? (
+          {(formData.exam_type_label === '__custom__' || (!examTypeLabels.includes(formData.exam_type_label) && formData.exam_type_label !== '')) ? (
             <div className="flex gap-2">
               <Input
                 className="h-9 flex-1"
