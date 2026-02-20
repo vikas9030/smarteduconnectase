@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import StatCard from '@/components/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Users,
   GraduationCap,
@@ -19,6 +20,7 @@ import {
   ClipboardList,
   CheckSquare,
   AlertCircle,
+  FlaskConical,
 } from 'lucide-react';
 
 // Sidebar items from shared config with permission check
@@ -40,6 +42,27 @@ interface TimetableEntry {
   subjects: { name: string } | null;
 }
 
+interface UpcomingExam {
+  id: string;
+  name: string;
+  exam_date: string;
+  exam_time: string | null;
+  max_marks: number | null;
+  classes: { name: string; section: string } | null;
+  subjects: { name: string } | null;
+}
+
+interface CompExam {
+  id: string;
+  exam_title: string;
+  exam_date: string;
+  exam_time: string;
+  total_marks: number;
+  exam_type_label: string | null;
+  classes: { name: string; section: string } | null;
+  subjects: { name: string } | null;
+}
+
 export default function TeacherDashboard() {
   const teacherSidebarItems = useTeacherSidebar();
   const { user, userRole, loading } = useAuth();
@@ -51,6 +74,8 @@ export default function TeacherDashboard() {
     pendingAttendance: true,
   });
   const [todaySchedule, setTodaySchedule] = useState<TimetableEntry[]>([]);
+  const [upcomingExams, setUpcomingExams] = useState<UpcomingExam[]>([]);
+  const [compExams, setCompExams] = useState<CompExam[]>([]);
   const [profileName, setProfileName] = useState('Teacher');
   const [loadingStats, setLoadingStats] = useState(true);
 
@@ -127,6 +152,28 @@ export default function TeacherDashboard() {
             .select('*', { count: 'exact', head: true })
             .eq('marked_by', teacher.id)
             .eq('date', todayDate);
+
+          // Fetch upcoming exams (from exams table, future dates)
+          const todayDate2 = new Date().toISOString().split('T')[0];
+          const { data: examData } = await supabase
+            .from('exams')
+            .select('id, name, exam_date, exam_time, max_marks, classes(name, section), subjects(name)')
+            .gte('exam_date', todayDate2)
+            .order('exam_date', { ascending: true })
+            .limit(5);
+
+          if (examData) setUpcomingExams(examData as UpcomingExam[]);
+
+          // Fetch upcoming competitive exams
+          const { data: compData } = await supabase
+            .from('weekly_exams')
+            .select('id, exam_title, exam_date, exam_time, total_marks, exam_type_label, classes(name, section), subjects(name)')
+            .eq('syllabus_type', 'competitive')
+            .gte('exam_date', todayDate2)
+            .order('exam_date', { ascending: true })
+            .limit(5);
+
+          if (compData) setCompExams(compData as CompExam[]);
 
           setStats({
             myClasses: classIds.length,
@@ -263,6 +310,79 @@ export default function TeacherDashboard() {
                   </button>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Exam Timetable & Competitive Exam Reminders */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                Upcoming Exam Timetable
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcomingExams.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No upcoming exams scheduled</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingExams.map((exam) => (
+                    <div key={exam.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{exam.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {exam.classes ? `Class ${exam.classes.name}-${exam.classes.section}` : ''} • {exam.subjects?.name || ''}
+                        </p>
+                      </div>
+                      <div className="text-right ml-2 shrink-0">
+                        <p className="text-xs font-medium">{new Date(exam.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
+                        {exam.exam_time && <p className="text-xs text-muted-foreground">{exam.exam_time}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <FlaskConical className="h-5 w-5 text-primary" />
+                Competitive Exam Reminders
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {compExams.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FlaskConical className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No upcoming competitive exams</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {compExams.map((exam) => {
+                    const daysLeft = Math.ceil((new Date(exam.exam_date + 'T00:00:00').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={exam.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{exam.exam_title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {exam.exam_type_label?.toUpperCase()} • {exam.subjects?.name || ''} • {exam.classes ? `Class ${exam.classes.name}-${exam.classes.section}` : ''}
+                          </p>
+                        </div>
+                        <Badge variant={daysLeft <= 3 ? 'destructive' : daysLeft <= 7 ? 'default' : 'secondary'} className="ml-2 shrink-0">
+                          {daysLeft <= 0 ? 'Today' : `${daysLeft}d left`}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
