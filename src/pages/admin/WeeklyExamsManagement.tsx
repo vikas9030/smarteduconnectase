@@ -262,7 +262,7 @@ export default function WeeklyExamsManagement() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const ExamForm = ({ onSubmit, submitLabel }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string }) => (
+  const renderExamForm = (onSubmit: (e: React.FormEvent) => void, submitLabel: string) => (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -396,7 +396,7 @@ export default function WeeklyExamsManagement() {
               <DialogHeader>
                 <DialogTitle>Create {activeTab === 'general' ? 'General' : 'Competitive'} Weekly Exam</DialogTitle>
               </DialogHeader>
-              <ExamForm onSubmit={handleCreate} submitLabel="Create Exam" />
+              {renderExamForm(handleCreate, "Create Exam")}
             </DialogContent>
           </Dialog>
 
@@ -406,7 +406,7 @@ export default function WeeklyExamsManagement() {
               <DialogHeader>
                 <DialogTitle>Edit Exam</DialogTitle>
               </DialogHeader>
-              <ExamForm onSubmit={handleEdit} submitLabel="Save Changes" />
+              {renderExamForm(handleEdit, "Save Changes")}
             </DialogContent>
           </Dialog>
 
