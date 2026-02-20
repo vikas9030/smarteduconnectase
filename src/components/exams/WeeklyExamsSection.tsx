@@ -332,20 +332,6 @@ export default function WeeklyExamsSection() {
         </div>
       </div>
 
-      {/* Competitive-only fields */}
-      {examTypeTab === 'competitive' && (
-        <div className="grid grid-cols-1 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Week Number</Label>
-            <Select value={formData.week_number} onValueChange={v => setFormData(f => ({ ...f, week_number: v }))}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Select week" /></SelectTrigger>
-              <SelectContent>
-                {[1, 2, 3].map(w => <SelectItem key={w} value={w.toString()}>Week {w}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      )}
 
       {/* Row 3: Date, Time, Duration */}
       <div className="grid grid-cols-3 gap-3">
