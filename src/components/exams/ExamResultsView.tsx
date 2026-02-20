@@ -8,11 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, FileSpreadsheet, Users, Award, BarChart3, TrendingUp, TrendingDown, BookOpen, FileText, FlaskConical } from 'lucide-react';
+import { Loader2, Search, Download, Users, Award, BarChart3, BookOpen, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
-import * as XLSX from 'xlsx';
 
 interface ExamResult {
   id: string;
@@ -173,71 +171,34 @@ export default function ExamResultsView() {
     return 'text-red-600';
   };
 
-  const handleExport = () => {
-    if (resultsTab === 'regular') {
-      const exportData = filteredResults.map(r => ({
-        'Student Name': r.students?.full_name || '',
-        'Admission No': r.students?.admission_number || '',
-        'Exam': r.exams?.name || '',
-        'Subject': r.exams?.subjects?.name || '',
-        'Class': r.exams?.classes ? `${r.exams.classes.name}-${r.exams.classes.section}` : '',
-        'Marks': r.marks_obtained ?? '',
-        'Max Marks': r.exams?.max_marks ?? '',
-        'Percentage': r.marks_obtained && r.exams?.max_marks ? `${((r.marks_obtained / r.exams.max_marks) * 100).toFixed(1)}%` : '',
-        'Grade': r.grade || '',
-        'Remarks': r.remarks || '',
-      }));
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Results');
-      XLSX.writeFile(wb, `exam-results-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-    } else {
-      const exportData = filteredWeeklyResults.map(r => ({
-        'Student Name': r.students?.full_name || '',
-        'Admission No': r.students?.admission_number || '',
-        'Exam': r.weekly_exams?.exam_title || '',
-        'Subject': r.weekly_exams?.subjects?.name || '',
-        'Class': r.weekly_exams?.classes ? `${r.weekly_exams.classes.name}-${r.weekly_exams.classes.section}` : '',
-        'Type': r.weekly_exams?.syllabus_type || '',
-        'Label': r.weekly_exams?.exam_type_label || '',
-        'Obtained': r.obtained_marks,
-        'Total': r.total_marks,
-        'Percentage': r.percentage ? `${r.percentage.toFixed(1)}%` : '',
-        'Rank': r.rank || '',
-      }));
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Weekly Results');
-      XLSX.writeFile(wb, `weekly-results-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
-    }
-    toast.success('Results exported');
-  };
-
-  const handlePDFDownload = () => {
+  const handleDownload = (dataType: 'regular' | 'weekly', typeResultsData?: WeeklyExamResult[]) => {
     const printWindow = window.open('', '_blank');
-    if (!printWindow) { toast.error('Please allow popups to download PDF'); return; }
-    
+    if (!printWindow) { toast.error('Please allow popups to download'); return; }
+
     let rows = '';
     let title = '';
     let headers = '';
-    
-    if (resultsTab === 'regular') {
+
+    if (dataType === 'regular') {
       title = 'Exam Results Report';
-      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th>';
+      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Class</th><th>Marks</th><th>%</th><th>Grade</th>';
       rows = filteredResults.map(r => {
         const pct = r.marks_obtained && r.exams?.max_marks ? ((r.marks_obtained / r.exams.max_marks) * 100).toFixed(0) : '0';
-        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.exams?.name || '-'}</td><td>${r.exams?.subjects?.name || '-'}</td><td>${r.marks_obtained ?? '-'}/${r.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${r.grade || '-'}</td></tr>`;
+        const cls = r.exams?.classes ? `${r.exams.classes.name}-${r.exams.classes.section.toUpperCase()}` : '-';
+        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.exams?.name || '-'}</td><td>${r.exams?.subjects?.name || '-'}</td><td>${cls}</td><td>${r.marks_obtained ?? '-'}/${r.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${r.grade || '-'}</td></tr>`;
       }).join('');
     } else {
-      title = 'Weekly / Competitive Exam Results';
-      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Type</th><th>Subject</th><th>Marks</th><th>%</th><th>Rank</th>';
-      rows = filteredWeeklyResults.map(r => {
+      const data = typeResultsData || [];
+      title = 'Exam Results Report';
+      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Class</th><th>Marks</th><th>%</th><th>Rank</th>';
+      rows = data.map(r => {
         const pct = r.percentage?.toFixed(0) || '0';
-        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.weekly_exams?.exam_title || '-'}</td><td>${r.weekly_exams?.syllabus_type || '-'}</td><td>${r.weekly_exams?.subjects?.name || '-'}</td><td>${r.obtained_marks}/${r.total_marks}</td><td>${pct}%</td><td>${r.rank || '-'}</td></tr>`;
+        const cls = r.weekly_exams?.classes ? `${r.weekly_exams.classes.name}-${r.weekly_exams.classes.section.toUpperCase()}` : '-';
+        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.weekly_exams?.exam_title || '-'}</td><td>${r.weekly_exams?.subjects?.name || '-'}</td><td>${cls}</td><td>${r.obtained_marks}/${r.total_marks}</td><td>${pct}%</td><td>${r.rank || '-'}</td></tr>`;
       }).join('');
     }
 
-    const count = resultsTab === 'regular' ? filteredResults.length : filteredWeeklyResults.length;
+    const count = dataType === 'regular' ? filteredResults.length : (typeResultsData?.length || 0);
     printWindow.document.write(`
       <html><head><title>${title}</title>
       <style>
@@ -256,7 +217,7 @@ export default function ExamResultsView() {
     `);
     printWindow.document.close();
     setTimeout(() => { printWindow.print(); }, 300);
-    toast.success('PDF download initiated');
+    toast.success('Download initiated');
   };
 
   if (loading) {
@@ -322,10 +283,7 @@ export default function ExamResultsView() {
                   <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
                     <Award className="h-3.5 w-3.5 mr-1" /> Report
                   </Button>
-                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePDFDownload} disabled={filteredResults.length === 0} title="Download PDF">
-                    <FileText className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleExport} disabled={filteredResults.length === 0} title="Export Excel">
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleDownload('regular')} disabled={filteredResults.length === 0} title="Download">
                     <Download className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -564,10 +522,7 @@ export default function ExamResultsView() {
                 <Input placeholder="Search student/exam..." value={weeklySearchQuery} onChange={e => setWeeklySearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
               </div>
               <div className="flex items-center gap-1.5 ml-auto">
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePDFDownload} disabled={typeResults.length === 0} title="Download PDF">
-                  <FileText className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleExport} disabled={typeResults.length === 0} title="Export Excel">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleDownload('weekly', typeResults)} disabled={typeResults.length === 0} title="Download">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
               </div>
