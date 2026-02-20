@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, BookOpen, FlaskConical, Calendar, Clock, History, PlayCircle } from 'lucide-react';
+import { Loader2, Search, BookOpen, FlaskConical, Calendar, Clock, History, PlayCircle, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface SyllabusEntry {
   id: string;
@@ -152,16 +153,21 @@ export default function TeacherSyllabus() {
             return acc;
           }, {})
         ).map(([subject, subItems]) => (
-          <Card key={subject}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-primary" />
-                {subject}
-                <Badge variant="secondary" className="ml-auto text-xs">{subItems.length} topics</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {subItems.map((s, idx) => (
+          <Collapsible key={subject} asChild>
+            <Card>
+              <CollapsibleTrigger className="w-full text-left">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    {subject}
+                    <Badge variant="secondary" className="ml-auto mr-2 text-xs">{subItems.length} topics</Badge>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-2">
+                  {subItems.map((s, idx) => (
                 <div key={s.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                   <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                     {idx + 1}
@@ -201,8 +207,10 @@ export default function TeacherSyllabus() {
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         ))}
       </div>
     )

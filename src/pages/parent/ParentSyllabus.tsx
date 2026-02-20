@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface SyllabusItem {
   id: string;
@@ -168,17 +170,22 @@ export default function ParentSyllabus() {
     return (
       <div className="space-y-4">
         {Object.entries(grouped).map(([subject, items]) => (
-          <Card key={subject}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                {subject}
-                <Badge variant="secondary" className="ml-auto">{items.length} topics</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {items.map((item, idx) => (
+          <Collapsible key={subject} asChild>
+            <Card>
+              <CollapsibleTrigger className="w-full text-left">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    {subject}
+                    <Badge variant="secondary" className="ml-auto mr-2">{items.length} topics</Badge>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="space-y-2">
+                    {items.map((item, idx) => (
                   <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                     <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                       {idx + 1}
@@ -219,9 +226,11 @@ export default function ParentSyllabus() {
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         ))}
       </div>
     );
