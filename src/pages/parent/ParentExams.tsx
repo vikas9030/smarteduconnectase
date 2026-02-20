@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Loader2, Calendar, FileText } from 'lucide-react';
+import { Loader2, Calendar, FileText, RotateCcw } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import StudentProgressView from '@/components/exams/StudentProgressView';
 import ExamScheduleView from '@/components/exams/ExamScheduleView';
+import WeeklyExamCalendarView from '@/components/exams/WeeklyExamCalendarView';
 import { BackButton } from '@/components/ui/back-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -111,12 +112,16 @@ export default function ParentExams() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="schedule" className="flex items-center gap-1.5">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs sm:text-sm">
               <Calendar className="h-4 w-4" />
               Schedule
             </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-1.5">
+            <TabsTrigger value="weekly" className="flex items-center gap-1 text-xs sm:text-sm">
+              <RotateCcw className="h-4 w-4" />
+              Weekly
+            </TabsTrigger>
+            <TabsTrigger value="results" className="flex items-center gap-1 text-xs sm:text-sm">
               <FileText className="h-4 w-4" />
               Results
             </TabsTrigger>
@@ -124,6 +129,10 @@ export default function ParentExams() {
 
           <TabsContent value="schedule" className="mt-4">
             <ExamScheduleView filterClassIds={childClassIds} />
+          </TabsContent>
+
+          <TabsContent value="weekly" className="mt-4">
+            <WeeklyExamCalendarView filterClassIds={childClassIds} />
           </TabsContent>
 
           <TabsContent value="results" className="mt-4 space-y-4">

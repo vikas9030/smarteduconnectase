@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Calendar, Clock, FileText, BookOpen, CheckCircle2, HelpCircle, AlignLeft } from 'lucide-react';
+import { Loader2, Search, Calendar, Clock, FileText, BookOpen, CheckCircle2, HelpCircle, AlignLeft, Tag } from 'lucide-react';
 
 interface WeeklyExam {
   id: string;
@@ -24,7 +24,11 @@ interface WeeklyExam {
   syllabus_type: string;
   week_number: number | null;
   class_id: string;
+  subject_id: string | null;
+  description: string | null;
+  exam_type_label: string | null;
   classes?: { name: string; section: string } | null;
+  subjects?: { name: string } | null;
 }
 
 interface SyllabusItem {
@@ -99,7 +103,7 @@ export default function TeacherWeeklyExams() {
   async function fetchData() {
     setLoadingData(true);
     const [examsRes, linksRes, syllabusRes, papersRes, questionsRes, resultsRes] = await Promise.all([
-      supabase.from('weekly_exams').select('*, classes(name, section)').order('exam_date', { ascending: false }),
+      supabase.from('weekly_exams').select('*, classes(name, section), subjects(name)').order('exam_date', { ascending: false }),
       supabase.from('weekly_exam_syllabus').select('exam_id, syllabus_id'),
       supabase.from('syllabus').select('id, chapter_name, topic_name, subjects(name)'),
       supabase.from('question_papers').select('id, exam_id, total_questions, total_marks'),
@@ -144,6 +148,13 @@ export default function TeacherWeeklyExams() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
+  const typeColors: Record<string, string> = {
+    JEE: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    NEET: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    BITSAT: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    General: 'bg-muted text-muted-foreground',
+  };
+
   const ExamCard = ({ exam }: { exam: WeeklyExam }) => {
     const linked = getLinkedSyllabus(exam.id);
     const paper = getPaper(exam.id);
@@ -153,32 +164,50 @@ export default function TeacherWeeklyExams() {
 
     return (
       <Card>
-        <CardContent className="py-4 space-y-3">
+        <CardContent className="py-3 px-3 sm:px-4 space-y-2.5">
           <div className="flex items-start justify-between gap-2 cursor-pointer" onClick={() => setExpandedExam(isExpanded ? null : exam.id)}>
-            <div className="space-y-1 flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-medium text-sm">{exam.exam_title}</h3>
-                <Badge className={`text-xs ${statusColors[exam.status]}`}>{exam.status}</Badge>
+            <div className="space-y-1.5 flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-semibold text-sm">{exam.exam_title}</h3>
+                <Badge className={`text-[10px] px-1.5 py-0 ${statusColors[exam.status]}`}>{exam.status}</Badge>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-xs">{exam.classes ? `${exam.classes.name}-${exam.classes.section}` : '—'}</Badge>
-                {exam.week_number && <Badge variant="secondary" className="text-xs">Week {exam.week_number}</Badge>}
-                {paper && <Badge variant="secondary" className="text-xs">{paper.total_questions} Q</Badge>}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {exam.exam_type_label && exam.exam_type_label !== 'General' && (
+                  <Badge className={`text-[10px] px-1.5 py-0 ${typeColors[exam.exam_type_label] || typeColors['General']}`}>
+                    <Tag className="h-2.5 w-2.5 mr-0.5" />{exam.exam_type_label}
+                  </Badge>
+                )}
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  {exam.classes ? `${exam.classes.name}-${exam.classes.section}` : '—'}
+                </Badge>
+                {exam.subjects && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{exam.subjects.name}</Badge>
+                )}
+                {exam.week_number && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">W{exam.week_number}</Badge>}
+                {paper && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{paper.total_questions}Q</Badge>}
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(exam.exam_date).toLocaleDateString()}</span>
-                <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{exam.exam_time}</span>
-                <span>{exam.duration_minutes} min</span>
+              <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground flex-wrap">
+                <span className="flex items-center gap-0.5"><Calendar className="h-3 w-3" />{new Date(exam.exam_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" />{exam.exam_time}</span>
+                <span>{exam.duration_minutes}min</span>
                 <span>Max: {exam.total_marks}</span>
+                {exam.negative_marking && <span className="text-destructive">-{exam.negative_marks_value}</span>}
               </div>
             </div>
           </div>
 
           {linked.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {linked.map(s => (
-                <Badge key={s.id} variant="outline" className="text-xs">{s.subjects?.name}: {s.topic_name}</Badge>
+                <Badge key={s.id} variant="outline" className="text-[10px] px-1.5 py-0">{s.subjects?.name}: {s.topic_name}</Badge>
               ))}
+            </div>
+          )}
+
+          {/* Description */}
+          {exam.description && (
+            <div className="bg-muted/40 rounded-md p-2">
+              <p className="text-[11px] text-muted-foreground">{exam.description}</p>
             </div>
           )}
 
