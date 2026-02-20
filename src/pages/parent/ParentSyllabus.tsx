@@ -168,64 +168,64 @@ export default function ParentSyllabus() {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {Object.entries(grouped).map(([subject, items]) => (
           <Collapsible key={subject} asChild>
-            <Card>
+            <Card className="overflow-hidden">
               <CollapsibleTrigger className="w-full text-left">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    {subject}
-                    <Badge variant="secondary" className="ml-auto mr-2">{items.length} topics</Badge>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                <CardHeader className="py-3 px-3 sm:px-6 sm:pb-3">
+                  <CardTitle className="text-sm sm:text-lg flex items-center gap-1.5 sm:gap-2">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                    <span className="truncate">{subject}</span>
+                    <Badge variant="secondary" className="ml-auto mr-1 sm:mr-2 text-[10px] sm:text-xs shrink-0">{items.length}</Badge>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent>
-                  <div className="space-y-2">
+                <CardContent className="px-2 sm:px-6 pb-3 sm:pb-6 pt-0">
+                  <div className="space-y-1.5 sm:space-y-2">
                     {items.map((item, idx) => (
-                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                    <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                      {idx + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{item.chapter_name}</p>
-                      <p className="text-xs text-muted-foreground">{item.topic_name}</p>
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {item.syllabus_type === 'competitive' && (
-                          <Badge className="text-[10px] bg-accent/20 text-accent-foreground">
-                            <FlaskConical className="h-3 w-3 mr-0.5" />Competitive
-                          </Badge>
-                        )}
-                        {item.exam_type && <Badge variant="outline" className="text-[10px]">{item.exam_type}</Badge>}
-                        {item.week_number && <Badge variant="outline" className="text-[10px]">Week {item.week_number}</Badge>}
+                      <div key={item.id} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-muted/50">
+                        <span className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/10 text-primary text-[10px] sm:text-xs font-bold flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-xs sm:text-sm leading-tight">{item.chapter_name}</p>
+                          <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight mt-0.5">{item.topic_name}</p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.syllabus_type === 'competitive' && (
+                              <Badge className="text-[9px] sm:text-[10px] px-1 py-0 bg-accent/20 text-accent-foreground">
+                                <FlaskConical className="h-2.5 w-2.5 mr-0.5" />Competitive
+                              </Badge>
+                            )}
+                            {item.exam_type && <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1 py-0">{item.exam_type}</Badge>}
+                            {item.week_number && <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1 py-0">W{item.week_number}</Badge>}
+                          </div>
+                          {teacherMap[item.id] && teacherMap[item.id].length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {teacherMap[item.id].map((t, i) => (
+                                <Badge key={i} variant="outline" className="text-[9px] sm:text-[10px] px-1 py-0 gap-0.5">
+                                  <User className="h-2 w-2 sm:h-2.5 sm:w-2.5" />{t.name} ({t.role})
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          {(item.start_date || item.schedule_date) && (
+                            <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground mt-1">
+                              <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                              {item.start_date && item.end_date
+                                ? `${new Date(item.start_date).toLocaleDateString()} – ${new Date(item.end_date).toLocaleDateString()}`
+                                : item.schedule_date
+                                  ? new Date(item.schedule_date).toLocaleDateString()
+                                  : ''
+                              }
+                              {item.schedule_time && <><Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />{item.schedule_time}</>}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {teacherMap[item.id] && teacherMap[item.id].length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {teacherMap[item.id].map((t, i) => (
-                            <Badge key={i} variant="outline" className="text-[10px] gap-0.5">
-                              <User className="h-2.5 w-2.5" />{t.name} ({t.role})
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      {(item.start_date || item.schedule_date) && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                          <Calendar className="h-3 w-3" />
-                          {item.start_date && item.end_date
-                            ? `${new Date(item.start_date).toLocaleDateString()} – ${new Date(item.end_date).toLocaleDateString()}`
-                            : item.schedule_date
-                              ? new Date(item.schedule_date).toLocaleDateString()
-                              : ''
-                          }
-                          {item.schedule_time && <><Clock className="h-3 w-3 ml-1" />{item.schedule_time}</>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    ))}
                   </div>
                 </CardContent>
               </CollapsibleContent>
@@ -241,19 +241,19 @@ export default function ParentSyllabus() {
       {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-4 sm:space-y-6 animate-fade-in px-1 sm:px-0">
           <BackButton to="/parent" />
           <div>
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-primary" /> Syllabus
+            <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Syllabus
             </h1>
-            <p className="text-muted-foreground">{childName ? `${childName}'s` : "Your child's"} curriculum & topics</p>
+            <p className="text-sm text-muted-foreground">{childName ? `${childName}'s` : "Your child's"} curriculum & topics</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-              <SelectTrigger className="w-full text-xs h-9">
-                <Filter className="h-3.5 w-3.5 mr-1" />
+              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
+                <Filter className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
                 <SelectValue placeholder="Subject" />
               </SelectTrigger>
               <SelectContent>
@@ -262,7 +262,7 @@ export default function ParentSyllabus() {
               </SelectContent>
             </Select>
             <Select value={selectedExam} onValueChange={setSelectedExam}>
-              <SelectTrigger className="w-full text-xs h-9">
+              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
                 <SelectValue placeholder="All Exams" />
               </SelectTrigger>
               <SelectContent>
@@ -273,21 +273,21 @@ export default function ParentSyllabus() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="present" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                <PlayCircle className="h-4 w-4" />
-                Current / Upcoming ({presentItems.length})
+            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+              <TabsTrigger value="present" className="flex items-center gap-1 text-[11px] sm:text-sm px-1 sm:px-3">
+                <PlayCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="truncate">Current ({presentItems.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="previous" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                <History className="h-4 w-4" />
-                Completed ({previousItems.length})
+              <TabsTrigger value="previous" className="flex items-center gap-1 text-[11px] sm:text-sm px-1 sm:px-3">
+                <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="truncate">Completed ({previousItems.length})</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="present" className="mt-4">
+            <TabsContent value="present" className="mt-3 sm:mt-4">
               <SyllabusGrouped items={presentItems} emptyMsg="No current or upcoming syllabus topics." />
             </TabsContent>
-            <TabsContent value="previous" className="mt-4">
+            <TabsContent value="previous" className="mt-3 sm:mt-4">
               <SyllabusGrouped items={previousItems} emptyMsg="No completed syllabus topics yet." />
             </TabsContent>
           </Tabs>
