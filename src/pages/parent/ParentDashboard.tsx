@@ -15,15 +15,12 @@ import {
   Calendar,
   Bell,
   FileText,
-  MessageSquare,
   Clock,
-  LayoutDashboard,
   Loader2,
   CreditCard,
-  Award,
-  TrendingUp,
+  FlaskConical,
 } from 'lucide-react';
-
+import { format } from 'date-fns';
 import { parentSidebarItems } from '@/config/parentSidebar';
 
 interface ChildData {
@@ -32,7 +29,29 @@ interface ChildData {
   admission_number: string;
   photo_url: string | null;
   status: string | null;
+  class_id: string | null;
   classes: { name: string; section: string } | null;
+}
+
+interface UpcomingCompExam {
+  id: string;
+  exam_title: string;
+  exam_date: string;
+  exam_time: string;
+  total_marks: number;
+  exam_type_label: string | null;
+  classes?: { name: string; section: string } | null;
+  subjects?: { name: string } | null;
+}
+
+interface TodayScheduleExam {
+  id: string;
+  name: string;
+  exam_date: string | null;
+  exam_time: string | null;
+  max_marks: number | null;
+  classes?: { name: string; section: string } | null;
+  subjects?: { name: string } | null;
 }
 
 export default function ParentDashboard() {
@@ -41,6 +60,8 @@ export default function ParentDashboard() {
   const [children, setChildren] = useState<ChildData[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [upcomingCompExams, setUpcomingCompExams] = useState<UpcomingCompExam[]>([]);
+  const [todayExams, setTodayExams] = useState<TodayScheduleExam[]>([]);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -52,6 +73,7 @@ export default function ParentDashboard() {
     async function fetchData() {
       if (!user) return;
       setLoadingData(true);
+      const today = new Date().toISOString().split('T')[0];
 
       try {
         // Get parent record
@@ -60,6 +82,8 @@ export default function ParentDashboard() {
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
+
+        let classIds: string[] = [];
 
         if (parentData) {
           // Get linked students
@@ -72,25 +96,49 @@ export default function ParentDashboard() {
             const studentIds = links.map(l => l.student_id);
             const { data: studentsData } = await supabase
               .from('students')
-              .select('id, full_name, admission_number, photo_url, status, classes(name, section)')
+              .select('id, full_name, admission_number, photo_url, status, class_id, classes(name, section)')
               .in('id', studentIds);
 
             if (studentsData) {
               setChildren(studentsData as ChildData[]);
+              classIds = studentsData.map((s: any) => s.class_id).filter(Boolean);
             }
           }
         }
 
-        // Fetch announcements
-        const { data: announcementsData } = await supabase
-          .from('announcements')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(4);
+        // Fetch announcements, competitive exams, and today's exams in parallel
+        const compExamsQuery = supabase
+          .from('weekly_exams')
+          .select('id, exam_title, exam_date, exam_time, total_marks, exam_type_label, classes(name, section), subjects(name)')
+          .eq('syllabus_type', 'competitive')
+          .gte('exam_date', today)
+          .order('exam_date', { ascending: true })
+          .limit(5);
 
-        if (announcementsData) {
-          setAnnouncements(announcementsData);
+        if (classIds.length > 0) {
+          compExamsQuery.in('class_id', classIds);
         }
+
+        const todayExamsQuery = supabase
+          .from('exams')
+          .select('id, name, exam_date, exam_time, max_marks, classes(name, section), subjects(name)')
+          .eq('exam_date', today)
+          .order('exam_time', { ascending: true });
+
+        if (classIds.length > 0) {
+          todayExamsQuery.in('class_id', classIds);
+        }
+
+        const [announcementsRes, compRes, todayRes] = await Promise.all([
+          supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
+          compExamsQuery,
+          todayExamsQuery,
+        ]);
+
+        if (announcementsRes.data) setAnnouncements(announcementsRes.data);
+        if (compRes.data) setUpcomingCompExams(compRes.data as unknown as UpcomingCompExam[]);
+        if (todayRes.data) setTodayExams(todayRes.data as unknown as TodayScheduleExam[]);
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -189,6 +237,113 @@ export default function ParentDashboard() {
             icon={<CreditCard className="h-6 w-6" />}
             variant="accent"
           />
+        </div>
+
+        {/* Today's Exam Schedule & Upcoming Competitive Exams */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Today's Exam Schedule */}
+          <Card className="card-elevated">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-display flex items-center gap-2 text-base">
+                <Calendar className="h-5 w-5 text-primary" />
+                Today's Exam Schedule
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {todayExams.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No exams today</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {todayExams.map(exam => (
+                    <div key={exam.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+                      <p className="font-semibold text-sm">{exam.name}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {exam.classes && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {exam.classes.name}-{exam.classes.section}
+                          </Badge>
+                        )}
+                        {exam.subjects && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                            {exam.subjects.name}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 ml-auto">Max: {exam.max_marks}</Badge>
+                      </div>
+                      {exam.exam_time && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {exam.exam_time}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Competitive Exams */}
+          <Card className="card-elevated">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-display flex items-center gap-2 text-base">
+                <FlaskConical className="h-5 w-5 text-primary" />
+                Upcoming Competitive Exams
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcomingCompExams.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <FlaskConical className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No upcoming competitive exams</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingCompExams.map(exam => {
+                    const examDate = new Date(exam.exam_date);
+                    const daysLeft = Math.ceil((examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={exam.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-sm truncate">{exam.exam_title}</p>
+                          <Badge
+                            variant={daysLeft <= 3 ? 'destructive' : daysLeft <= 7 ? 'default' : 'secondary'}
+                            className="text-[10px] px-1.5 py-0 shrink-0"
+                          >
+                            {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {exam.exam_type_label && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                              {exam.exam_type_label}
+                            </Badge>
+                          )}
+                          {exam.subjects && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                              {exam.subjects.name}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(examDate, 'dd MMM yyyy')}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {exam.exam_time}
+                          </span>
+                          <span>Marks: {exam.total_marks}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Announcements */}
