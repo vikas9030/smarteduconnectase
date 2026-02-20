@@ -152,8 +152,8 @@ export default function SyllabusManagement() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!formData.class_id || !formData.subject_id || !formData.chapter_name) {
-      toast.error('Please fill Class, Subject and Chapter');
+    if (!formData.class_id || !formData.subject_id) {
+      toast.error('Please fill Class and Subject');
       return;
     }
 
@@ -465,7 +465,7 @@ export default function SyllabusManagement() {
                     {/* Step 2: Chapter & Topics */}
                     <div className="space-y-3">
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chapter Name *</Label>
+                        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chapter Name</Label>
                         <Input value={formData.chapter_name} onChange={e => setFormData(f => ({ ...f, chapter_name: e.target.value }))} placeholder="e.g. Kinematics" />
                       </div>
 
@@ -678,7 +678,7 @@ export default function SyllabusManagement() {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Chapter *</Label>
+                    <Label>Chapter</Label>
                     <Input value={formData.chapter_name} onChange={e => setFormData(f => ({ ...f, chapter_name: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
