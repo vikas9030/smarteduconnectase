@@ -51,7 +51,7 @@ export default function TeacherSyllabus() {
   const [loadingData, setLoadingData] = useState(true);
   const [typeTab, setTypeTab] = useState('general');
   const [statusFilter, setStatusFilter] = useState('running');
-  const [timeFilter, setTimeFilter] = useState('current');
+  const [timeFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState('all');
   const [filterSubject, setFilterSubject] = useState('all');
@@ -321,19 +321,8 @@ export default function TeacherSyllabus() {
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
-                <SelectValue placeholder="Time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="current">Current</SelectItem>
-                <SelectItem value="past">Past</SelectItem>
-                <SelectItem value="future">Future</SelectItem>
-              </SelectContent>
-            </Select>
             <Select value={filterClass} onValueChange={setFilterClass}>
-              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="Class" />
               </SelectTrigger>
               <SelectContent>
@@ -342,7 +331,7 @@ export default function TeacherSyllabus() {
               </SelectContent>
             </Select>
             <Select value={filterSubject} onValueChange={setFilterSubject}>
-              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="Subject" />
               </SelectTrigger>
               <SelectContent>
@@ -351,7 +340,7 @@ export default function TeacherSyllabus() {
               </SelectContent>
             </Select>
             <Select value={filterExam} onValueChange={setFilterExam}>
-              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="Exam" />
               </SelectTrigger>
               <SelectContent>
