@@ -276,7 +276,7 @@ export default function WeeklyExamsSection() {
     General: 'bg-muted text-muted-foreground',
   };
 
-  const ExamForm = ({ onSubmit, submitLabel }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string }) => (
+  const renderExamForm = (onSubmit: (e: React.FormEvent) => void, submitLabel: string) => (
     <form onSubmit={onSubmit} className="space-y-4">
       {/* Row 1: Class & Subject */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -548,7 +548,7 @@ export default function WeeklyExamsSection() {
           <DialogHeader>
             <DialogTitle className="text-base">Create {examTypeTab === 'general' ? 'General' : 'Competitive'} Weekly Exam</DialogTitle>
           </DialogHeader>
-          <ExamForm onSubmit={handleCreate} submitLabel="Create Exam" />
+          {renderExamForm(handleCreate, "Create Exam")}
         </DialogContent>
       </Dialog>
 
@@ -558,7 +558,7 @@ export default function WeeklyExamsSection() {
           <DialogHeader>
             <DialogTitle className="text-base">Edit Exam</DialogTitle>
           </DialogHeader>
-          <ExamForm onSubmit={handleEdit} submitLabel="Save Changes" />
+          {renderExamForm(handleEdit, "Save Changes")}
         </DialogContent>
       </Dialog>
 
