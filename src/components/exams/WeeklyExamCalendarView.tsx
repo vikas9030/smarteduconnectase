@@ -178,34 +178,33 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4">
-      {/* Calendar - Left Side */}
+    <div className="flex flex-col md:grid md:grid-cols-[auto_1fr] gap-3 sm:gap-4">
+      {/* Calendar */}
       <Card className="md:w-fit">
-        <CardContent className="p-2 sm:p-3">
+        <CardContent className="p-1.5 sm:p-3 flex flex-col items-center">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={setSelectedDate}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
-            className={cn("p-0 pointer-events-auto w-full")}
+            className={cn("p-0 pointer-events-auto w-full [&_.rdp-cell]:h-8 [&_.rdp-cell]:w-8 sm:[&_.rdp-cell]:h-9 sm:[&_.rdp-cell]:w-9 [&_.rdp-day]:h-8 [&_.rdp-day]:w-8 sm:[&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-9 [&_.rdp-head_cell]:w-8 sm:[&_.rdp-head_cell]:w-9")}
             modifiers={{ hasExam: (date) => hasExam(date) }}
             modifiersClassNames={{ hasExam: 'bg-primary/15 font-bold text-primary rounded-md' }}
           />
-          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded bg-primary/15" />
+          <div className="flex items-center gap-2 mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-muted-foreground self-start px-1">
+            <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-primary/15" />
             <span>Exam scheduled</span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Exam List - Right Side */}
+      {/* Exam List */}
       <div className="space-y-2 min-w-0">
-        {/* Selected date exams */}
         {selectedDate && (
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold flex items-center gap-1.5">
-              <CalendarIcon className="h-4 w-4 text-primary" />
+            <h3 className="text-xs sm:text-sm font-semibold flex items-center gap-1.5">
+              <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               {format(selectedDate, 'dd MMM yyyy')} — {selectedDateExams.length} exam{selectedDateExams.length !== 1 ? 's' : ''}
             </h3>
             {selectedDateExams.length === 0 ? (
@@ -221,8 +220,8 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
         {/* Upcoming exams if no date selected */}
         {!selectedDate && upcomingExams.length > 0 && (
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold flex items-center gap-1.5">
-              <CalendarIcon className="h-4 w-4 text-primary" />
+            <h3 className="text-xs sm:text-sm font-semibold flex items-center gap-1.5">
+              <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               Upcoming Exams
             </h3>
             <div className="space-y-2">
