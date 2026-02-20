@@ -184,9 +184,9 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-wrap gap-1.5 sm:gap-3">
             <Select value={selectedExamName || 'all'} onValueChange={(v) => setSelectedExamName(v === 'all' ? '' : v)}>
-              <SelectTrigger className="w-full sm:w-[220px]">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[220px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="All Exams" />
               </SelectTrigger>
               <SelectContent>
@@ -198,7 +198,7 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
             </Select>
 
             <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9">
                   <SelectValue placeholder="All Classes" />
                 </SelectTrigger>
                 <SelectContent>

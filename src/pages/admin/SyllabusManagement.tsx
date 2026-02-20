@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Plus, BookOpen, FlaskConical, Search, MoreVertical, Pencil, Trash2, Calendar, Clock, Users, ChevronDown, ChevronUp, UserPlus, X } from 'lucide-react';
+import { Loader2, Plus, BookOpen, FlaskConical, Search, MoreVertical, Pencil, Trash2, Calendar, Clock, Users, ChevronDown, ChevronUp, UserPlus, X, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -32,6 +32,8 @@ interface SyllabusItem {
   schedule_time: string | null;
   start_date: string | null;
   end_date: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
   classes?: { name: string; section: string } | null;
   subjects?: { name: string } | null;
 }
@@ -69,6 +71,7 @@ export default function SyllabusManagement() {
   const [customExamGeneral, setCustomExamGeneral] = useState('');
   const [customExamCompetitive, setCustomExamCompetitive] = useState('');
   const [useCustomExam, setUseCustomExam] = useState(false);
+  const [completedByNames, setCompletedByNames] = useState<Record<string, string>>({});
 
   // Inline add form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -112,6 +115,22 @@ export default function SyllabusManagement() {
 
     const profileMap = new Map<string, string>();
     if (profilesRes.data) profilesRes.data.forEach(p => profileMap.set(p.user_id, p.full_name));
+
+    // Build completedByNames map
+    if (syllabusRes.data) {
+      const completedByIds = [...new Set(syllabusRes.data.map((s: any) => s.completed_by).filter(Boolean))] as string[];
+      const cMap: Record<string, string> = {};
+      completedByIds.forEach(uid => {
+        if (profileMap.has(uid)) cMap[uid] = profileMap.get(uid)!;
+      });
+      // Fetch any missing profiles
+      const missingIds = completedByIds.filter(uid => !profileMap.has(uid));
+      if (missingIds.length > 0) {
+        const { data: extraProfiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', missingIds);
+        extraProfiles?.forEach(p => { cMap[p.user_id] = p.full_name; });
+      }
+      setCompletedByNames(cMap);
+    }
 
     if (teachersRes.data) {
       setTeachers(teachersRes.data.map(t => ({
@@ -338,26 +357,28 @@ export default function SyllabusManagement() {
       {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-3 sm:space-y-6 animate-fade-in px-0">
           <BackButton to="/admin" />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="font-display text-2xl font-bold">Syllabus Management</h1>
-              <p className="text-muted-foreground">Manage general & competitive syllabus like a timetable</p>
+              <h1 className="font-display text-lg sm:text-2xl font-bold flex items-center gap-1.5 sm:gap-2">
+                <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" /> Syllabus Management
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Manage general & competitive syllabus like a timetable</p>
             </div>
-            <Button onClick={() => { setShowAddForm(!showAddForm); if (!showAddForm) resetForm(); }}>
+            <Button size="sm" className="sm:size-default" onClick={() => { setShowAddForm(!showAddForm); if (!showAddForm) resetForm(); }}>
               {showAddForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               {showAddForm ? 'Close' : 'Add Syllabus'}
             </Button>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="general" className="flex items-center gap-1.5">
-                <BookOpen className="h-4 w-4" />General
+            <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10">
+              <TabsTrigger value="general" className="flex items-center gap-1 text-[10px] sm:text-sm">
+                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4" />General
               </TabsTrigger>
-              <TabsTrigger value="competitive" className="flex items-center gap-1.5">
-                <FlaskConical className="h-4 w-4" />Competitive
+              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[10px] sm:text-sm">
+                <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />Competitive
               </TabsTrigger>
             </TabsList>
 
@@ -589,45 +610,51 @@ export default function SyllabusManagement() {
             )}
 
             {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search chapters, topics..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
-              </div>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-4">
               <Select value={filterClass} onValueChange={setFilterClass}>
-                <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="All Classes" /></SelectTrigger>
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                  <SelectValue placeholder="Class" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={filterSubject} onValueChange={setFilterSubject}>
-                <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="All Subjects" /></SelectTrigger>
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                  <SelectValue placeholder="Subject" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Subjects</SelectItem>
                   {filteredSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={filterExam} onValueChange={setFilterExam}>
-                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="All Exams" /></SelectTrigger>
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                  <SelectValue placeholder="Exam" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Exams</SelectItem>
                   {examTypeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
+            <div className="relative mt-1.5 sm:mt-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input placeholder="Search chapters, topics..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-7 sm:h-9 text-[10px] sm:text-sm" />
+            </div>
 
             {/* Summary */}
-            <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-              <Badge variant="outline">{filteredSyllabus.length} topics</Badge>
-              <Badge variant="outline">{Object.keys(groupedSyllabus).length} chapters</Badge>
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-[10px] sm:text-xs">{filteredSyllabus.length} topics</Badge>
+              <Badge variant="outline" className="text-[10px] sm:text-xs">{Object.keys(groupedSyllabus).length} chapters</Badge>
             </div>
 
             <TabsContent value="general" className="mt-4">
-              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType />
+              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType completedByNames={completedByNames} />
             </TabsContent>
             <TabsContent value="competitive" className="mt-4">
-              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType />
+              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType completedByNames={completedByNames} />
             </TabsContent>
           </Tabs>
 
@@ -772,7 +799,7 @@ export default function SyllabusManagement() {
 }
 
 function SyllabusList({
-  groupedSyllabus, teacherMappings, onEdit, onDelete, onAssignTeacher, showExamType = false,
+  groupedSyllabus, teacherMappings, onEdit, onDelete, onAssignTeacher, showExamType = false, completedByNames = {},
 }: {
   groupedSyllabus: Record<string, SyllabusItem[]>;
   teacherMappings: TeacherMapping[];
@@ -780,6 +807,7 @@ function SyllabusList({
   onDelete: (id: string) => void;
   onAssignTeacher: (item: SyllabusItem) => void;
   showExamType?: boolean;
+  completedByNames?: Record<string, string>;
 }) {
   const entries = Object.entries(groupedSyllabus);
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
@@ -873,6 +901,12 @@ function SyllabusList({
                                       {m.teacherName} <span className="text-muted-foreground ml-0.5">({m.role_type})</span>
                                     </Badge>
                                   ))}
+                                </div>
+                               )}
+                              {topic.completed_at && (
+                                <div className="flex items-center gap-1.5 mt-1.5 text-[10px] sm:text-xs text-green-700 bg-green-50 rounded-md px-2 py-1 w-fit">
+                                  <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                  Completed {new Date(topic.completed_at).toLocaleDateString()} by {topic.completed_by ? (completedByNames[topic.completed_by] || 'Teacher') : '—'}
                                 </div>
                               )}
                             </div>
