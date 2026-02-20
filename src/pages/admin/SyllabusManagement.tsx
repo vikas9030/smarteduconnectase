@@ -388,7 +388,7 @@ export default function SyllabusManagement() {
                         <Select value={formData.subject_id} onValueChange={v => setFormData(f => ({ ...f, subject_id: v }))}>
                           <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                           <SelectContent>
-                            {(activeTab === 'general' ? subjects : filteredSubjects).map(s => (
+                            {filteredSubjects.map(s => (
                               <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -605,7 +605,7 @@ export default function SyllabusManagement() {
                 <SelectTrigger className="w-full sm:w-[160px]"><SelectValue placeholder="All Subjects" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Subjects</SelectItem>
-                  {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  {filteredSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={filterExam} onValueChange={setFilterExam}>
@@ -651,7 +651,7 @@ export default function SyllabusManagement() {
                     <Select value={formData.subject_id} onValueChange={v => setFormData(f => ({ ...f, subject_id: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                       <SelectContent>
-                        {(activeTab === 'general' ? subjects : filteredSubjects).map(s => (
+                        {filteredSubjects.map(s => (
                           <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                         ))}
                       </SelectContent>
