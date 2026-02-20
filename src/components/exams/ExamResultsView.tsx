@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Search, Download, FileSpreadsheet, Users, Award, BarChart3, TrendingUp, TrendingDown, BookOpen, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Search, Download, FileSpreadsheet, Users, Award, BarChart3, TrendingUp, TrendingDown, BookOpen, FileText, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -24,10 +25,32 @@ interface ExamResult {
   exams: { name: string; exam_date: string | null; max_marks: number | null; class_id: string | null; subjects: { name: string } | null; classes: { name: string; section: string } | null } | null;
 }
 
+interface WeeklyExamResult {
+  id: string;
+  obtained_marks: number;
+  total_marks: number;
+  percentage: number | null;
+  rank: number | null;
+  student_id: string;
+  exam_id: string;
+  students: { full_name: string; admission_number: string; class_id: string | null } | null;
+  weekly_exams: {
+    exam_title: string;
+    exam_date: string;
+    total_marks: number;
+    syllabus_type: string;
+    exam_type_label: string | null;
+    class_id: string;
+    subjects: { name: string } | null;
+    classes: { name: string; section: string } | null;
+  } | null;
+}
+
 interface ClassOption { id: string; name: string; section: string }
 
 export default function ExamResultsView() {
   const [results, setResults] = useState<ExamResult[]>([]);
+  const [weeklyResults, setWeeklyResults] = useState<WeeklyExamResult[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedExamName, setSelectedExamName] = useState('all');
@@ -35,6 +58,12 @@ export default function ExamResultsView() {
   const [selectedStudent, setSelectedStudent] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'report'>('table');
+  const [resultsTab, setResultsTab] = useState('regular');
+
+  // Weekly filters
+  const [weeklyClassFilter, setWeeklyClassFilter] = useState('all');
+  const [weeklyTypeFilter, setWeeklyTypeFilter] = useState('all');
+  const [weeklySearchQuery, setWeeklySearchQuery] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -42,15 +71,18 @@ export default function ExamResultsView() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [marksRes, classesRes] = await Promise.all([
+    const [marksRes, weeklyRes, classesRes] = await Promise.all([
       supabase.from('exam_marks').select('*, students(full_name, admission_number, class_id), exams(name, exam_date, max_marks, class_id, subjects(name), classes(name, section))').order('created_at', { ascending: false }),
+      supabase.from('student_exam_results').select('*, students(full_name, admission_number, class_id), weekly_exams(exam_title, exam_date, total_marks, syllabus_type, exam_type_label, class_id, subjects(name), classes(name, section))').order('created_at', { ascending: false }),
       supabase.from('classes').select('id, name, section').order('name'),
     ]);
     if (marksRes.data) setResults(marksRes.data as unknown as ExamResult[]);
+    if (weeklyRes.data) setWeeklyResults(weeklyRes.data as unknown as WeeklyExamResult[]);
     if (classesRes.data) setClasses(classesRes.data);
     setLoading(false);
   };
 
+  // === Regular exam logic ===
   const examNames = useMemo(() => [...new Set(results.map(r => r.exams?.name).filter(Boolean))], [results]);
   
   const filteredResults = useMemo(() => {
@@ -79,7 +111,6 @@ export default function ExamResultsView() {
     return Array.from(studentMap.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [results, selectedClass]);
 
-  // Progress report card data (grouped by student, then by exam)
   const reportCardData = useMemo(() => {
     if (selectedStudent === 'all') return null;
     const studentResults = filteredResults.filter(r => r.student_id === selectedStudent);
@@ -98,6 +129,25 @@ export default function ExamResultsView() {
     return { grouped, student, totalMarks, totalMax, overallPct, count: studentResults.length };
   }, [filteredResults, selectedStudent]);
 
+  // === Weekly/Competitive exam logic ===
+  const filteredWeeklyResults = useMemo(() => {
+    return weeklyResults.filter(r => {
+      if (weeklyTypeFilter !== 'all' && r.weekly_exams?.syllabus_type !== weeklyTypeFilter) return false;
+      if (weeklyClassFilter !== 'all' && r.weekly_exams?.class_id !== weeklyClassFilter) return false;
+      if (weeklySearchQuery) {
+        const q = weeklySearchQuery.toLowerCase();
+        const matchName = r.students?.full_name?.toLowerCase().includes(q);
+        const matchAdm = r.students?.admission_number?.toLowerCase().includes(q);
+        const matchExam = r.weekly_exams?.exam_title?.toLowerCase().includes(q);
+        if (!matchName && !matchAdm && !matchExam) return false;
+      }
+      return true;
+    });
+  }, [weeklyResults, weeklyTypeFilter, weeklyClassFilter, weeklySearchQuery]);
+
+  const weeklyExamNames = useMemo(() => [...new Set(weeklyResults.map(r => r.weekly_exams?.exam_title).filter(Boolean))], [weeklyResults]);
+
+  // === Shared helpers ===
   const getGradeColor = (grade: string | null) => {
     if (!grade) return 'bg-muted text-muted-foreground';
     const g = grade.toUpperCase();
@@ -115,34 +165,72 @@ export default function ExamResultsView() {
   };
 
   const handleExport = () => {
-    const exportData = filteredResults.map(r => ({
-      'Student Name': r.students?.full_name || '',
-      'Admission No': r.students?.admission_number || '',
-      'Exam': r.exams?.name || '',
-      'Subject': r.exams?.subjects?.name || '',
-      'Class': r.exams?.classes ? `${r.exams.classes.name}-${r.exams.classes.section}` : '',
-      'Marks': r.marks_obtained ?? '',
-      'Max Marks': r.exams?.max_marks ?? '',
-      'Percentage': r.marks_obtained && r.exams?.max_marks ? `${((r.marks_obtained / r.exams.max_marks) * 100).toFixed(1)}%` : '',
-      'Grade': r.grade || '',
-      'Remarks': r.remarks || '',
-    }));
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Results');
-    XLSX.writeFile(wb, `exam-results-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    if (resultsTab === 'regular') {
+      const exportData = filteredResults.map(r => ({
+        'Student Name': r.students?.full_name || '',
+        'Admission No': r.students?.admission_number || '',
+        'Exam': r.exams?.name || '',
+        'Subject': r.exams?.subjects?.name || '',
+        'Class': r.exams?.classes ? `${r.exams.classes.name}-${r.exams.classes.section}` : '',
+        'Marks': r.marks_obtained ?? '',
+        'Max Marks': r.exams?.max_marks ?? '',
+        'Percentage': r.marks_obtained && r.exams?.max_marks ? `${((r.marks_obtained / r.exams.max_marks) * 100).toFixed(1)}%` : '',
+        'Grade': r.grade || '',
+        'Remarks': r.remarks || '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Results');
+      XLSX.writeFile(wb, `exam-results-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    } else {
+      const exportData = filteredWeeklyResults.map(r => ({
+        'Student Name': r.students?.full_name || '',
+        'Admission No': r.students?.admission_number || '',
+        'Exam': r.weekly_exams?.exam_title || '',
+        'Subject': r.weekly_exams?.subjects?.name || '',
+        'Class': r.weekly_exams?.classes ? `${r.weekly_exams.classes.name}-${r.weekly_exams.classes.section}` : '',
+        'Type': r.weekly_exams?.syllabus_type || '',
+        'Label': r.weekly_exams?.exam_type_label || '',
+        'Obtained': r.obtained_marks,
+        'Total': r.total_marks,
+        'Percentage': r.percentage ? `${r.percentage.toFixed(1)}%` : '',
+        'Rank': r.rank || '',
+      }));
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Weekly Results');
+      XLSX.writeFile(wb, `weekly-results-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    }
     toast.success('Results exported');
   };
 
   const handlePDFDownload = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) { toast.error('Please allow popups to download PDF'); return; }
-    const rows = filteredResults.map(r => {
-      const pct = r.marks_obtained && r.exams?.max_marks ? ((r.marks_obtained / r.exams.max_marks) * 100).toFixed(0) : '0';
-      return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.exams?.name || '-'}</td><td>${r.exams?.subjects?.name || '-'}</td><td>${r.marks_obtained ?? '-'}/${r.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${r.grade || '-'}</td></tr>`;
-    }).join('');
+    
+    let rows = '';
+    let title = '';
+    let headers = '';
+    
+    if (resultsTab === 'regular') {
+      title = 'Exam Results Report';
+      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th>';
+      rows = filteredResults.map(r => {
+        const pct = r.marks_obtained && r.exams?.max_marks ? ((r.marks_obtained / r.exams.max_marks) * 100).toFixed(0) : '0';
+        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.exams?.name || '-'}</td><td>${r.exams?.subjects?.name || '-'}</td><td>${r.marks_obtained ?? '-'}/${r.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${r.grade || '-'}</td></tr>`;
+      }).join('');
+    } else {
+      title = 'Weekly / Competitive Exam Results';
+      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Type</th><th>Subject</th><th>Marks</th><th>%</th><th>Rank</th>';
+      rows = filteredWeeklyResults.map(r => {
+        const pct = r.percentage?.toFixed(0) || '0';
+        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.weekly_exams?.exam_title || '-'}</td><td>${r.weekly_exams?.syllabus_type || '-'}</td><td>${r.weekly_exams?.subjects?.name || '-'}</td><td>${r.obtained_marks}/${r.total_marks}</td><td>${pct}%</td><td>${r.rank || '-'}</td></tr>`;
+      }).join('');
+    }
+
+    const count = resultsTab === 'regular' ? filteredResults.length : filteredWeeklyResults.length;
     printWindow.document.write(`
-      <html><head><title>Exam Results</title>
+      <html><head><title>${title}</title>
       <style>
         body { font-family: 'Inter', Arial, sans-serif; padding: 20px; color: #333; }
         h1 { font-size: 20px; margin-bottom: 8px; }
@@ -152,9 +240,9 @@ export default function ExamResultsView() {
         .meta { color: #888; font-size: 12px; margin-bottom: 16px; }
         @media print { body { padding: 0; } }
       </style></head><body>
-      <h1>Exam Results Report</h1>
-      <p class="meta">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} • ${filteredResults.length} records</p>
-      <table><thead><tr><th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th></tr></thead><tbody>${rows}</tbody></table>
+      <h1>${title}</h1>
+      <p class="meta">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} • ${count} records</p>
+      <table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>
       </body></html>
     `);
     printWindow.document.close();
@@ -168,170 +256,331 @@ export default function ExamResultsView() {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-4 pb-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row flex-1 gap-2">
-              <Select value={selectedExamName} onValueChange={setSelectedExamName}>
-                <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Exams</SelectItem>
-                  {examNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedStudent('all'); }}>
-                <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm"><SelectValue placeholder="Class" /></SelectTrigger>
+      {/* Results Type Tabs */}
+      <Tabs value={resultsTab} onValueChange={(v) => { setResultsTab(v); }}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="regular" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <BookOpen className="h-4 w-4" />
+            Regular Exams
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <BarChart3 className="h-4 w-4" />
+            Weekly Exams
+          </TabsTrigger>
+          <TabsTrigger value="competitive" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <FlaskConical className="h-4 w-4" />
+            Competitive
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Regular Exam Results */}
+        <TabsContent value="regular" className="space-y-4 mt-4">
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row flex-1 gap-2">
+                  <Select value={selectedExamName} onValueChange={setSelectedExamName}>
+                    <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Exam / Unit" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Exams</SelectItem>
+                      {examNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedStudent('all'); }}>
+                    <SelectTrigger className="w-full sm:w-[130px] h-9 text-sm"><SelectValue placeholder="Class" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                    <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm"><SelectValue placeholder="Student" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Students</SelectItem>
+                      {uniqueStudents.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.admission})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <div className="relative w-full sm:w-[150px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('table')}>
+                    <BarChart3 className="h-3.5 w-3.5 mr-1" /> Table
+                  </Button>
+                  <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
+                    <Award className="h-3.5 w-3.5 mr-1" /> Report
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePDFDownload} disabled={filteredResults.length === 0} title="Download PDF">
+                    <FileText className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleExport} disabled={filteredResults.length === 0} title="Export Excel">
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Report Card View */}
+          {viewMode === 'report' && reportCardData && selectedStudent !== 'all' ? (
+            <div className="space-y-4">
+              <Card className="border-2 border-primary/20">
+                <CardHeader className="bg-primary/5 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Award className="h-5 w-5 text-primary" />
+                        Progress Report Card
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        {reportCardData.student?.full_name} • {reportCardData.student?.admission_number}
+                      </CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-3xl font-bold ${getPctColor(reportCardData.overallPct)}`}>{reportCardData.overallPct.toFixed(1)}%</p>
+                      <p className="text-xs text-muted-foreground">Overall Average</p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center p-3 bg-muted/30 rounded-lg">
+                      <p className="text-2xl font-bold">{reportCardData.count}</p>
+                      <p className="text-xs text-muted-foreground">Total Exams</p>
+                    </div>
+                    <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
+                      <p className="text-2xl font-bold text-emerald-600">{reportCardData.totalMarks}</p>
+                      <p className="text-xs text-muted-foreground">Marks Obtained</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-500/10 rounded-lg">
+                      <p className="text-2xl font-bold text-blue-600">{reportCardData.totalMax}</p>
+                      <p className="text-xs text-muted-foreground">Total Max Marks</p>
+                    </div>
+                  </div>
+                  <Progress value={reportCardData.overallPct} className="h-3" />
+                </CardContent>
+              </Card>
+
+              {Object.entries(reportCardData.grouped).map(([examName, marks]) => {
+                const examTotal = marks.reduce((s, m) => s + (m.marks_obtained || 0), 0);
+                const examMax = marks.reduce((s, m) => s + (m.exams?.max_marks || 100), 0);
+                const examPct = examMax > 0 ? (examTotal / examMax) * 100 : 0;
+                return (
+                  <Card key={examName} className="overflow-hidden">
+                    <CardHeader className="pb-3 bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-primary" />
+                          {examName}
+                        </CardTitle>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{marks.length} subject{marks.length > 1 ? 's' : ''}</Badge>
+                          <span className={`font-bold ${getPctColor(examPct)}`}>{examPct.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/20">
+                            <TableHead>Subject</TableHead>
+                            <TableHead className="text-center">Marks</TableHead>
+                            <TableHead className="text-center">%</TableHead>
+                            <TableHead className="text-center">Grade</TableHead>
+                            <TableHead className="hidden sm:table-cell">Remarks</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {marks.map(mark => {
+                            const pct = mark.marks_obtained && mark.exams?.max_marks ? (mark.marks_obtained / mark.exams.max_marks) * 100 : 0;
+                            return (
+                              <TableRow key={mark.id}>
+                                <TableCell className="font-medium capitalize">{mark.exams?.subjects?.name || '-'}</TableCell>
+                                <TableCell className="text-center">
+                                  <span className="font-semibold">{mark.marks_obtained ?? '-'}</span>
+                                  <span className="text-muted-foreground text-xs">/{mark.exams?.max_marks ?? 100}</span>
+                                </TableCell>
+                                <TableCell className="text-center"><span className={`font-semibold ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
+                                <TableCell className="text-center"><Badge className={`text-xs ${getGradeColor(mark.grade)}`}>{mark.grade || '-'}</Badge></TableCell>
+                                <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{mark.remarks || '-'}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                          <TableRow className="bg-muted/20 font-semibold">
+                            <TableCell>Total</TableCell>
+                            <TableCell className="text-center">{examTotal}/{examMax}</TableCell>
+                            <TableCell className="text-center"><span className={getPctColor(examPct)}>{examPct.toFixed(1)}%</span></TableCell>
+                            <TableCell colSpan={2}></TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            /* Table View */
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Results
+                  <Badge variant="secondary" className="ml-1">{filteredResults.length} records</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {filteredResults.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
+                    <p className="text-muted-foreground">No results found. Adjust filters or enter marks first.</p>
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[500px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/20">
+                          <TableHead className="text-xs sm:text-sm min-w-[80px]">Student</TableHead>
+                          <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Adm No</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Exam</TableHead>
+                          <TableHead className="text-xs sm:text-sm">Subject</TableHead>
+                          <TableHead className="text-xs sm:text-sm hidden md:table-cell">Class</TableHead>
+                          <TableHead className="text-center text-xs sm:text-sm">Marks</TableHead>
+                          <TableHead className="text-center text-xs sm:text-sm">%</TableHead>
+                          <TableHead className="text-center text-xs sm:text-sm">Grade</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredResults.map(r => {
+                          const pct = r.marks_obtained && r.exams?.max_marks ? (r.marks_obtained / r.exams.max_marks) * 100 : 0;
+                          return (
+                            <TableRow key={r.id}>
+                              <TableCell className="font-medium text-xs sm:text-sm py-2">{r.students?.full_name || '-'}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground hidden sm:table-cell py-2">{r.students?.admission_number || '-'}</TableCell>
+                              <TableCell className="text-xs sm:text-sm py-2">{r.exams?.name || '-'}</TableCell>
+                              <TableCell className="capitalize text-xs sm:text-sm py-2">{r.exams?.subjects?.name || '-'}</TableCell>
+                              <TableCell className="hidden md:table-cell py-2">
+                                {r.exams?.classes ? <Badge variant="outline" className="text-xs">{r.exams.classes.name}-{r.exams.classes.section.toUpperCase()}</Badge> : '-'}
+                              </TableCell>
+                              <TableCell className="text-center text-xs sm:text-sm py-2">
+                                <span className="font-semibold">{r.marks_obtained ?? '-'}</span>
+                                <span className="text-[10px] sm:text-xs text-muted-foreground">/{r.exams?.max_marks ?? 100}</span>
+                              </TableCell>
+                              <TableCell className="text-center py-2"><span className={`font-semibold text-xs sm:text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
+                              <TableCell className="text-center py-2"><Badge className={`text-[10px] sm:text-xs ${getGradeColor(r.grade)}`}>{r.grade || '-'}</Badge></TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Weekly Exam Results */}
+        <TabsContent value="weekly" className="space-y-4 mt-4">
+          {renderWeeklyResultsContent('general')}
+        </TabsContent>
+
+        {/* Competitive Exam Results */}
+        <TabsContent value="competitive" className="space-y-4 mt-4">
+          {renderWeeklyResultsContent('competitive')}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  function renderWeeklyResultsContent(type: 'general' | 'competitive') {
+    const typeResults = type === 'general'
+      ? filteredWeeklyResults.filter(r => r.weekly_exams?.syllabus_type !== 'competitive')
+      : filteredWeeklyResults.filter(r => r.weekly_exams?.syllabus_type === 'competitive');
+
+    return (
+      <>
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-4 pb-4">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Select value={weeklyClassFilter} onValueChange={setWeeklyClassFilter}>
+                <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Class" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm"><SelectValue placeholder="Student" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Students</SelectItem>
-                  {uniqueStudents.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.admission})</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <div className="relative w-full sm:w-[150px]">
+              <div className="relative w-full sm:w-[180px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+                <Input placeholder="Search student/exam..." value={weeklySearchQuery} onChange={e => setWeeklySearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+              </div>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePDFDownload} disabled={typeResults.length === 0} title="Download PDF">
+                  <FileText className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleExport} disabled={typeResults.length === 0} title="Export Excel">
+                  <Download className="h-3.5 w-3.5" />
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('table')}>
-                <BarChart3 className="h-3.5 w-3.5 mr-1" /> Table
-              </Button>
-              <Button variant={viewMode === 'report' ? 'default' : 'outline'} size="sm" className="h-8 text-xs" onClick={() => setViewMode('report')} disabled={selectedStudent === 'all'}>
-                <Award className="h-3.5 w-3.5 mr-1" /> Report
-              </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handlePDFDownload} disabled={filteredResults.length === 0} title="Download PDF">
-                <FileText className="h-3.5 w-3.5" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={handleExport} disabled={filteredResults.length === 0} title="Export Excel">
-                <Download className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+          </CardContent>
+        </Card>
+
+        {/* Summary Stats */}
+        {typeResults.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Card>
+              <CardContent className="py-3 text-center">
+                <p className="text-2xl font-bold">{typeResults.length}</p>
+                <p className="text-xs text-muted-foreground">Total Records</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 text-center">
+                <p className="text-2xl font-bold">{new Set(typeResults.map(r => r.student_id)).size}</p>
+                <p className="text-xs text-muted-foreground">Students</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 text-center">
+                {(() => {
+                  const avg = typeResults.reduce((s, r) => s + (r.percentage || 0), 0) / typeResults.length;
+                  return <p className={`text-2xl font-bold ${getPctColor(avg)}`}>{avg.toFixed(1)}%</p>;
+                })()}
+                <p className="text-xs text-muted-foreground">Avg Percentage</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-3 text-center">
+                {(() => {
+                  const max = Math.max(...typeResults.map(r => r.percentage || 0));
+                  return <p className={`text-2xl font-bold ${getPctColor(max)}`}>{max.toFixed(1)}%</p>;
+                })()}
+                <p className="text-xs text-muted-foreground">Highest %</p>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        )}
 
-      {/* Report Card View */}
-      {viewMode === 'report' && reportCardData && selectedStudent !== 'all' ? (
-        <div className="space-y-4">
-          {/* Student Summary */}
-          <Card className="border-2 border-primary/20">
-            <CardHeader className="bg-primary/5 pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <Award className="h-5 w-5 text-primary" />
-                    Progress Report Card
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    {reportCardData.student?.full_name} • {reportCardData.student?.admission_number}
-                  </CardDescription>
-                </div>
-                <div className="text-right">
-                  <p className={`text-3xl font-bold ${getPctColor(reportCardData.overallPct)}`}>{reportCardData.overallPct.toFixed(1)}%</p>
-                  <p className="text-xs text-muted-foreground">Overall Average</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-3 bg-muted/30 rounded-lg">
-                  <p className="text-2xl font-bold">{reportCardData.count}</p>
-                  <p className="text-xs text-muted-foreground">Total Exams</p>
-                </div>
-                <div className="text-center p-3 bg-emerald-500/10 rounded-lg">
-                  <p className="text-2xl font-bold text-emerald-600">{reportCardData.totalMarks}</p>
-                  <p className="text-xs text-muted-foreground">Marks Obtained</p>
-                </div>
-                <div className="text-center p-3 bg-blue-500/10 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{reportCardData.totalMax}</p>
-                  <p className="text-xs text-muted-foreground">Total Max Marks</p>
-                </div>
-              </div>
-              <Progress value={reportCardData.overallPct} className="h-3" />
-            </CardContent>
-          </Card>
-
-          {/* Results by Exam/Unit */}
-          {Object.entries(reportCardData.grouped).map(([examName, marks]) => {
-            const examTotal = marks.reduce((s, m) => s + (m.marks_obtained || 0), 0);
-            const examMax = marks.reduce((s, m) => s + (m.exams?.max_marks || 100), 0);
-            const examPct = examMax > 0 ? (examTotal / examMax) * 100 : 0;
-            return (
-              <Card key={examName} className="overflow-hidden">
-                <CardHeader className="pb-3 bg-muted/30">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      {examName}
-                    </CardTitle>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">{marks.length} subject{marks.length > 1 ? 's' : ''}</Badge>
-                      <span className={`font-bold ${getPctColor(examPct)}`}>{examPct.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/20">
-                        <TableHead>Subject</TableHead>
-                        <TableHead className="text-center">Marks</TableHead>
-                        <TableHead className="text-center">%</TableHead>
-                        <TableHead className="text-center">Grade</TableHead>
-                        <TableHead className="hidden sm:table-cell">Remarks</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {marks.map(mark => {
-                        const pct = mark.marks_obtained && mark.exams?.max_marks ? (mark.marks_obtained / mark.exams.max_marks) * 100 : 0;
-                        return (
-                          <TableRow key={mark.id}>
-                            <TableCell className="font-medium capitalize">{mark.exams?.subjects?.name || '-'}</TableCell>
-                            <TableCell className="text-center">
-                              <span className="font-semibold">{mark.marks_obtained ?? '-'}</span>
-                              <span className="text-muted-foreground text-xs">/{mark.exams?.max_marks ?? 100}</span>
-                            </TableCell>
-                            <TableCell className="text-center"><span className={`font-semibold ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
-                            <TableCell className="text-center"><Badge className={`text-xs ${getGradeColor(mark.grade)}`}>{mark.grade || '-'}</Badge></TableCell>
-                            <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">{mark.remarks || '-'}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      <TableRow className="bg-muted/20 font-semibold">
-                        <TableCell>Total</TableCell>
-                        <TableCell className="text-center">{examTotal}/{examMax}</TableCell>
-                        <TableCell className="text-center"><span className={getPctColor(examPct)}>{examPct.toFixed(1)}%</span></TableCell>
-                        <TableCell colSpan={2}></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        /* Table View */
+        {/* Results Table */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              Results
-              <Badge variant="secondary" className="ml-1">{filteredResults.length} records</Badge>
+              {type === 'competitive' ? <FlaskConical className="h-4 w-4 text-primary" /> : <BarChart3 className="h-4 w-4 text-primary" />}
+              {type === 'competitive' ? 'Competitive' : 'Weekly'} Exam Results
+              <Badge variant="secondary" className="ml-1">{typeResults.length} records</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {filteredResults.length === 0 ? (
+            {typeResults.length === 0 ? (
               <div className="text-center py-12">
-                <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
-                <p className="text-muted-foreground">No results found. Adjust filters or enter marks first.</p>
+                {type === 'competitive' ? <FlaskConical className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" /> : <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />}
+                <p className="text-muted-foreground">No {type} exam results found.</p>
+                <p className="text-sm text-muted-foreground mt-1">Enter marks in the {type === 'competitive' ? 'W.Marks' : 'W.Marks'} tab first.</p>
               </div>
             ) : (
               <ScrollArea className="h-[500px]">
@@ -341,31 +590,46 @@ export default function ExamResultsView() {
                       <TableHead className="text-xs sm:text-sm min-w-[80px]">Student</TableHead>
                       <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Adm No</TableHead>
                       <TableHead className="text-xs sm:text-sm">Exam</TableHead>
-                      <TableHead className="text-xs sm:text-sm">Subject</TableHead>
+                      <TableHead className="text-xs sm:text-sm hidden md:table-cell">Subject</TableHead>
                       <TableHead className="text-xs sm:text-sm hidden md:table-cell">Class</TableHead>
+                      {type === 'competitive' && <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Type</TableHead>}
                       <TableHead className="text-center text-xs sm:text-sm">Marks</TableHead>
                       <TableHead className="text-center text-xs sm:text-sm">%</TableHead>
-                      <TableHead className="text-center text-xs sm:text-sm">Grade</TableHead>
+                      <TableHead className="text-center text-xs sm:text-sm">Rank</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredResults.map(r => {
-                      const pct = r.marks_obtained && r.exams?.max_marks ? (r.marks_obtained / r.exams.max_marks) * 100 : 0;
+                    {typeResults.map(r => {
+                      const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
                       return (
                         <TableRow key={r.id}>
                           <TableCell className="font-medium text-xs sm:text-sm py-2">{r.students?.full_name || '-'}</TableCell>
                           <TableCell className="text-xs text-muted-foreground hidden sm:table-cell py-2">{r.students?.admission_number || '-'}</TableCell>
-                          <TableCell className="text-xs sm:text-sm py-2">{r.exams?.name || '-'}</TableCell>
-                          <TableCell className="capitalize text-xs sm:text-sm py-2">{r.exams?.subjects?.name || '-'}</TableCell>
+                          <TableCell className="py-2">
+                            <div>
+                              <p className="text-xs sm:text-sm font-medium">{r.weekly_exams?.exam_title || '-'}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {r.weekly_exams?.exam_date ? new Date(r.weekly_exams.exam_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="capitalize text-xs sm:text-sm hidden md:table-cell py-2">{r.weekly_exams?.subjects?.name || '-'}</TableCell>
                           <TableCell className="hidden md:table-cell py-2">
-                            {r.exams?.classes ? <Badge variant="outline" className="text-xs">{r.exams.classes.name}-{r.exams.classes.section.toUpperCase()}</Badge> : '-'}
+                            {r.weekly_exams?.classes ? <Badge variant="outline" className="text-xs">{r.weekly_exams.classes.name}-{r.weekly_exams.classes.section.toUpperCase()}</Badge> : '-'}
                           </TableCell>
+                          {type === 'competitive' && (
+                            <TableCell className="hidden lg:table-cell py-2">
+                              <Badge variant="secondary" className="text-[10px]">{r.weekly_exams?.exam_type_label || r.weekly_exams?.syllabus_type}</Badge>
+                            </TableCell>
+                          )}
                           <TableCell className="text-center text-xs sm:text-sm py-2">
-                            <span className="font-semibold">{r.marks_obtained ?? '-'}</span>
-                            <span className="text-[10px] sm:text-xs text-muted-foreground">/{r.exams?.max_marks ?? 100}</span>
+                            <span className="font-semibold">{r.obtained_marks}</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">/{r.total_marks}</span>
                           </TableCell>
-                          <TableCell className="text-center py-2"><span className={`font-semibold text-xs sm:text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
-                          <TableCell className="text-center py-2"><Badge className={`text-[10px] sm:text-xs ${getGradeColor(r.grade)}`}>{r.grade || '-'}</Badge></TableCell>
+                          <TableCell className="text-center py-2">
+                            <span className={`font-semibold text-xs sm:text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
+                          </TableCell>
+                          <TableCell className="text-center text-xs sm:text-sm py-2 font-medium">{r.rank || '-'}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -375,7 +639,7 @@ export default function ExamResultsView() {
             )}
           </CardContent>
         </Card>
-      )}
-    </div>
-  );
+      </>
+    );
+  }
 }
