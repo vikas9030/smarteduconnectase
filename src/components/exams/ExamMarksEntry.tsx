@@ -185,22 +185,19 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
         <CardContent className="space-y-4">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {examNames.length > 1 && (
-              <Select value={selectedExamName || 'all'} onValueChange={(v) => setSelectedExamName(v === 'all' ? '' : v)}>
-                <SelectTrigger className="w-full sm:w-[220px]">
-                  <SelectValue placeholder="All Exams" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Exams</SelectItem>
-                  {examNames.map((name) => (
-                    <SelectItem key={name} value={name}>{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <Select value={selectedExamName || 'all'} onValueChange={(v) => setSelectedExamName(v === 'all' ? '' : v)}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="All Exams" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Exams</SelectItem>
+                {examNames.map((name) => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {classOptions.length > 1 && (
-              <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
+            <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="All Classes" />
                 </SelectTrigger>
@@ -211,7 +208,6 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
                   ))}
                 </SelectContent>
               </Select>
-            )}
           </div>
 
           {filteredExams.length === 0 ? (
