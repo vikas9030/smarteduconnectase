@@ -19,6 +19,7 @@ export interface ClassItem {
 export interface SubjectItem {
   id: string;
   name: string;
+  category?: string | null;
 }
 
 export interface ExamSlot {

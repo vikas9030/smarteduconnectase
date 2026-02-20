@@ -328,7 +328,7 @@ export default function ExamsManagement() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           classes={classes}
-          subjects={subjects}
+          subjects={subjects.filter(s => s.category !== 'competitive')}
           onSuccess={fetchData}
         />
       </div>
