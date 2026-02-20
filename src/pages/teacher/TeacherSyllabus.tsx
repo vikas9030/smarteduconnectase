@@ -288,29 +288,31 @@ export default function TeacherSyllabus() {
       {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-        <div className="space-y-4 sm:space-y-6 animate-fade-in px-1 sm:px-0">
+        <div className="space-y-3 sm:space-y-6 animate-fade-in px-0">
           <BackButton to="/teacher" />
           <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold">My Syllabus</h1>
-            <p className="text-sm text-muted-foreground">View your assigned topics</p>
+            <h1 className="font-display text-lg sm:text-2xl font-bold flex items-center gap-1.5 sm:gap-2">
+              <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" /> My Syllabus
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">View your assigned topics</p>
           </div>
 
           {/* General / Competitive Tabs */}
           <Tabs value={typeTab} onValueChange={(v) => { setTypeTab(v); setFilterSubject('all'); setFilterExam('all'); setFilterClass('all'); }}>
-            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
-              <TabsTrigger value="general" className="flex items-center gap-1 text-[11px] sm:text-sm">
-                <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> General
+            <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10">
+              <TabsTrigger value="general" className="flex items-center gap-1 text-[10px] sm:text-sm">
+                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" /> General
               </TabsTrigger>
-              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[11px] sm:text-sm">
-                <FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Competitive
+              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[10px] sm:text-sm">
+                <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" /> Competitive
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          {/* Status & Time Dropdowns */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -320,7 +322,7 @@ export default function TeacherSyllabus() {
               </SelectContent>
             </Select>
             <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="Time" />
               </SelectTrigger>
               <SelectContent>
@@ -330,37 +332,37 @@ export default function TeacherSyllabus() {
                 <SelectItem value="future">Future</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={filterClass} onValueChange={setFilterClass}>
+              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                <SelectValue placeholder="Class" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {classOptions.map(([id, label]) => <SelectItem key={id} value={id}>{label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterSubject} onValueChange={setFilterSubject}>
+              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                <SelectValue placeholder="Subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subjects</SelectItem>
+                {subjectOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterExam} onValueChange={setFilterExam}>
+              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                <SelectValue placeholder="Exam" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Exams</SelectItem>
+                {examOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-
-          {/* Other Filters */}
-          <div className="space-y-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input placeholder="Search topics..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-8 sm:h-9 text-xs sm:text-sm" />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <Select value={filterClass} onValueChange={setFilterClass}>
-                <SelectTrigger className="w-full text-xs h-8 sm:h-9"><SelectValue placeholder="Class" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
-                  {classOptions.map(([id, label]) => <SelectItem key={id} value={id}>{label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filterSubject} onValueChange={setFilterSubject}>
-                <SelectTrigger className="w-full text-xs h-8 sm:h-9"><SelectValue placeholder="Subject" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Subjects</SelectItem>
-                  {subjectOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filterExam} onValueChange={setFilterExam}>
-                <SelectTrigger className="w-full text-xs h-8 sm:h-9"><SelectValue placeholder="Exam" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Exams</SelectItem>
-                  {examOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input placeholder="Search topics..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-7 sm:h-9 text-[10px] sm:text-sm" />
           </div>
 
           <SyllabusList items={filteredItems} showComplete={statusFilter !== 'completed'} />
