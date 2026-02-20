@@ -98,15 +98,15 @@ export default function ExamsManagement() {
 
   return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-3 sm:space-y-6 animate-fade-in px-0">
         <BackButton to="/admin" />
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-bold">Exams Management</h1>
-            <p className="text-muted-foreground">Create, schedule, and manage examinations</p>
+            <h1 className="font-display text-lg sm:text-2xl font-bold">Exams Management</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Create, schedule, and manage examinations</p>
           </div>
 
-          <Button className="gradient-admin" onClick={() => setDialogOpen(true)}>
+          <Button size="sm" className="gradient-admin sm:size-default" onClick={() => setDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Exam
           </Button>
@@ -114,26 +114,26 @@ export default function ExamsManagement() {
 
         {/* Tabs for different views */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 lg:w-[650px]">
-            <TabsTrigger value="schedule" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <Calendar className="h-4 w-4" />
-              Schedule
+          <TabsList className="grid w-full grid-cols-5 h-8 sm:h-10 lg:w-[650px]">
+            <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Schedule</span>
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <RotateCcw className="h-4 w-4" />
-              Weekly
+            <TabsTrigger value="weekly" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Weekly</span>
             </TabsTrigger>
-            <TabsTrigger value="marks" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <ClipboardList className="h-4 w-4" />
-              Marks
+            <TabsTrigger value="marks" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Marks</span>
             </TabsTrigger>
-            <TabsTrigger value="weekly-marks" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <FlaskConical className="h-4 w-4" />
-              W.Marks
+            <TabsTrigger value="weekly-marks" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">W.Marks</span>
             </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-1.5 text-xs sm:text-sm">
-              <BarChart3 className="h-4 w-4" />
-              Results
+            <TabsTrigger value="results" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Results</span>
             </TabsTrigger>
           </TabsList>
 
