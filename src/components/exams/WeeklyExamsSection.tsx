@@ -314,7 +314,7 @@ export default function WeeklyExamsSection() {
                 value={formData.exam_type_label === '__custom__' ? '' : formData.exam_type_label}
                 onChange={e => setFormData(f => ({ ...f, exam_type_label: e.target.value }))}
                 placeholder="Enter custom name"
-                autoFocus
+                
               />
               <Button type="button" variant="outline" size="sm" className="h-9 text-xs" onClick={() => setFormData(f => ({ ...f, exam_type_label: 'General' }))}>
                 Cancel
