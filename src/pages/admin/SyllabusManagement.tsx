@@ -782,7 +782,7 @@ function SyllabusList({
   showExamType?: boolean;
 }) {
   const entries = Object.entries(groupedSyllabus);
-  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set(entries.slice(0, 3).map(([k]) => k)));
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
 
   const toggleChapter = (key: string) => {
     setExpandedChapters(prev => {
