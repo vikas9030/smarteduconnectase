@@ -50,6 +50,7 @@ export default function WeeklyExamMarksEntry() {
 
   const [selectedClassId, setSelectedClassId] = useState('all');
   const [examTypeFilter, setExamTypeFilter] = useState<'all' | 'competitive' | 'general'>('all');
+  const [examTypeLabelFilter, setExamTypeLabelFilter] = useState('all');
   const [selectedExam, setSelectedExam] = useState<WeeklyExam | null>(null);
   const [marks, setMarks] = useState<Record<string, { obtained: string; percentage: string }>>({});
 
@@ -75,9 +76,17 @@ export default function WeeklyExamMarksEntry() {
     return exams.filter(e => {
       if (selectedClassId !== 'all' && e.class_id !== selectedClassId) return false;
       if (examTypeFilter !== 'all' && e.syllabus_type !== examTypeFilter) return false;
+      if (examTypeLabelFilter !== 'all' && e.exam_type_label !== examTypeLabelFilter) return false;
       return true;
     });
-  }, [exams, selectedClassId, examTypeFilter]);
+  }, [exams, selectedClassId, examTypeFilter, examTypeLabelFilter]);
+
+  // Get unique exam type labels
+  const examTypeLabels = useMemo(() => 
+    [...new Set(exams.map(e => e.exam_type_label).filter(Boolean))] as string[]
+  , [exams]);
+
+  const isFilterActive = selectedClassId !== 'all' || examTypeFilter !== 'all' || examTypeLabelFilter !== 'all';
 
   const loadStudentsAndMarks = async (exam: WeeklyExam) => {
     setLoadingStudents(true);
@@ -206,10 +215,30 @@ export default function WeeklyExamMarksEntry() {
                 <SelectItem value="general">General</SelectItem>
               </SelectContent>
             </Select>
+
+            {examTypeLabels.length > 0 && (
+              <Select value={examTypeLabelFilter} onValueChange={setExamTypeLabelFilter}>
+                <SelectTrigger className="w-full sm:w-[160px]">
+                  <SelectValue placeholder="Exam Label" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Labels</SelectItem>
+                  {examTypeLabels.map(label => (
+                    <SelectItem key={label} value={label}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
-          {filteredExams.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No weekly exams found. Create exams in the Weekly tab first.</p>
+          {!isFilterActive ? (
+            <div className="text-center py-8">
+              <FlaskConical className="h-10 w-10 mx-auto text-muted-foreground mb-2 opacity-50" />
+              <p className="text-muted-foreground text-sm font-medium">Select filters to view exams</p>
+              <p className="text-xs text-muted-foreground mt-1">Choose a class or exam type to find exams.</p>
+            </div>
+          ) : filteredExams.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No weekly exams found for the selected filters.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {filteredExams.map(exam => (

@@ -210,8 +210,14 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
               </Select>
           </div>
 
-          {filteredExams.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No exams found. Please ask admin to create exams for your classes.</p>
+          {!selectedExamName && selectedClassFilter === 'all' ? (
+            <div className="text-center py-8">
+              <BookOpen className="h-10 w-10 mx-auto text-muted-foreground mb-2 opacity-50" />
+              <p className="text-muted-foreground text-sm font-medium">Select an exam and class to view</p>
+              <p className="text-xs text-muted-foreground mt-1">Use the filters above to find exams.</p>
+            </div>
+          ) : filteredExams.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No exams found for the selected filters.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {filteredExams.map((exam) => (
