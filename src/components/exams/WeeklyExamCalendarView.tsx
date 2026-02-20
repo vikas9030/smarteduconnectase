@@ -178,9 +178,9 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
   };
 
   return (
-    <div className="space-y-4">
-      {/* Calendar */}
-      <Card>
+    <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4">
+      {/* Calendar - Left Side */}
+      <Card className="md:w-fit">
         <CardContent className="p-3">
           <div className="flex items-center justify-between mb-2">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
@@ -208,42 +208,45 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
         </CardContent>
       </Card>
 
-      {/* Selected date exams */}
-      {selectedDate && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold flex items-center gap-1.5">
-            <CalendarIcon className="h-4 w-4 text-primary" />
-            {format(selectedDate, 'dd MMM yyyy')} — {selectedDateExams.length} exam{selectedDateExams.length !== 1 ? 's' : ''}
-          </h3>
-          {selectedDateExams.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-4 text-center">No exams on this date</p>
-          ) : (
-            <div className="space-y-2">
-              {selectedDateExams.map(exam => <ExamDetailCard key={exam.id} exam={exam} />)}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Upcoming exams if no date selected */}
-      {!selectedDate && upcomingExams.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold flex items-center gap-1.5">
-            <CalendarIcon className="h-4 w-4 text-primary" />
-            Upcoming Exams
-          </h3>
+      {/* Exam List - Right Side */}
+      <div className="space-y-2 min-w-0">
+        {/* Selected date exams */}
+        {selectedDate && (
           <div className="space-y-2">
-            {upcomingExams.map(exam => <ExamDetailCard key={exam.id} exam={exam} />)}
+            <h3 className="text-sm font-semibold flex items-center gap-1.5">
+              <CalendarIcon className="h-4 w-4 text-primary" />
+              {format(selectedDate, 'dd MMM yyyy')} — {selectedDateExams.length} exam{selectedDateExams.length !== 1 ? 's' : ''}
+            </h3>
+            {selectedDateExams.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-4 text-center">No exams on this date</p>
+            ) : (
+              <div className="space-y-2">
+                {selectedDateExams.map(exam => <ExamDetailCard key={exam.id} exam={exam} />)}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {!selectedDate && upcomingExams.length === 0 && (
-        <Card><CardContent className="py-8 text-center text-muted-foreground">
-          <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-40" />
-          <p className="text-sm">No upcoming weekly exams</p>
-        </CardContent></Card>
-      )}
+        {/* Upcoming exams if no date selected */}
+        {!selectedDate && upcomingExams.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold flex items-center gap-1.5">
+              <CalendarIcon className="h-4 w-4 text-primary" />
+              Upcoming Exams
+            </h3>
+            <div className="space-y-2">
+              {upcomingExams.map(exam => <ExamDetailCard key={exam.id} exam={exam} />)}
+            </div>
+          </div>
+        )}
+
+        {!selectedDate && upcomingExams.length === 0 && (
+          <Card><CardContent className="py-8 text-center text-muted-foreground">
+            <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No upcoming weekly exams</p>
+          </CardContent></Card>
+        )}
+      </div>
 
       {/* Exam Detail Dialog */}
       <Dialog open={!!detailExam} onOpenChange={v => { if (!v) setDetailExam(null); }}>
