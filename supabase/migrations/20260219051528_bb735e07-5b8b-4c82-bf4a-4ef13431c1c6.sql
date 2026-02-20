@@ -1,0 +1,1 @@
+ALTER TABLE public.exams ADD COLUMN exam_time text DEFAULT NULL;
