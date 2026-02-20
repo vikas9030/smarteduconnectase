@@ -334,16 +334,7 @@ export default function WeeklyExamsSection() {
 
       {/* Competitive-only fields */}
       {examTypeTab === 'competitive' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium">Exam Cycle</Label>
-            <Select value={formData.cycle_id} onValueChange={v => setFormData(f => ({ ...f, cycle_id: v }))}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Select cycle" /></SelectTrigger>
-              <SelectContent>
-                {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.exam_type} - Cycle #{c.cycle_number} {c.is_active ? '✓' : ''}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="grid grid-cols-1 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Week Number</Label>
             <Select value={formData.week_number} onValueChange={v => setFormData(f => ({ ...f, week_number: v }))}>
