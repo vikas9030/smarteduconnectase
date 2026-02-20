@@ -180,7 +180,7 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
   return (
     <div className="flex flex-col md:grid md:grid-cols-[auto_1fr] gap-3 sm:gap-4">
       {/* Calendar */}
-      <Card className="md:w-fit">
+      <Card className="w-fit mx-auto md:mx-0">
         <CardContent className="p-1.5 sm:p-3 flex flex-col items-center">
           <Calendar
             mode="single"
@@ -188,7 +188,7 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
             onSelect={setSelectedDate}
             month={currentMonth}
             onMonthChange={setCurrentMonth}
-            className={cn("p-0 pointer-events-auto w-full [&_.rdp-cell]:h-8 [&_.rdp-cell]:w-8 sm:[&_.rdp-cell]:h-9 sm:[&_.rdp-cell]:w-9 [&_.rdp-day]:h-8 [&_.rdp-day]:w-8 sm:[&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-9 [&_.rdp-head_cell]:w-8 sm:[&_.rdp-head_cell]:w-9")}
+            className={cn("p-0 pointer-events-auto [&_.rdp-cell]:h-8 [&_.rdp-cell]:w-8 sm:[&_.rdp-cell]:h-9 sm:[&_.rdp-cell]:w-9 [&_.rdp-day]:h-8 [&_.rdp-day]:w-8 sm:[&_.rdp-day]:h-9 sm:[&_.rdp-day]:w-9 [&_.rdp-head_cell]:w-8 sm:[&_.rdp-head_cell]:w-9")}
             modifiers={{ hasExam: (date) => hasExam(date) }}
             modifiersClassNames={{ hasExam: 'bg-primary/15 font-bold text-primary rounded-md' }}
           />
