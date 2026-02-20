@@ -64,6 +64,8 @@ export default function ExamResultsView() {
   const [weeklyClassFilter, setWeeklyClassFilter] = useState('all');
   const [weeklyTypeFilter, setWeeklyTypeFilter] = useState('all');
   const [weeklySearchQuery, setWeeklySearchQuery] = useState('');
+  const [weeklyExamNameFilter, setWeeklyExamNameFilter] = useState('all');
+  const [weeklyDateFilter, setWeeklyDateFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -134,6 +136,8 @@ export default function ExamResultsView() {
     return weeklyResults.filter(r => {
       if (weeklyTypeFilter !== 'all' && r.weekly_exams?.syllabus_type !== weeklyTypeFilter) return false;
       if (weeklyClassFilter !== 'all' && r.weekly_exams?.class_id !== weeklyClassFilter) return false;
+      if (weeklyExamNameFilter !== 'all' && r.weekly_exams?.exam_title !== weeklyExamNameFilter) return false;
+      if (weeklyDateFilter !== 'all' && r.weekly_exams?.exam_date !== weeklyDateFilter) return false;
       if (weeklySearchQuery) {
         const q = weeklySearchQuery.toLowerCase();
         const matchName = r.students?.full_name?.toLowerCase().includes(q);
@@ -143,9 +147,9 @@ export default function ExamResultsView() {
       }
       return true;
     });
-  }, [weeklyResults, weeklyTypeFilter, weeklyClassFilter, weeklySearchQuery]);
+  }, [weeklyResults, weeklyTypeFilter, weeklyClassFilter, weeklySearchQuery, weeklyExamNameFilter, weeklyDateFilter]);
 
-  const weeklyExamNames = useMemo(() => [...new Set(weeklyResults.map(r => r.weekly_exams?.exam_title).filter(Boolean))], [weeklyResults]);
+  const weeklyExamDates = useMemo(() => [...new Set(weeklyResults.map(r => r.weekly_exams?.exam_date).filter(Boolean))].sort(), [weeklyResults]);
 
   // === Shared helpers ===
   const getGradeColor = (grade: string | null) => {
@@ -501,17 +505,47 @@ export default function ExamResultsView() {
       ? filteredWeeklyResults.filter(r => r.weekly_exams?.syllabus_type !== 'competitive')
       : filteredWeeklyResults.filter(r => r.weekly_exams?.syllabus_type === 'competitive');
 
+    // Get unique exam names for this type
+    const typeExamNames = [...new Set(
+      weeklyResults
+        .filter(r => type === 'general' ? r.weekly_exams?.syllabus_type !== 'competitive' : r.weekly_exams?.syllabus_type === 'competitive')
+        .map(r => r.weekly_exams?.exam_title)
+        .filter(Boolean)
+    )];
+
+    // Get unique dates for this type
+    const typeExamDates = [...new Set(
+      weeklyResults
+        .filter(r => type === 'general' ? r.weekly_exams?.syllabus_type !== 'competitive' : r.weekly_exams?.syllabus_type === 'competitive')
+        .map(r => r.weekly_exams?.exam_date)
+        .filter(Boolean)
+    )].sort();
+
     return (
       <>
         {/* Filters */}
         <Card>
           <CardContent className="pt-4 pb-4">
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+              <Select value={weeklyExamNameFilter} onValueChange={setWeeklyExamNameFilter}>
+                <SelectTrigger className="w-full sm:w-[160px] h-9 text-sm"><SelectValue placeholder="Exam Name" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {typeExamNames.map(name => <SelectItem key={name} value={name!}>{name}</SelectItem>)}
+                </SelectContent>
+              </Select>
               <Select value={weeklyClassFilter} onValueChange={setWeeklyClassFilter}>
                 <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Class" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={weeklyDateFilter} onValueChange={setWeeklyDateFilter}>
+                <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Date" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Dates</SelectItem>
+                  {typeExamDates.map(d => <SelectItem key={d} value={d!}>{new Date(d!).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</SelectItem>)}
                 </SelectContent>
               </Select>
               <div className="relative w-full sm:w-[180px]">
