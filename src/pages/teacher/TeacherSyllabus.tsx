@@ -5,12 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
 import { BackButton } from '@/components/ui/back-button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, BookOpen, FlaskConical, Calendar, Clock, User } from 'lucide-react';
+import { Loader2, Search, BookOpen, FlaskConical, Calendar, Clock, History, PlayCircle } from 'lucide-react';
 
 interface SyllabusEntry {
   id: string;
@@ -21,6 +21,8 @@ interface SyllabusEntry {
   week_number: number | null;
   schedule_date: string | null;
   schedule_time: string | null;
+  start_date: string | null;
+  end_date: string | null;
   class_id: string;
   subject_id: string;
   classes?: { name: string; section: string } | null;
@@ -34,16 +36,6 @@ interface TeacherMapping {
   role_type: string;
 }
 
-interface ScheduleEntry {
-  id: string;
-  syllabus_id: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  class_id: string;
-  classes?: { name: string; section: string } | null;
-}
-
 export default function TeacherSyllabus() {
   const teacherSidebarItems = useTeacherSidebar();
   const { user, userRole, loading } = useAuth();
@@ -51,10 +43,8 @@ export default function TeacherSyllabus() {
 
   const [syllabus, setSyllabus] = useState<SyllabusEntry[]>([]);
   const [mappings, setMappings] = useState<TeacherMapping[]>([]);
-  const [schedules, setSchedules] = useState<ScheduleEntry[]>([]);
-  const [teacherId, setTeacherId] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(true);
-  const [activeTab, setActiveTab] = useState('assigned');
+  const [activeTab, setActiveTab] = useState('present');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState('all');
 
@@ -68,20 +58,16 @@ export default function TeacherSyllabus() {
 
   async function fetchData() {
     setLoadingData(true);
-    // Get teacher record
     const { data: teacherData } = await supabase.from('teachers').select('id').eq('user_id', user!.id).single();
     if (!teacherData) { setLoadingData(false); return; }
-    setTeacherId(teacherData.id);
 
-    const [mappingsRes, syllabusRes, schedulesRes] = await Promise.all([
+    const [mappingsRes, syllabusRes] = await Promise.all([
       supabase.from('teacher_syllabus_map').select('*').eq('teacher_id', teacherData.id),
       supabase.from('syllabus').select('*, classes(name, section), subjects(name)'),
-      supabase.from('syllabus_schedule').select('*, classes(name, section)').eq('teacher_id', teacherData.id).order('date'),
     ]);
 
     if (mappingsRes.data) setMappings(mappingsRes.data as TeacherMapping[]);
     if (syllabusRes.data) setSyllabus(syllabusRes.data as SyllabusEntry[]);
-    if (schedulesRes.data) setSchedules(schedulesRes.data as ScheduleEntry[]);
     setLoadingData(false);
   }
 
@@ -93,6 +79,34 @@ export default function TeacherSyllabus() {
     return m?.role_type || '';
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
+  const { presentItems, previousItems } = useMemo(() => {
+    let items = assignedSyllabus;
+    if (filterClass !== 'all') items = items.filter(s => s.class_id === filterClass);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      items = items.filter(s =>
+        s.chapter_name.toLowerCase().includes(q) ||
+        s.topic_name.toLowerCase().includes(q) ||
+        s.subjects?.name?.toLowerCase().includes(q)
+      );
+    }
+
+    const present: SyllabusEntry[] = [];
+    const previous: SyllabusEntry[] = [];
+
+    items.forEach(item => {
+      if (item.end_date && item.end_date < today) {
+        previous.push(item);
+      } else {
+        present.push(item);
+      }
+    });
+
+    return { presentItems: present, previousItems: previous };
+  }, [assignedSyllabus, filterClass, searchQuery, today]);
+
   const classOptions = useMemo(() => {
     const map = new Map<string, string>();
     assignedSyllabus.forEach(s => {
@@ -100,19 +114,6 @@ export default function TeacherSyllabus() {
     });
     return Array.from(map.entries());
   }, [assignedSyllabus]);
-
-  const filteredSyllabus = useMemo(() => {
-    let items = assignedSyllabus;
-    if (filterClass !== 'all') items = items.filter(s => s.class_id === filterClass);
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      items = items.filter(s => s.chapter_name.toLowerCase().includes(q) || s.topic_name.toLowerCase().includes(q) || s.subjects?.name?.toLowerCase().includes(q));
-    }
-    return items;
-  }, [assignedSyllabus, filterClass, searchQuery]);
-
-  const generalItems = filteredSyllabus.filter(s => s.syllabus_type === 'general');
-  const competitiveItems = filteredSyllabus.filter(s => s.syllabus_type === 'competitive');
 
   const roleColors: Record<string, string> = {
     lead: 'bg-primary/10 text-primary',
@@ -124,35 +125,68 @@ export default function TeacherSyllabus() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const SyllabusList = ({ items }: { items: SyllabusEntry[] }) => (
+  const SyllabusList = ({ items, emptyMsg }: { items: SyllabusEntry[]; emptyMsg: string }) => (
     items.length === 0 ? (
-      <Card><CardContent className="py-12 text-center text-muted-foreground">No assigned syllabus topics found.</CardContent></Card>
+      <Card><CardContent className="py-12 text-center text-muted-foreground">{emptyMsg}</CardContent></Card>
     ) : (
       <div className="space-y-3">
-        {items.map(s => (
-          <Card key={s.id}>
-            <CardContent className="py-4 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="space-y-1 flex-1 min-w-0">
-                  <h3 className="font-medium text-sm">{s.chapter_name}</h3>
-                  <p className="text-xs text-muted-foreground">{s.topic_name}</p>
+        {Object.entries(
+          items.reduce<Record<string, SyllabusEntry[]>>((acc, s) => {
+            const key = s.subjects?.name || 'Other';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(s);
+            return acc;
+          }, {})
+        ).map(([subject, subItems]) => (
+          <Card key={subject}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-primary" />
+                {subject}
+                <Badge variant="secondary" className="ml-auto text-xs">{subItems.length} topics</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {subItems.map((s, idx) => (
+                <div key={s.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{s.chapter_name}</p>
+                    <p className="text-xs text-muted-foreground">{s.topic_name}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      <Badge variant="outline" className="text-[10px]">
+                        {s.classes ? `${s.classes.name}-${s.classes.section}` : '—'}
+                      </Badge>
+                      {s.syllabus_type === 'competitive' && (
+                        <Badge className="text-[10px] bg-accent/20 text-accent-foreground">
+                          <FlaskConical className="h-3 w-3 mr-0.5" />Competitive
+                        </Badge>
+                      )}
+                      {s.exam_type && <Badge variant="outline" className="text-[10px]">{s.exam_type}</Badge>}
+                      {s.week_number && <Badge variant="outline" className="text-[10px]">Week {s.week_number}</Badge>}
+                      {roleForSyllabus(s.id) && (
+                        <Badge className={`text-[10px] ${roleColors[roleForSyllabus(s.id)] || ''}`}>
+                          {roleForSyllabus(s.id)} faculty
+                        </Badge>
+                      )}
+                    </div>
+                    {(s.start_date || s.schedule_date) && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                        <Calendar className="h-3 w-3" />
+                        {s.start_date && s.end_date
+                          ? `${new Date(s.start_date).toLocaleDateString()} – ${new Date(s.end_date).toLocaleDateString()}`
+                          : s.schedule_date
+                            ? new Date(s.schedule_date).toLocaleDateString()
+                            : ''
+                        }
+                        {s.schedule_time && <><Clock className="h-3 w-3 ml-1" />{s.schedule_time}</>}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <Badge className={`text-xs shrink-0 ${roleColors[roleForSyllabus(s.id)] || ''}`}>
-                  {roleForSyllabus(s.id)} faculty
-                </Badge>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-xs">{s.classes ? `${s.classes.name}-${s.classes.section}` : '—'}</Badge>
-                <Badge variant="secondary" className="text-xs">{s.subjects?.name}</Badge>
-                {s.exam_type && <Badge variant="outline" className="text-xs">{s.exam_type}</Badge>}
-                {s.week_number && <Badge variant="outline" className="text-xs">Week {s.week_number}</Badge>}
-              </div>
-              {s.schedule_date && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" />{new Date(s.schedule_date).toLocaleDateString()}
-                  {s.schedule_time && <><Clock className="h-3 w-3 ml-1" />{s.schedule_time}</>}
-                </div>
-              )}
+              ))}
             </CardContent>
           </Card>
         ))}
@@ -169,7 +203,7 @@ export default function TeacherSyllabus() {
           <BackButton to="/teacher" />
           <div>
             <h1 className="font-display text-2xl font-bold">My Syllabus</h1>
-            <p className="text-muted-foreground">View your assigned syllabus topics and schedule</p>
+            <p className="text-muted-foreground">View your assigned topics — current & completed</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -187,51 +221,22 @@ export default function TeacherSyllabus() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="assigned" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                <BookOpen className="h-4 w-4" />General
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="present" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                <PlayCircle className="h-4 w-4" />
+                Present / Upcoming ({presentItems.length})
               </TabsTrigger>
-              <TabsTrigger value="competitive" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                <FlaskConical className="h-4 w-4" />Competitive
-              </TabsTrigger>
-              <TabsTrigger value="schedule" className="flex items-center gap-1.5 text-xs sm:text-sm">
-                <Calendar className="h-4 w-4" />Schedule
+              <TabsTrigger value="previous" className="flex items-center gap-1.5 text-xs sm:text-sm">
+                <History className="h-4 w-4" />
+                Completed ({previousItems.length})
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="assigned" className="mt-4">
-              <SyllabusList items={generalItems} />
+            <TabsContent value="present" className="mt-4">
+              <SyllabusList items={presentItems} emptyMsg="No current or upcoming syllabus topics assigned." />
             </TabsContent>
-            <TabsContent value="competitive" className="mt-4">
-              <SyllabusList items={competitiveItems} />
-            </TabsContent>
-            <TabsContent value="schedule" className="mt-4">
-              {schedules.length === 0 ? (
-                <Card><CardContent className="py-12 text-center text-muted-foreground">No scheduled sessions found.</CardContent></Card>
-              ) : (
-                <div className="space-y-3">
-                  {schedules.map(sch => {
-                    const syl = syllabus.find(s => s.id === sch.syllabus_id);
-                    return (
-                      <Card key={sch.id}>
-                        <CardContent className="py-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="space-y-1">
-                              <h3 className="font-medium text-sm">{syl?.chapter_name || 'Unknown'}</h3>
-                              <p className="text-xs text-muted-foreground">{syl?.topic_name}</p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">{sch.classes ? `${sch.classes.name}-${sch.classes.section}` : '—'}</Badge>
-                          </div>
-                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(sch.date).toLocaleDateString()}</span>
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{sch.start_time} - {sch.end_time}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
+            <TabsContent value="previous" className="mt-4">
+              <SyllabusList items={previousItems} emptyMsg="No completed syllabus topics yet." />
             </TabsContent>
           </Tabs>
         </div>
