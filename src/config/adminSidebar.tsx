@@ -28,7 +28,6 @@ export const adminSidebarItems = [
   { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/admin/attendance' },
   { icon: <FileText className="h-5 w-5" />, label: 'Exams', path: '/admin/exams' },
   { icon: <BookOpen className="h-5 w-5" />, label: 'Syllabus', path: '/admin/syllabus' },
-  { icon: <RotateCcw className="h-5 w-5" />, label: 'Exam Cycles', path: '/admin/exam-cycles' },
   
   { icon: <UserPlus className="h-5 w-5" />, label: 'Leads', path: '/admin/leads' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/admin/announcements' },
