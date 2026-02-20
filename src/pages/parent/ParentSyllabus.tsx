@@ -5,13 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { BackButton } from '@/components/ui/back-button';
-import { Loader2, BookOpen, Filter, PlayCircle, History, Calendar, Clock, FlaskConical, User } from 'lucide-react';
+import { Loader2, BookOpen, Filter, PlayCircle, History, Calendar, Clock, FlaskConical, User, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 
 interface SyllabusItem {
   id: string;
@@ -24,6 +23,8 @@ interface SyllabusItem {
   schedule_time: string | null;
   start_date: string | null;
   end_date: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
   subjects: { name: string } | null;
   classes: { name: string; section: string } | null;
 }
@@ -38,7 +39,7 @@ export default function ParentSyllabus() {
   const [selectedExam, setSelectedExam] = useState('all');
   const [activeTab, setActiveTab] = useState('present');
   const [teacherMap, setTeacherMap] = useState<Record<string, { name: string; role: string }[]>>({});
-
+  const [completedByNames, setCompletedByNames] = useState<Record<string, string>>({});
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
@@ -111,6 +112,14 @@ export default function ParentSyllabus() {
                   setTeacherMap(grouped);
                 }
               }
+              // Fetch completed_by names
+              const completedByIds = [...new Set(syllabusData.map((s: any) => s.completed_by).filter(Boolean))] as string[];
+              if (completedByIds.length > 0) {
+                const { data: cProfiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', completedByIds);
+                const cMap: Record<string, string> = {};
+                cProfiles?.forEach((p: any) => { cMap[p.user_id] = p.full_name; });
+                setCompletedByNames(cMap);
+              }
             }
           }
         }
@@ -141,7 +150,7 @@ export default function ParentSyllabus() {
     const previous: SyllabusItem[] = [];
 
     result.forEach(item => {
-      if (item.end_date && item.end_date < today) {
+      if (item.completed_at) {
         previous.push(item);
       } else {
         present.push(item);
@@ -221,6 +230,13 @@ export default function ParentSyllabus() {
                                   : ''
                               }
                               {item.schedule_time && <><Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />{item.schedule_time}</>}
+                            </div>
+                          )}
+                          {/* Completed info */}
+                          {item.completed_at && (
+                            <div className="flex items-center gap-1.5 mt-1.5 text-[10px] sm:text-xs text-green-700 bg-green-50 rounded-md px-2 py-1 w-fit">
+                              <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                              Completed {new Date(item.completed_at).toLocaleDateString()} by {item.completed_by ? (completedByNames[item.completed_by] || 'Teacher') : '—'}
                             </div>
                           )}
                         </div>

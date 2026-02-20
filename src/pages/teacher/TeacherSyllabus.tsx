@@ -8,10 +8,12 @@ import { BackButton } from '@/components/ui/back-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Search, BookOpen, FlaskConical, Calendar, Clock, History, PlayCircle, ChevronDown } from 'lucide-react';
+import { Loader2, Search, BookOpen, FlaskConical, Calendar, Clock, History, PlayCircle, ChevronDown, CheckCircle2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { toast } from 'sonner';
 
 interface SyllabusEntry {
   id: string;
@@ -24,6 +26,8 @@ interface SyllabusEntry {
   schedule_time: string | null;
   start_date: string | null;
   end_date: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
   class_id: string;
   subject_id: string;
   classes?: { name: string; section: string } | null;
@@ -50,6 +54,8 @@ export default function TeacherSyllabus() {
   const [filterClass, setFilterClass] = useState('all');
   const [filterSubject, setFilterSubject] = useState('all');
   const [filterExam, setFilterExam] = useState('all');
+  const [teacherName, setTeacherName] = useState('');
+  const [completedByNames, setCompletedByNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'teacher')) navigate('/auth');
@@ -64,13 +70,29 @@ export default function TeacherSyllabus() {
     const { data: teacherData } = await supabase.from('teachers').select('id').eq('user_id', user!.id).single();
     if (!teacherData) { setLoadingData(false); return; }
 
+    // Get teacher's own name
+    const { data: profileData } = await supabase.from('profiles').select('full_name').eq('user_id', user!.id).single();
+    if (profileData) setTeacherName(profileData.full_name);
+
     const [mappingsRes, syllabusRes] = await Promise.all([
       supabase.from('teacher_syllabus_map').select('*').eq('teacher_id', teacherData.id),
       supabase.from('syllabus').select('*, classes(name, section), subjects(name)'),
     ]);
 
     if (mappingsRes.data) setMappings(mappingsRes.data as TeacherMapping[]);
-    if (syllabusRes.data) setSyllabus(syllabusRes.data as SyllabusEntry[]);
+    if (syllabusRes.data) {
+      const items = syllabusRes.data as SyllabusEntry[];
+      setSyllabus(items);
+
+      // Fetch names of teachers who completed topics
+      const completedByIds = [...new Set(items.map(s => s.completed_by).filter(Boolean))] as string[];
+      if (completedByIds.length > 0) {
+        const { data: profiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', completedByIds);
+        const nameMap: Record<string, string> = {};
+        profiles?.forEach(p => { nameMap[p.user_id] = p.full_name; });
+        setCompletedByNames(nameMap);
+      }
+    }
     setLoadingData(false);
   }
 
@@ -81,8 +103,6 @@ export default function TeacherSyllabus() {
     const m = mappings.find(m => m.syllabus_id === syllabusId);
     return m?.role_type || '';
   };
-
-  const today = new Date().toISOString().split('T')[0];
 
   const subjectOptions = useMemo(() =>
     [...new Set(assignedSyllabus.map(s => s.subjects?.name).filter(Boolean))] as string[],
@@ -112,7 +132,7 @@ export default function TeacherSyllabus() {
     const previous: SyllabusEntry[] = [];
 
     items.forEach(item => {
-      if (item.end_date && item.end_date < today) {
+      if (item.completed_at) {
         previous.push(item);
       } else {
         present.push(item);
@@ -120,7 +140,7 @@ export default function TeacherSyllabus() {
     });
 
     return { presentItems: present, previousItems: previous };
-  }, [assignedSyllabus, filterClass, filterSubject, filterExam, searchQuery, today]);
+  }, [assignedSyllabus, filterClass, filterSubject, filterExam, searchQuery]);
 
   const classOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -136,11 +156,30 @@ export default function TeacherSyllabus() {
     doubt: 'bg-accent text-accent-foreground',
   };
 
+  async function handleMarkCompleted(syllabusId: string) {
+    if (!user) return;
+    const { error } = await supabase
+      .from('syllabus')
+      .update({ completed_at: new Date().toISOString(), completed_by: user.id })
+      .eq('id', syllabusId);
+
+    if (error) {
+      toast.error('Failed to mark as completed');
+      return;
+    }
+    toast.success('Marked as completed!');
+    // Update local state
+    setSyllabus(prev => prev.map(s =>
+      s.id === syllabusId ? { ...s, completed_at: new Date().toISOString(), completed_by: user.id } : s
+    ));
+    setCompletedByNames(prev => ({ ...prev, [user.id]: teacherName }));
+  }
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const SyllabusList = ({ items, emptyMsg }: { items: SyllabusEntry[]; emptyMsg: string }) => (
+  const SyllabusList = ({ items, emptyMsg, showComplete }: { items: SyllabusEntry[]; emptyMsg: string; showComplete: boolean }) => (
     items.length === 0 ? (
       <Card><CardContent className="py-12 text-center text-muted-foreground">{emptyMsg}</CardContent></Card>
     ) : (
@@ -161,52 +200,73 @@ export default function TeacherSyllabus() {
                     <BookOpen className="h-4 w-4 text-primary" />
                     {subject}
                     <Badge variant="secondary" className="ml-auto mr-2 text-xs">{subItems.length} topics</Badge>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-2">
                   {subItems.map((s, idx) => (
-                <div key={s.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
-                    {idx + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm">{s.chapter_name}</p>
-                    <p className="text-xs text-muted-foreground">{s.topic_name}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      <Badge variant="outline" className="text-[10px]">
-                        {s.classes ? `${s.classes.name}-${s.classes.section}` : '—'}
-                      </Badge>
-                      {s.syllabus_type === 'competitive' && (
-                        <Badge className="text-[10px] bg-accent/20 text-accent-foreground">
-                          <FlaskConical className="h-3 w-3 mr-0.5" />Competitive
-                        </Badge>
-                      )}
-                      {s.exam_type && <Badge variant="outline" className="text-[10px]">{s.exam_type}</Badge>}
-                      {s.week_number && <Badge variant="outline" className="text-[10px]">Week {s.week_number}</Badge>}
-                      {roleForSyllabus(s.id) && (
-                        <Badge className={`text-[10px] ${roleColors[roleForSyllabus(s.id)] || ''}`}>
-                          {roleForSyllabus(s.id)} faculty
-                        </Badge>
-                      )}
-                    </div>
-                    {(s.start_date || s.schedule_date) && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <Calendar className="h-3 w-3" />
-                        {s.start_date && s.end_date
-                          ? `${new Date(s.start_date).toLocaleDateString()} – ${new Date(s.end_date).toLocaleDateString()}`
-                          : s.schedule_date
-                            ? new Date(s.schedule_date).toLocaleDateString()
-                            : ''
-                        }
-                        {s.schedule_time && <><Clock className="h-3 w-3 ml-1" />{s.schedule_time}</>}
+                    <div key={s.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{s.chapter_name}</p>
+                        <p className="text-xs text-muted-foreground">{s.topic_name}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          <Badge variant="outline" className="text-[10px]">
+                            {s.classes ? `${s.classes.name}-${s.classes.section}` : '—'}
+                          </Badge>
+                          {s.syllabus_type === 'competitive' && (
+                            <Badge className="text-[10px] bg-accent/20 text-accent-foreground">
+                              <FlaskConical className="h-3 w-3 mr-0.5" />Competitive
+                            </Badge>
+                          )}
+                          {s.exam_type && <Badge variant="outline" className="text-[10px]">{s.exam_type}</Badge>}
+                          {s.week_number && <Badge variant="outline" className="text-[10px]">Week {s.week_number}</Badge>}
+                          {roleForSyllabus(s.id) && (
+                            <Badge className={`text-[10px] ${roleColors[roleForSyllabus(s.id)] || ''}`}>
+                              {roleForSyllabus(s.id)} faculty
+                            </Badge>
+                          )}
+                        </div>
+                        {(s.start_date || s.schedule_date) && (
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            <Calendar className="h-3 w-3" />
+                            {s.start_date && s.end_date
+                              ? `${new Date(s.start_date).toLocaleDateString()} – ${new Date(s.end_date).toLocaleDateString()}`
+                              : s.schedule_date
+                                ? new Date(s.schedule_date).toLocaleDateString()
+                                : ''
+                            }
+                            {s.schedule_time && <><Clock className="h-3 w-3 ml-1" />{s.schedule_time}</>}
+                          </div>
+                        )}
+
+                        {/* Completed info */}
+                        {s.completed_at && (
+                          <div className="flex items-center gap-1.5 mt-2 text-xs text-green-700 bg-green-50 rounded-md px-2 py-1 w-fit">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Completed on {new Date(s.completed_at).toLocaleDateString()} by {s.completed_by ? (completedByNames[s.completed_by] || 'Teacher') : '—'}
+                          </div>
+                        )}
+
+                        {/* Mark completed button */}
+                        {showComplete && !s.completed_at && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2 h-7 text-xs gap-1 text-green-700 border-green-300 hover:bg-green-50"
+                            onClick={() => handleMarkCompleted(s.id)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Mark Completed
+                          </Button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                    </div>
+                  ))}
                 </CardContent>
               </CollapsibleContent>
             </Card>
@@ -271,10 +331,10 @@ export default function TeacherSyllabus() {
             </TabsList>
 
             <TabsContent value="present" className="mt-4">
-              <SyllabusList items={presentItems} emptyMsg="No current or upcoming syllabus topics assigned." />
+              <SyllabusList items={presentItems} emptyMsg="No current or upcoming syllabus topics assigned." showComplete={true} />
             </TabsContent>
             <TabsContent value="previous" className="mt-4">
-              <SyllabusList items={previousItems} emptyMsg="No completed syllabus topics yet." />
+              <SyllabusList items={previousItems} emptyMsg="No completed syllabus topics yet." showComplete={false} />
             </TabsContent>
           </Tabs>
         </div>
