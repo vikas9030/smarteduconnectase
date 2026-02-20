@@ -307,12 +307,28 @@ export default function WeeklyExamsSection() {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Exam Type Label</Label>
-          <Select value={formData.exam_type_label} onValueChange={v => setFormData(f => ({ ...f, exam_type_label: v }))}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="Select type" /></SelectTrigger>
-            <SelectContent>
-              {examTypeLabels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {formData.exam_type_label === '__custom__' || !examTypeLabels.includes(formData.exam_type_label) && formData.exam_type_label !== '' ? (
+            <div className="flex gap-2">
+              <Input
+                className="h-9 flex-1"
+                value={formData.exam_type_label === '__custom__' ? '' : formData.exam_type_label}
+                onChange={e => setFormData(f => ({ ...f, exam_type_label: e.target.value }))}
+                placeholder="Enter custom name"
+                autoFocus
+              />
+              <Button type="button" variant="outline" size="sm" className="h-9 text-xs" onClick={() => setFormData(f => ({ ...f, exam_type_label: 'General' }))}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Select value={formData.exam_type_label} onValueChange={v => setFormData(f => ({ ...f, exam_type_label: v }))}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Select type" /></SelectTrigger>
+              <SelectContent>
+                {examTypeLabels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                <SelectItem value="__custom__">+ Custom Name</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
