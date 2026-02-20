@@ -47,6 +47,8 @@ export default function TeacherSyllabus() {
   const [activeTab, setActiveTab] = useState('present');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState('all');
+  const [filterSubject, setFilterSubject] = useState('all');
+  const [filterExam, setFilterExam] = useState('all');
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'teacher')) navigate('/auth');
@@ -81,9 +83,21 @@ export default function TeacherSyllabus() {
 
   const today = new Date().toISOString().split('T')[0];
 
+  const subjectOptions = useMemo(() =>
+    [...new Set(assignedSyllabus.map(s => s.subjects?.name).filter(Boolean))] as string[],
+    [assignedSyllabus]
+  );
+
+  const examOptions = useMemo(() =>
+    [...new Set(assignedSyllabus.map(s => s.exam_type).filter(Boolean))] as string[],
+    [assignedSyllabus]
+  );
+
   const { presentItems, previousItems } = useMemo(() => {
     let items = assignedSyllabus;
     if (filterClass !== 'all') items = items.filter(s => s.class_id === filterClass);
+    if (filterSubject !== 'all') items = items.filter(s => s.subjects?.name === filterSubject);
+    if (filterExam !== 'all') items = items.filter(s => s.exam_type === filterExam);
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       items = items.filter(s =>
@@ -105,7 +119,7 @@ export default function TeacherSyllabus() {
     });
 
     return { presentItems: present, previousItems: previous };
-  }, [assignedSyllabus, filterClass, searchQuery, today]);
+  }, [assignedSyllabus, filterClass, filterSubject, filterExam, searchQuery, today]);
 
   const classOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -206,18 +220,34 @@ export default function TeacherSyllabus() {
             <p className="text-muted-foreground">View your assigned topics — current & completed</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="space-y-3">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search topics..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9" />
             </div>
-            <Select value={filterClass} onValueChange={setFilterClass}>
-              <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All Classes" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classOptions.map(([id, label]) => <SelectItem key={id} value={id}>{label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <Select value={filterClass} onValueChange={setFilterClass}>
+                <SelectTrigger className="w-full text-xs h-9"><SelectValue placeholder="All Classes" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {classOptions.map(([id, label]) => <SelectItem key={id} value={id}>{label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filterSubject} onValueChange={setFilterSubject}>
+                <SelectTrigger className="w-full text-xs h-9"><SelectValue placeholder="All Subjects" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem>
+                  {subjectOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filterExam} onValueChange={setFilterExam}>
+                <SelectTrigger className="w-full text-xs h-9 col-span-2 sm:col-span-1"><SelectValue placeholder="All Exams" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {examOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
