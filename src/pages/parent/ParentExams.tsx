@@ -265,7 +265,6 @@ export default function ParentExams() {
           </TabsContent>
 
           <TabsContent value="results" className="mt-4 space-y-4">
-            {examNames.length > 1 && (
               <div className="flex justify-end">
                 <Select value={selectedExam} onValueChange={setSelectedExam}>
                   <SelectTrigger className="w-[180px]">
@@ -279,7 +278,6 @@ export default function ParentExams() {
                   </SelectContent>
                 </Select>
               </div>
-            )}
             <StudentProgressView marks={filteredMarks} studentName={childName} showAnalytics={true} />
 
             {/* General Weekly Results */}
