@@ -57,6 +57,8 @@ export default function ParentExams() {
   const [loadingData, setLoadingData] = useState(true);
   const [selectedExam, setSelectedExam] = useState('all');
   const [activeTab, setActiveTab] = useState('schedule');
+  const [competitiveExamFilter, setCompetitiveExamFilter] = useState('all');
+  const [competitiveLabelFilter, setCompetitiveLabelFilter] = useState('all');
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -128,6 +130,23 @@ export default function ParentExams() {
   // Group weekly results by type
   const competitiveResults = useMemo(() => weeklyResults.filter(r => r.weekly_exams?.syllabus_type === 'competitive'), [weeklyResults]);
   const generalWeeklyResults = useMemo(() => weeklyResults.filter(r => r.weekly_exams?.syllabus_type === 'general'), [weeklyResults]);
+
+  // Competitive filter options
+  const competitiveExamNames = useMemo(() =>
+    [...new Set(competitiveResults.map(r => r.weekly_exams?.exam_title).filter(Boolean))] as string[],
+    [competitiveResults]
+  );
+  const competitiveLabels = useMemo(() =>
+    [...new Set(competitiveResults.map(r => r.weekly_exams?.exam_type_label).filter(Boolean))] as string[],
+    [competitiveResults]
+  );
+  const filteredCompetitiveResults = useMemo(() => {
+    return competitiveResults.filter(r => {
+      if (competitiveExamFilter !== 'all' && r.weekly_exams?.exam_title !== competitiveExamFilter) return false;
+      if (competitiveLabelFilter !== 'all' && r.weekly_exams?.exam_type_label !== competitiveLabelFilter) return false;
+      return true;
+    });
+  }, [competitiveResults, competitiveExamFilter, competitiveLabelFilter]);
 
   const getPctColor = (pct: number) => {
     if (pct >= 80) return 'text-emerald-600';
@@ -291,8 +310,36 @@ export default function ParentExams() {
           </TabsContent>
 
           <TabsContent value="competitive" className="mt-4 space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {competitiveExamNames.length > 0 && (
+                <Select value={competitiveExamFilter} onValueChange={setCompetitiveExamFilter}>
+                  <SelectTrigger className="w-[170px]">
+                    <SelectValue placeholder="Filter by Exam" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Exams</SelectItem>
+                    {competitiveExamNames.map(name => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {competitiveLabels.length > 0 && (
+                <Select value={competitiveLabelFilter} onValueChange={setCompetitiveLabelFilter}>
+                  <SelectTrigger className="w-[170px]">
+                    <SelectValue placeholder="Exam Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {competitiveLabels.map(label => (
+                      <SelectItem key={label} value={label}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <WeeklyResultsSection 
-              results={competitiveResults} 
+              results={filteredCompetitiveResults} 
               title="Competitive Exam Results" 
               icon={<FlaskConical className="h-4 w-4 text-primary" />} 
             />
