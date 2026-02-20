@@ -182,7 +182,7 @@ export default function SubjectsManagement() {
             <p className="text-muted-foreground">Manage all subjects taught in school</p>
           </div>
 
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (open) setFormData({ name: '', code: '', category: 'general' }); }}>
             <DialogTrigger asChild>
               <Button className="gradient-admin"><Plus className="h-4 w-4 mr-2" />Add Subject</Button>
             </DialogTrigger>
