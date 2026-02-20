@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { BackButton } from '@/components/ui/back-button';
-import { Loader2, BookOpen, Filter, PlayCircle, History, Calendar, Clock, FlaskConical, User, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Loader2, BookOpen, Filter, FlaskConical, User, ChevronDown, CheckCircle2, Calendar, Clock, GraduationCap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,11 +35,14 @@ export default function ParentSyllabus() {
   const [syllabus, setSyllabus] = useState<SyllabusItem[]>([]);
   const [childName, setChildName] = useState('');
   const [loadingData, setLoadingData] = useState(true);
+  const [typeTab, setTypeTab] = useState('general');
+  const [statusFilter, setStatusFilter] = useState('running');
+  const [timeFilter, setTimeFilter] = useState('current');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedExam, setSelectedExam] = useState('all');
-  const [activeTab, setActiveTab] = useState('present');
   const [teacherMap, setTeacherMap] = useState<Record<string, { name: string; role: string }[]>>({});
   const [completedByNames, setCompletedByNames] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
@@ -80,7 +83,6 @@ export default function ParentSyllabus() {
 
             if (syllabusData) {
               setSyllabus(syllabusData as unknown as SyllabusItem[]);
-              // Fetch teacher assignments for these syllabus entries
               const syllabusIds = syllabusData.map((s: any) => s.id);
               if (syllabusIds.length > 0) {
                 const { data: tMap } = await supabase
@@ -112,7 +114,6 @@ export default function ParentSyllabus() {
                   setTeacherMap(grouped);
                 }
               }
-              // Fetch completed_by names
               const completedByIds = [...new Set(syllabusData.map((s: any) => s.completed_by).filter(Boolean))] as string[];
               if (completedByIds.length > 0) {
                 const { data: cProfiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', completedByIds);
@@ -129,42 +130,56 @@ export default function ParentSyllabus() {
     fetchData();
   }, [user]);
 
-  const subjects = useMemo(() =>
-    [...new Set(syllabus.map(s => s.subjects?.name).filter(Boolean))] as string[],
-    [syllabus]
-  );
-
-  const examOptions = useMemo(() =>
-    [...new Set(syllabus.map(s => s.exam_type).filter(Boolean))] as string[],
-    [syllabus]
-  );
-
   const today = new Date().toISOString().split('T')[0];
 
-  const { presentItems, previousItems } = useMemo(() => {
-    let result = syllabus;
+  const filteredItems = useMemo(() => {
+    let result = syllabus.filter(s => s.syllabus_type === typeTab);
     if (selectedSubject !== 'all') result = result.filter(s => s.subjects?.name === selectedSubject);
     if (selectedExam !== 'all') result = result.filter(s => s.exam_type === selectedExam);
 
-    const present: SyllabusItem[] = [];
-    const previous: SyllabusItem[] = [];
+    // Status filter
+    if (statusFilter === 'running') result = result.filter(s => !s.completed_at);
+    else if (statusFilter === 'completed') result = result.filter(s => !!s.completed_at);
 
-    result.forEach(item => {
-      if (item.completed_at) {
-        previous.push(item);
-      } else {
-        present.push(item);
-      }
-    });
+    // Time filter
+    if (timeFilter === 'current') {
+      result = result.filter(s => {
+        if (s.start_date && s.end_date) return s.start_date <= today && s.end_date >= today;
+        if (s.schedule_date) return s.schedule_date === today;
+        return true;
+      });
+    } else if (timeFilter === 'past') {
+      result = result.filter(s => {
+        if (s.end_date) return s.end_date < today;
+        if (s.schedule_date) return s.schedule_date < today;
+        return false;
+      });
+    } else if (timeFilter === 'future') {
+      result = result.filter(s => {
+        if (s.start_date) return s.start_date > today;
+        if (s.schedule_date) return s.schedule_date > today;
+        return false;
+      });
+    }
 
-    return { presentItems: present, previousItems: previous };
-  }, [syllabus, selectedSubject, selectedExam, today]);
+    return result;
+  }, [syllabus, typeTab, selectedSubject, selectedExam, statusFilter, timeFilter, today]);
+
+  const subjects = useMemo(() =>
+    [...new Set(syllabus.filter(s => s.syllabus_type === typeTab).map(s => s.subjects?.name).filter(Boolean))] as string[],
+    [syllabus, typeTab]
+  );
+
+  const examOptions = useMemo(() =>
+    [...new Set(syllabus.filter(s => s.syllabus_type === typeTab).map(s => s.exam_type).filter(Boolean))] as string[],
+    [syllabus, typeTab]
+  );
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const SyllabusGrouped = ({ items, emptyMsg }: { items: SyllabusItem[]; emptyMsg: string }) => {
+  const SyllabusGrouped = ({ items }: { items: SyllabusItem[] }) => {
     const grouped = items.reduce<Record<string, SyllabusItem[]>>((acc, item) => {
       const subject = item.subjects?.name || 'Other';
       if (!acc[subject]) acc[subject] = [];
@@ -173,7 +188,7 @@ export default function ParentSyllabus() {
     }, {});
 
     if (Object.keys(grouped).length === 0) {
-      return <Card><CardContent className="py-10 text-center text-muted-foreground">{emptyMsg}</CardContent></Card>;
+      return <Card><CardContent className="py-10 text-center text-muted-foreground">No syllabus topics found for the selected filters.</CardContent></Card>;
     }
 
     return (
@@ -203,11 +218,6 @@ export default function ParentSyllabus() {
                           <p className="font-medium text-xs sm:text-sm leading-tight">{item.chapter_name}</p>
                           <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight mt-0.5">{item.topic_name}</p>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {item.syllabus_type === 'competitive' && (
-                              <Badge className="text-[9px] sm:text-[10px] px-1 py-0 bg-accent/20 text-accent-foreground">
-                                <FlaskConical className="h-2.5 w-2.5 mr-0.5" />Competitive
-                              </Badge>
-                            )}
                             {item.exam_type && <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1 py-0">{item.exam_type}</Badge>}
                             {item.week_number && <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1 py-0">W{item.week_number}</Badge>}
                           </div>
@@ -232,7 +242,6 @@ export default function ParentSyllabus() {
                               {item.schedule_time && <><Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />{item.schedule_time}</>}
                             </div>
                           )}
-                          {/* Completed info */}
                           {item.completed_at && (
                             <div className="flex items-center gap-1.5 mt-1.5 text-[10px] sm:text-xs text-green-700 bg-green-50 rounded-md px-2 py-1 w-fit">
                               <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
@@ -266,6 +275,44 @@ export default function ParentSyllabus() {
             <p className="text-sm text-muted-foreground">{childName ? `${childName}'s` : "Your child's"} curriculum & topics</p>
           </div>
 
+          {/* General / Competitive Tabs */}
+          <Tabs value={typeTab} onValueChange={(v) => { setTypeTab(v); setSelectedSubject('all'); setSelectedExam('all'); }}>
+            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
+              <TabsTrigger value="general" className="flex items-center gap-1 text-[11px] sm:text-sm">
+                <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> General
+              </TabsTrigger>
+              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[11px] sm:text-sm">
+                <FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Competitive
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Status & Time Dropdowns */}
+          <div className="grid grid-cols-2 gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="running">Running / Present</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={timeFilter} onValueChange={setTimeFilter}>
+              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
+                <SelectValue placeholder="Time" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                <SelectItem value="current">Current</SelectItem>
+                <SelectItem value="past">Past</SelectItem>
+                <SelectItem value="future">Future</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Subject & Exam Filters */}
           <div className="grid grid-cols-2 gap-2">
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
               <SelectTrigger className="w-full text-xs h-8 sm:h-9">
@@ -288,25 +335,7 @@ export default function ParentSyllabus() {
             </Select>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
-              <TabsTrigger value="present" className="flex items-center gap-1 text-[11px] sm:text-sm px-1 sm:px-3">
-                <PlayCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="truncate">Current ({presentItems.length})</span>
-              </TabsTrigger>
-              <TabsTrigger value="previous" className="flex items-center gap-1 text-[11px] sm:text-sm px-1 sm:px-3">
-                <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="truncate">Completed ({previousItems.length})</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="present" className="mt-3 sm:mt-4">
-              <SyllabusGrouped items={presentItems} emptyMsg="No current or upcoming syllabus topics." />
-            </TabsContent>
-            <TabsContent value="previous" className="mt-3 sm:mt-4">
-              <SyllabusGrouped items={previousItems} emptyMsg="No completed syllabus topics yet." />
-            </TabsContent>
-          </Tabs>
+          <SyllabusGrouped items={filteredItems} />
         </div>
       )}
     </DashboardLayout>
