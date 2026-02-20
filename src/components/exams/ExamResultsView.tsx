@@ -87,10 +87,10 @@ export default function ExamResultsView() {
   // === Regular exam logic ===
   const examNames = useMemo(() => [...new Set(results.map(r => r.exams?.name).filter(Boolean))], [results]);
 
-  // Check if any filter is active (for regular exams)
-  const isRegularFilterActive = selectedExamName !== 'all' || selectedClass !== 'all' || selectedStudent !== 'all' || searchQuery.trim() !== '';
-  // Check if any filter is active (for weekly/competitive)
-  const isWeeklyFilterActive = weeklyExamNameFilter !== 'all' || weeklyClassFilter !== 'all' || weeklyDateFilter !== 'all' || weeklySearchQuery.trim() !== '';
+  // Check if required filters are active (for regular exams) - need exam AND class AND (student or search)
+  const isRegularFilterActive = selectedExamName !== 'all' && selectedClass !== 'all' && (selectedStudent !== 'all' || searchQuery.trim() !== '');
+  // Check if required filters are active (for weekly/competitive) - need exam AND class AND (date or search)
+  const isWeeklyFilterActive = weeklyExamNameFilter !== 'all' && weeklyClassFilter !== 'all' && (weeklyDateFilter !== 'all' || weeklySearchQuery.trim() !== '');
   
   const filteredResults = useMemo(() => {
     return results.filter(r => {
@@ -445,8 +445,8 @@ export default function ExamResultsView() {
                 {!isRegularFilterActive ? (
                   <div className="text-center py-12">
                     <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
-                    <p className="text-muted-foreground font-medium">Use filters to view results</p>
-                    <p className="text-sm text-muted-foreground mt-1">Select an exam, class, student or search to display results.</p>
+                    <p className="text-muted-foreground font-medium">Select filters to view results</p>
+                    <p className="text-sm text-muted-foreground mt-1">Choose an Exam, Class, and Student/Search to display results.</p>
                   </div>
                 ) : filteredResults.length === 0 ? (
                   <div className="text-center py-12">
@@ -580,8 +580,8 @@ export default function ExamResultsView() {
           <Card>
             <CardContent className="py-12 text-center">
               <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3 opacity-50" />
-              <p className="text-muted-foreground font-medium">Use filters to view results</p>
-              <p className="text-sm text-muted-foreground mt-1">Select an exam name, class, date or search to display results.</p>
+              <p className="text-muted-foreground font-medium">Select filters to view results</p>
+              <p className="text-sm text-muted-foreground mt-1">Choose an Exam Name, Class, and Date/Search to display results.</p>
             </CardContent>
           </Card>
         ) : (
