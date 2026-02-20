@@ -19,8 +19,10 @@ import {
   LayoutDashboard,
   Loader2,
   ClipboardList,
+  FlaskConical,
 } from 'lucide-react';
 import ExamMarksEntry from '@/components/exams/ExamMarksEntry';
+import WeeklyExamMarksEntry from '@/components/exams/WeeklyExamMarksEntry';
 import ExamScheduleView from '@/components/exams/ExamScheduleView';
 import ExamResultsView from '@/components/exams/ExamResultsView';
 import StudentProgressView from '@/components/exams/StudentProgressView';
@@ -188,22 +190,26 @@ export default function TeacherExams() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs sm:text-sm">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>Schedule</span>
+                <span className="hidden sm:inline">Schedule</span>
               </TabsTrigger>
               <TabsTrigger value="enter" className="flex items-center gap-1 text-xs sm:text-sm">
                 <ClipboardList className="h-3.5 w-3.5" />
-                <span>Enter Marks</span>
+                <span className="hidden sm:inline">Marks</span>
+              </TabsTrigger>
+              <TabsTrigger value="weekly-marks" className="flex items-center gap-1 text-xs sm:text-sm">
+                <FlaskConical className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">W.Marks</span>
               </TabsTrigger>
               <TabsTrigger value="results" className="flex items-center gap-1 text-xs sm:text-sm">
                 <FileText className="h-3.5 w-3.5" />
-                <span>Results</span>
+                <span className="hidden sm:inline">Results</span>
               </TabsTrigger>
               <TabsTrigger value="view" className="flex items-center gap-1 text-xs sm:text-sm">
                 <Users className="h-3.5 w-3.5" />
-                <span>Student</span>
+                <span className="hidden sm:inline">Student</span>
               </TabsTrigger>
             </TabsList>
 
@@ -213,6 +219,10 @@ export default function TeacherExams() {
 
             <TabsContent value="enter" className="mt-4">
               <ExamMarksEntry exams={exams} onMarksUpdated={fetchData} />
+            </TabsContent>
+
+            <TabsContent value="weekly-marks" className="mt-4">
+              <WeeklyExamMarksEntry />
             </TabsContent>
 
             <TabsContent value="results" className="mt-4">
