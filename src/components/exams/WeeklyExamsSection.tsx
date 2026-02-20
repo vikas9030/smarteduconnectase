@@ -289,10 +289,10 @@ export default function WeeklyExamsSection() {
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Subject</Label>
-          <Select value={formData.subject_id} onValueChange={v => setFormData(f => ({ ...f, subject_id: v }))}>
+          <Select value={formData.subject_id || 'none'} onValueChange={v => setFormData(f => ({ ...f, subject_id: v === 'none' ? '' : v }))}>
             <SelectTrigger className="h-9"><SelectValue placeholder="Select subject" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {filteredSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
