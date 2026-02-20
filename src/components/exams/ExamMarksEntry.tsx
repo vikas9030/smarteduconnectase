@@ -42,13 +42,21 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Get unique exam names
-  const examNames = [...new Set(exams.map(e => e.name))];
+  const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
 
-  // Filter exams by selected name
-  const filteredExams = selectedExamName 
-    ? exams.filter(e => e.name === selectedExamName)
-    : exams;
+  // Get unique exam names and classes
+  const examNames = [...new Set(exams.map(e => e.name))];
+  const classOptions = [...new Map(exams
+    .filter(e => e.classes)
+    .map(e => [e.class_id, { id: e.class_id, name: e.classes!.name, section: e.classes!.section }])
+  ).values()];
+
+  // Filter exams by selected name and class
+  const filteredExams = exams.filter(e => {
+    if (selectedExamName && e.name !== selectedExamName) return false;
+    if (selectedClassFilter !== 'all' && e.class_id !== selectedClassFilter) return false;
+    return true;
+  });
 
   const loadStudentsAndMarks = async (exam: Exam) => {
     setLoading(true);
@@ -175,12 +183,11 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Exam Name Filter */}
-          {examNames.length > 1 && (
-            <div>
-              <label className="text-sm font-medium mb-2 block">Filter by Exam</label>
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {examNames.length > 1 && (
               <Select value={selectedExamName || 'all'} onValueChange={(v) => setSelectedExamName(v === 'all' ? '' : v)}>
-                <SelectTrigger className="w-full md:w-[250px]">
+                <SelectTrigger className="w-full sm:w-[220px]">
                   <SelectValue placeholder="All Exams" />
                 </SelectTrigger>
                 <SelectContent>
@@ -190,8 +197,22 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            )}
+
+            {classOptions.length > 1 && (
+              <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="All Classes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {classOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
 
           {filteredExams.length === 0 ? (
             <p className="text-muted-foreground text-sm">No exams found. Please ask admin to create exams for your classes.</p>
