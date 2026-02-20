@@ -169,11 +169,11 @@ export default function TeacherExams() {
 
   return (
     <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-3 sm:space-y-6 animate-fade-in px-0">
         <BackButton to="/teacher" />
         <div>
-          <h1 className="font-display text-2xl font-bold">Exam Marks</h1>
-          <p className="text-muted-foreground">Enter and view student exam results</p>
+          <h1 className="font-display text-lg sm:text-2xl font-bold">Exam Marks</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">Enter and view student exam results</p>
         </div>
 
         {loadingData ? (
@@ -190,46 +190,46 @@ export default function TeacherExams() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Calendar className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Schedule</span>
+            <TabsList className="grid w-full grid-cols-5 h-8 sm:h-10">
+              <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="truncate">Schedule</span>
               </TabsTrigger>
-              <TabsTrigger value="enter" className="flex items-center gap-1 text-xs sm:text-sm">
-                <ClipboardList className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Marks</span>
+              <TabsTrigger value="enter" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+                <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="truncate">Marks</span>
               </TabsTrigger>
-              <TabsTrigger value="weekly-marks" className="flex items-center gap-1 text-xs sm:text-sm">
-                <FlaskConical className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">W.Marks</span>
+              <TabsTrigger value="weekly-marks" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+                <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="truncate">W.Marks</span>
               </TabsTrigger>
-              <TabsTrigger value="results" className="flex items-center gap-1 text-xs sm:text-sm">
-                <FileText className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Results</span>
+              <TabsTrigger value="results" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="truncate">Results</span>
               </TabsTrigger>
-              <TabsTrigger value="view" className="flex items-center gap-1 text-xs sm:text-sm">
-                <Users className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Student</span>
+              <TabsTrigger value="view" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="truncate">Student</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="schedule" className="mt-4">
+            <TabsContent value="schedule" className="mt-3 sm:mt-4">
               <ExamScheduleView />
             </TabsContent>
 
-            <TabsContent value="enter" className="mt-4">
+            <TabsContent value="enter" className="mt-3 sm:mt-4">
               <ExamMarksEntry exams={exams} onMarksUpdated={fetchData} />
             </TabsContent>
 
-            <TabsContent value="weekly-marks" className="mt-4">
+            <TabsContent value="weekly-marks" className="mt-3 sm:mt-4">
               <WeeklyExamMarksEntry />
             </TabsContent>
 
-            <TabsContent value="results" className="mt-4">
+            <TabsContent value="results" className="mt-3 sm:mt-4">
               <ExamResultsView />
             </TabsContent>
 
-            <TabsContent value="view" className="mt-4 space-y-4">
+            <TabsContent value="view" className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
               {/* Student Selection */}
               <Card>
                 <CardHeader className="pb-3">
