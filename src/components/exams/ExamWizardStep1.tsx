@@ -1,9 +1,11 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileText, Calendar, Clock } from 'lucide-react';
 import { ExamFormData } from './types';
+import { useState } from 'react';
 
 interface Props {
   formData: ExamFormData;
@@ -28,6 +30,8 @@ const terms = [
 ];
 
 export default function ExamWizardStep1({ formData, setFormData }: Props) {
+  const [isCustom, setIsCustom] = useState(!examTypes.includes(formData.name) && formData.name !== '');
+
   return (
     <div className="space-y-5">
       <div className="text-center mb-6">
@@ -41,19 +45,41 @@ export default function ExamWizardStep1({ formData, setFormData }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Exam Type *</Label>
-          <Select
-            value={formData.name}
-            onValueChange={(v) => setFormData(prev => ({ ...prev, name: v }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select exam type" />
-            </SelectTrigger>
-            <SelectContent>
-              {examTypes.map((type) => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isCustom ? (
+            <div className="flex gap-2">
+              <Input
+                className="flex-1"
+                placeholder="Enter custom exam name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              />
+              <Button type="button" variant="outline" size="sm" className="h-10 text-xs" onClick={() => { setIsCustom(false); setFormData(prev => ({ ...prev, name: '' })); }}>
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Select
+              value={formData.name}
+              onValueChange={(v) => {
+                if (v === '__custom__') {
+                  setIsCustom(true);
+                  setFormData(prev => ({ ...prev, name: '' }));
+                } else {
+                  setFormData(prev => ({ ...prev, name: v }));
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select exam type" />
+              </SelectTrigger>
+              <SelectContent>
+                {examTypes.filter(t => t !== 'Custom').map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+                <SelectItem value="__custom__">+ Custom Name</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -73,17 +99,6 @@ export default function ExamWizardStep1({ formData, setFormData }: Props) {
           </Select>
         </div>
       </div>
-
-      {formData.name === 'Custom' && (
-        <div className="space-y-2">
-          <Label>Custom Exam Name *</Label>
-          <Input
-            placeholder="Enter custom exam name"
-            value={formData.name === 'Custom' ? '' : formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value || 'Custom' }))}
-          />
-        </div>
-      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -137,7 +152,7 @@ export default function ExamWizardStep1({ formData, setFormData }: Props) {
       </div>
 
       {/* Preview Card */}
-      {formData.name && formData.name !== 'Custom' && formData.startDate && formData.endDate && (
+      {formData.name && formData.startDate && formData.endDate && (
         <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
