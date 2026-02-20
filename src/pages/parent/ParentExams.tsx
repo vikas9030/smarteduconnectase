@@ -163,7 +163,7 @@ export default function ParentExams() {
     if (results.length === 0) {
       return (
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="py-6 sm:py-8 text-center text-muted-foreground text-xs sm:text-sm">
             <p>No {title.toLowerCase()} results yet.</p>
           </CardContent>
         </Card>
@@ -175,70 +175,104 @@ export default function ParentExams() {
     const overallPct = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
+        {/* Summary card */}
         <Card className="border-primary/20">
-          <CardHeader className="pb-3 bg-primary/5">
+          <CardHeader className="pb-2 sm:pb-3 bg-primary/5 px-3 sm:px-6 py-2.5 sm:py-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-xs sm:text-base flex items-center gap-1.5 sm:gap-2">
                 {icon}
                 {title}
               </CardTitle>
               <div className="text-right">
-                <p className={`text-2xl font-bold ${getPctColor(overallPct)}`}>{overallPct.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">Overall</p>
+                <p className={`text-lg sm:text-2xl font-bold ${getPctColor(overallPct)}`}>{overallPct.toFixed(1)}%</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Overall</p>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-3">
-            <Progress value={overallPct} className="h-2.5" />
-            <p className="text-xs text-muted-foreground mt-2">{results.length} exams • {totalObtained}/{totalMax} marks</p>
+          <CardContent className="pt-2 sm:pt-3 px-3 sm:px-6">
+            <Progress value={overallPct} className="h-2 sm:h-2.5" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">{results.length} exams • {totalObtained}/{totalMax} marks</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Exam</TableHead>
-                  <TableHead className="text-xs">Subject</TableHead>
-                  <TableHead className="text-xs text-center">Marks</TableHead>
-                  <TableHead className="text-xs text-center">%</TableHead>
-                  {results.some(r => r.rank) && <TableHead className="text-xs text-center">Rank</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map(r => {
-                  const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell className="py-2">
-                        <div>
-                          <p className="font-medium text-xs">{r.weekly_exams?.exam_title}</p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                            {r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="capitalize text-xs">{r.weekly_exams?.subjects?.name || '-'}</TableCell>
-                      <TableCell className="text-center text-xs">
-                        <span className="font-semibold">{r.obtained_marks}</span>
-                        <span className="text-muted-foreground">/{r.total_marks}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className={`font-semibold text-xs ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
-                      </TableCell>
-                      {results.some(r2 => r2.rank) && (
-                        <TableCell className="text-center text-xs font-medium">{r.rank || '-'}</TableCell>
-                      )}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {/* Mobile: Card list, Desktop: Table */}
+        <div className="hidden sm:block">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Exam</TableHead>
+                    <TableHead className="text-xs">Subject</TableHead>
+                    <TableHead className="text-xs text-center">Marks</TableHead>
+                    <TableHead className="text-xs text-center">%</TableHead>
+                    {results.some(r => r.rank) && <TableHead className="text-xs text-center">Rank</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {results.map(r => {
+                    const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
+                    return (
+                      <TableRow key={r.id}>
+                        <TableCell className="py-2">
+                          <div>
+                            <p className="font-medium text-xs">{r.weekly_exams?.exam_title}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                              {r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="capitalize text-xs">{r.weekly_exams?.subjects?.name || '-'}</TableCell>
+                        <TableCell className="text-center text-xs">
+                          <span className="font-semibold">{r.obtained_marks}</span>
+                          <span className="text-muted-foreground">/{r.total_marks}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className={`font-semibold text-xs ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
+                        </TableCell>
+                        {results.some(r2 => r2.rank) && (
+                          <TableCell className="text-center text-xs font-medium">{r.rank || '-'}</TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Mobile card list */}
+        <div className="sm:hidden space-y-2">
+          {results.map(r => {
+            const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
+            return (
+              <Card key={r.id}>
+                <CardContent className="p-2.5 space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-xs truncate">{r.weekly_exams?.exam_title}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}
+                      </p>
+                    </div>
+                    <span className={`font-bold text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 capitalize">{r.weekly_exams?.subjects?.name || '-'}</Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      <span className="font-semibold text-foreground">{r.obtained_marks}</span>/{r.total_marks}
+                    </span>
+                    {r.rank && <Badge variant="outline" className="text-[9px] px-1.5 py-0">Rank: {r.rank}</Badge>}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -248,45 +282,45 @@ export default function ParentExams() {
       {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-3 sm:space-y-6 animate-fade-in px-0">
         <BackButton to="/parent" />
         <div>
-          <h1 className="font-display text-2xl font-bold">Exams</h1>
-          <p className="text-muted-foreground">{childName}'s exam schedule & results</p>
+          <h1 className="font-display text-lg sm:text-2xl font-bold">Exams</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">{childName}'s exam schedule & results</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="schedule" className="flex items-center gap-1 text-xs sm:text-sm">
-              <Calendar className="h-4 w-4" />
-              Schedule
+          <TabsList className="grid w-full grid-cols-4 h-8 sm:h-10">
+            <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Schedule</span>
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-1 text-xs sm:text-sm">
-              <RotateCcw className="h-4 w-4" />
-              Weekly
+            <TabsTrigger value="weekly" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Weekly</span>
             </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-1 text-xs sm:text-sm">
-              <FileText className="h-4 w-4" />
-              Results
+            <TabsTrigger value="results" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Results</span>
             </TabsTrigger>
-            <TabsTrigger value="competitive" className="flex items-center gap-1 text-xs sm:text-sm">
-              <FlaskConical className="h-4 w-4" />
-              Competitive
+            <TabsTrigger value="competitive" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
+              <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="truncate">Comp.</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="schedule" className="mt-4">
+          <TabsContent value="schedule" className="mt-3 sm:mt-4">
             <ExamScheduleView filterClassIds={childClassIds} />
           </TabsContent>
 
-          <TabsContent value="weekly" className="mt-4">
+          <TabsContent value="weekly" className="mt-3 sm:mt-4">
             <WeeklyExamCalendarView filterClassIds={childClassIds} />
           </TabsContent>
 
-          <TabsContent value="results" className="mt-4 space-y-4">
+          <TabsContent value="results" className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
               <div className="flex justify-end">
                 <Select value={selectedExam} onValueChange={setSelectedExam}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[150px] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9">
                     <SelectValue placeholder="Filter by Exam" />
                   </SelectTrigger>
                   <SelectContent>
@@ -304,16 +338,16 @@ export default function ParentExams() {
               <WeeklyResultsSection 
                 results={generalWeeklyResults} 
                 title="Weekly Exam Results" 
-                icon={<BookOpen className="h-4 w-4 text-primary" />} 
+                icon={<BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />} 
               />
             )}
           </TabsContent>
 
-          <TabsContent value="competitive" className="mt-4 space-y-4">
-            <div className="flex flex-wrap gap-2">
+          <TabsContent value="competitive" className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {competitiveExamNames.length > 0 && (
                 <Select value={competitiveExamFilter} onValueChange={setCompetitiveExamFilter}>
-                  <SelectTrigger className="w-[170px]">
+                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[170px] text-[10px] sm:text-xs h-7 sm:h-9">
                     <SelectValue placeholder="Filter by Exam" />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,7 +360,7 @@ export default function ParentExams() {
               )}
               {competitiveLabels.length > 0 && (
                 <Select value={competitiveLabelFilter} onValueChange={setCompetitiveLabelFilter}>
-                  <SelectTrigger className="w-[170px]">
+                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[170px] text-[10px] sm:text-xs h-7 sm:h-9">
                     <SelectValue placeholder="Exam Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -341,7 +375,7 @@ export default function ParentExams() {
             <WeeklyResultsSection 
               results={filteredCompetitiveResults} 
               title="Competitive Exam Results" 
-              icon={<FlaskConical className="h-4 w-4 text-primary" />} 
+              icon={<FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />} 
             />
           </TabsContent>
         </Tabs>
