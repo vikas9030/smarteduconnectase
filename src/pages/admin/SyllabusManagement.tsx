@@ -65,6 +65,10 @@ export default function SyllabusManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState('all');
   const [filterSubject, setFilterSubject] = useState('all');
+  const [filterExam, setFilterExam] = useState('all');
+  const [customExamGeneral, setCustomExamGeneral] = useState('');
+  const [customExamCompetitive, setCustomExamCompetitive] = useState('');
+  const [useCustomExam, setUseCustomExam] = useState(false);
 
   // Inline add form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -286,18 +290,25 @@ export default function SyllabusManagement() {
     toast.success('Teacher removed'); fetchData();
   }
 
+  const examTypeOptions = useMemo(() => {
+    const types = new Set<string>();
+    syllabus.forEach(s => { if (s.exam_type) types.add(s.exam_type); });
+    return [...types].sort();
+  }, [syllabus]);
+
   const filteredSyllabus = useMemo(() => {
     return syllabus.filter(s => {
       if (s.syllabus_type !== (activeTab === 'general' ? 'general' : 'competitive')) return false;
       if (filterClass !== 'all' && s.class_id !== filterClass) return false;
       if (filterSubject !== 'all' && s.subject_id !== filterSubject) return false;
+      if (filterExam !== 'all' && s.exam_type !== filterExam) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return s.chapter_name.toLowerCase().includes(q) || s.topic_name.toLowerCase().includes(q) || s.subjects?.name?.toLowerCase().includes(q) || false;
       }
       return true;
     });
-  }, [syllabus, activeTab, filterClass, filterSubject, searchQuery]);
+  }, [syllabus, activeTab, filterClass, filterSubject, filterExam, searchQuery]);
 
   const filteredSubjects = useMemo(() => {
     if (activeTab === 'general') return subjects.filter(s => s.category === 'general' || !s.category);
@@ -386,12 +397,30 @@ export default function SyllabusManagement() {
                      {activeTab === 'general' && (
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exam *</Label>
-                          <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
-                            <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
-                            <SelectContent>
-                              {GENERAL_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          {useCustomExam ? (
+                            <div className="flex gap-2">
+                              <Input
+                                value={customExamGeneral}
+                                onChange={e => { setCustomExamGeneral(e.target.value); setFormData(f => ({ ...f, exam_type: e.target.value })); }}
+                                placeholder="Enter custom exam name"
+                              />
+                              <Button type="button" variant="ghost" size="sm" onClick={() => { setUseCustomExam(false); setCustomExamGeneral(''); setFormData(f => ({ ...f, exam_type: '' })); }}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
+                                <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
+                                <SelectContent>
+                                  {GENERAL_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                              <Button type="button" variant="outline" size="sm" className="shrink-0 text-xs" onClick={() => setUseCustomExam(true)}>
+                                Custom
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                       <div className="space-y-1.5">
@@ -405,12 +434,30 @@ export default function SyllabusManagement() {
                       {activeTab === 'competitive' && (
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exam Type</Label>
-                          <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
-                            <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
-                            <SelectContent>
-                              {COMPETITIVE_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          {useCustomExam ? (
+                            <div className="flex gap-2">
+                              <Input
+                                value={customExamCompetitive}
+                                onChange={e => { setCustomExamCompetitive(e.target.value); setFormData(f => ({ ...f, exam_type: e.target.value })); }}
+                                placeholder="Enter custom exam name"
+                              />
+                              <Button type="button" variant="ghost" size="sm" onClick={() => { setUseCustomExam(false); setCustomExamCompetitive(''); setFormData(f => ({ ...f, exam_type: '' })); }}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Select value={formData.exam_type} onValueChange={v => setFormData(f => ({ ...f, exam_type: v }))}>
+                                <SelectTrigger><SelectValue placeholder="Select exam" /></SelectTrigger>
+                                <SelectContent>
+                                  {COMPETITIVE_EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                              <Button type="button" variant="outline" size="sm" className="shrink-0 text-xs" onClick={() => setUseCustomExam(true)}>
+                                Custom
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -559,6 +606,13 @@ export default function SyllabusManagement() {
                 <SelectContent>
                   <SelectItem value="all">All Subjects</SelectItem>
                   {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={filterExam} onValueChange={setFilterExam}>
+                <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="All Exams" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {examTypeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
