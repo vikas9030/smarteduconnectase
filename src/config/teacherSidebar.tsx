@@ -11,6 +11,7 @@ import {
   MessageSquare,
   UserPlus,
   Image,
+  LibraryBig,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -26,7 +27,7 @@ const baseTeacherSidebarItems: SidebarItem[] = [
   { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/teacher/attendance' },
   { icon: <BookOpen className="h-5 w-5" />, label: 'Homework', path: '/teacher/homework' },
   { icon: <FileText className="h-5 w-5" />, label: 'Exam Marks', path: '/teacher/exams' },
-  { icon: <BookOpen className="h-5 w-5" />, label: 'Syllabus', path: '/teacher/syllabus' },
+  { icon: <LibraryBig className="h-5 w-5" />, label: 'Syllabus', path: '/teacher/syllabus' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Weekly Exams', path: '/teacher/weekly-exams' },
   { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements' },

@@ -11,6 +11,7 @@ import {
   Award,
   CreditCard,
   Image,
+  LibraryBig,
 } from 'lucide-react';
 
 export const parentSidebarItems = [
@@ -19,7 +20,7 @@ export const parentSidebarItems = [
   { icon: <Clock className="h-5 w-5" />, label: 'Attendance', path: '/parent/attendance' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Timetable', path: '/parent/timetable' },
   { icon: <BookOpen className="h-5 w-5" />, label: 'Homework', path: '/parent/homework' },
-  { icon: <BookOpen className="h-5 w-5" />, label: 'Syllabus', path: '/parent/syllabus' },
+  { icon: <LibraryBig className="h-5 w-5" />, label: 'Syllabus', path: '/parent/syllabus' },
   { icon: <FileText className="h-5 w-5" />, label: 'Exam Results', path: '/parent/exams' },
   { icon: <TrendingUp className="h-5 w-5" />, label: 'Progress', path: '/parent/progress' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/parent/announcements' },
