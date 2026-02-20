@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { adminSidebarItems } from '@/config/adminSidebar';
 import StatCard from '@/components/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Users,
   GraduationCap,
@@ -16,7 +17,10 @@ import {
   Loader2,
   TrendingUp,
   FileText,
+  FlaskConical,
+  Calendar,
 } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface DashboardStats {
   totalStudents: number;
@@ -26,6 +30,29 @@ interface DashboardStats {
   pendingLeaves: number;
   pendingCertificates: number;
   openComplaints: number;
+}
+
+interface UpcomingCompExam {
+  id: string;
+  exam_title: string;
+  exam_date: string;
+  exam_time: string;
+  duration_minutes: number;
+  total_marks: number;
+  status: string;
+  exam_type_label: string | null;
+  classes?: { name: string; section: string } | null;
+  subjects?: { name: string } | null;
+}
+
+interface TodayExam {
+  id: string;
+  name: string;
+  exam_date: string | null;
+  exam_time: string | null;
+  max_marks: number | null;
+  classes?: { name: string; section: string } | null;
+  subjects?: { name: string } | null;
 }
 
 export default function AdminDashboard() {
@@ -41,6 +68,8 @@ export default function AdminDashboard() {
     openComplaints: 0,
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [upcomingCompExams, setUpcomingCompExams] = useState<UpcomingCompExam[]>([]);
+  const [todayExams, setTodayExams] = useState<TodayExam[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [profileName, setProfileName] = useState('Principal');
 
@@ -67,6 +96,8 @@ export default function AdminDashboard() {
           setProfileName(profile.full_name.split(' ')[0]);
         }
 
+        const today = new Date().toISOString().split('T')[0];
+
         // Fetch all counts in parallel
         const [
           studentsRes,
@@ -76,7 +107,9 @@ export default function AdminDashboard() {
           pendingCertsRes,
           openComplaintsRes,
           todayAttendanceRes,
-          announcementsRes
+          announcementsRes,
+          compExamsRes,
+          todayExamsRes,
         ] = await Promise.all([
           supabase.from('students').select('*', { count: 'exact', head: true }),
           supabase.from('teachers').select('*', { count: 'exact', head: true }),
@@ -84,8 +117,18 @@ export default function AdminDashboard() {
           supabase.from('leave_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
           supabase.from('certificate_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
           supabase.from('complaints').select('*', { count: 'exact', head: true }).eq('status', 'open'),
-          supabase.from('attendance').select('status').eq('date', new Date().toISOString().split('T')[0]),
+          supabase.from('attendance').select('status').eq('date', today),
           supabase.from('announcements').select('*').order('created_at', { ascending: false }).limit(4),
+          supabase.from('weekly_exams')
+            .select('id, exam_title, exam_date, exam_time, duration_minutes, total_marks, status, exam_type_label, syllabus_type, classes(name, section), subjects(name)')
+            .eq('syllabus_type', 'competitive')
+            .gte('exam_date', today)
+            .order('exam_date', { ascending: true })
+            .limit(5),
+          supabase.from('exams')
+            .select('id, name, exam_date, exam_time, max_marks, classes(name, section), subjects(name)')
+            .eq('exam_date', today)
+            .order('exam_time', { ascending: true }),
         ]);
 
         // Calculate today's attendance rate
@@ -104,6 +147,9 @@ export default function AdminDashboard() {
           pendingCertificates: pendingCertsRes.count || 0,
           openComplaints: openComplaintsRes.count || 0,
         });
+
+        if (compExamsRes.data) setUpcomingCompExams(compExamsRes.data as unknown as UpcomingCompExam[]);
+        if (todayExamsRes.data) setTodayExams(todayExamsRes.data as unknown as TodayExam[]);
 
         // Build recent activity from announcements
         const activities = (announcementsRes.data || []).map(a => ({
@@ -270,6 +316,120 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Today's Exam Timetable & Upcoming Competitive Exams */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Today's Exam Timetable */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2 text-base">
+                <Calendar className="h-5 w-5 text-primary" />
+                Today's Exam Schedule
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {todayExams.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No exams scheduled for today</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {todayExams.map(exam => (
+                    <div key={exam.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-sm truncate">{exam.name}</p>
+                        <Badge variant="outline" className="text-xs shrink-0">Max: {exam.max_marks}</Badge>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {exam.classes && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            {exam.classes.name}-{exam.classes.section}
+                          </Badge>
+                        )}
+                        {exam.subjects && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                            {exam.subjects.name}
+                          </Badge>
+                        )}
+                      </div>
+                      {exam.exam_time && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {exam.exam_time}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Competitive Exams */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2 text-base">
+                <FlaskConical className="h-5 w-5 text-primary" />
+                Upcoming Competitive Exams
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {upcomingCompExams.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <FlaskConical className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No upcoming competitive exams</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {upcomingCompExams.map(exam => {
+                    const examDate = new Date(exam.exam_date);
+                    const daysLeft = Math.ceil((examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    return (
+                      <div key={exam.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-sm truncate">{exam.exam_title}</p>
+                          <Badge
+                            variant={daysLeft <= 3 ? 'destructive' : daysLeft <= 7 ? 'default' : 'secondary'}
+                            className="text-[10px] px-1.5 py-0 shrink-0"
+                          >
+                            {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {exam.exam_type_label && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                              {exam.exam_type_label}
+                            </Badge>
+                          )}
+                          {exam.classes && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              {exam.classes.name}-{exam.classes.section}
+                            </Badge>
+                          )}
+                          {exam.subjects && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                              {exam.subjects.name}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(examDate, 'dd MMM yyyy')}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> {exam.exam_time}
+                          </span>
+                          <span>Marks: {exam.total_marks}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
