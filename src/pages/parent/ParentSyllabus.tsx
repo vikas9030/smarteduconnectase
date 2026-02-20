@@ -266,46 +266,42 @@ export default function ParentSyllabus() {
       {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-        <div className="space-y-4 sm:space-y-6 animate-fade-in px-1 sm:px-0">
+        <div className="space-y-3 sm:space-y-6 animate-fade-in px-0">
           <BackButton to="/parent" />
           <div>
-            <h1 className="font-display text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Syllabus
+            <h1 className="font-display text-lg sm:text-2xl font-bold flex items-center gap-1.5 sm:gap-2">
+              <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" /> Syllabus
             </h1>
-            <p className="text-sm text-muted-foreground">{childName ? `${childName}'s` : "Your child's"} curriculum & topics</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{childName ? `${childName}'s` : "Your child's"} curriculum & topics</p>
           </div>
 
           {/* General / Competitive Tabs */}
           <Tabs value={typeTab} onValueChange={(v) => { setTypeTab(v); setSelectedSubject('all'); setSelectedExam('all'); }}>
-            <TabsList className="grid w-full grid-cols-2 h-9 sm:h-10">
-              <TabsTrigger value="general" className="flex items-center gap-1 text-[11px] sm:text-sm">
-                <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> General
+            <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10">
+              <TabsTrigger value="general" className="flex items-center gap-1 text-[10px] sm:text-sm">
+                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" /> General
               </TabsTrigger>
-              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[11px] sm:text-sm">
-                <FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Competitive
+              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[10px] sm:text-sm">
+                <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" /> Competitive
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          {/* Status Filter */}
-          <div className="grid grid-cols-2 gap-2">
+          {/* All Filters in one row on mobile */}
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="running">Running / Present</SelectItem>
+                <SelectItem value="running">Running</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Subject & Exam Filters */}
-          <div className="grid grid-cols-2 gap-2">
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
-                <Filter className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
+              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                <Filter className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 mr-0.5" />
                 <SelectValue placeholder="Subject" />
               </SelectTrigger>
               <SelectContent>
@@ -313,15 +309,17 @@ export default function ParentSyllabus() {
                 {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={selectedExam} onValueChange={setSelectedExam}>
-              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
-                <SelectValue placeholder="All Exams" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Exams</SelectItem>
-                {examOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {examOptions.length > 0 && (
+              <Select value={selectedExam} onValueChange={setSelectedExam}>
+                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                  <SelectValue placeholder="Exam Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {examOptions.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <SyllabusGrouped items={filteredItems} />
