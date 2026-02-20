@@ -37,7 +37,7 @@ export default function ParentSyllabus() {
   const [loadingData, setLoadingData] = useState(true);
   const [typeTab, setTypeTab] = useState('general');
   const [statusFilter, setStatusFilter] = useState('running');
-  const [timeFilter, setTimeFilter] = useState('current');
+  const [timeFilter] = useState('all');
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedExam, setSelectedExam] = useState('all');
   const [teacherMap, setTeacherMap] = useState<Record<string, { name: string; role: string }[]>>({});
@@ -287,7 +287,7 @@ export default function ParentSyllabus() {
             </TabsList>
           </Tabs>
 
-          {/* Status & Time Dropdowns */}
+          {/* Status Filter */}
           <div className="grid grid-cols-2 gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full text-xs h-8 sm:h-9">
@@ -297,17 +297,6 @@ export default function ParentSyllabus() {
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="running">Running / Present</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-full text-xs h-8 sm:h-9">
-                <SelectValue placeholder="Time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="current">Current</SelectItem>
-                <SelectItem value="past">Past</SelectItem>
-                <SelectItem value="future">Future</SelectItem>
               </SelectContent>
             </Select>
           </div>
