@@ -64,7 +64,8 @@ export default function ExamResultsView() {
   const [weeklySearchQuery, setWeeklySearchQuery] = useState('');
   const [weeklyExamNameFilter, setWeeklyExamNameFilter] = useState('all');
   const [weeklyDateFilter, setWeeklyDateFilter] = useState('all');
-  const [allWeeklyExams, setAllWeeklyExams] = useState<{ id: string; exam_title: string; syllabus_type: string; class_id: string }[]>([]);
+  const [allWeeklyExams, setAllWeeklyExams] = useState<{ id: string; exam_title: string; syllabus_type: string; class_id: string; exam_type_label: string | null }[]>([]);
+  const [weeklyExamTypeLabelFilter, setWeeklyExamTypeLabelFilter] = useState('all');
 
   useEffect(() => {
     fetchData();
@@ -76,7 +77,7 @@ export default function ExamResultsView() {
       supabase.from('exam_marks').select('*, students(full_name, admission_number, class_id), exams(name, exam_date, max_marks, class_id, subjects(name), classes(name, section))').order('created_at', { ascending: false }),
       supabase.from('student_exam_results').select('*, students(full_name, admission_number, class_id), weekly_exams(exam_title, exam_date, total_marks, syllabus_type, exam_type_label, class_id, subjects(name), classes(name, section))').order('created_at', { ascending: false }),
       supabase.from('classes').select('id, name, section').order('name'),
-      supabase.from('weekly_exams').select('id, exam_title, syllabus_type, class_id').order('exam_date', { ascending: false }),
+      supabase.from('weekly_exams').select('id, exam_title, syllabus_type, class_id, exam_type_label').order('exam_date', { ascending: false }),
     ]);
     if (marksRes.data) setResults(marksRes.data as unknown as ExamResult[]);
     if (weeklyRes.data) setWeeklyResults(weeklyRes.data as unknown as WeeklyExamResult[]);
@@ -142,6 +143,7 @@ export default function ExamResultsView() {
       if (weeklyTypeFilter !== 'all' && r.weekly_exams?.syllabus_type !== weeklyTypeFilter) return false;
       if (weeklyClassFilter !== 'all' && r.weekly_exams?.class_id !== weeklyClassFilter) return false;
       if (weeklyExamNameFilter !== 'all' && r.weekly_exams?.exam_title !== weeklyExamNameFilter) return false;
+      if (weeklyExamTypeLabelFilter !== 'all' && r.weekly_exams?.exam_type_label !== weeklyExamTypeLabelFilter) return false;
       if (weeklyDateFilter !== 'all' && r.weekly_exams?.exam_date !== weeklyDateFilter) return false;
       if (weeklySearchQuery) {
         const q = weeklySearchQuery.toLowerCase();
@@ -152,7 +154,7 @@ export default function ExamResultsView() {
       }
       return true;
     });
-  }, [weeklyResults, weeklyTypeFilter, weeklyClassFilter, weeklySearchQuery, weeklyExamNameFilter, weeklyDateFilter]);
+  }, [weeklyResults, weeklyTypeFilter, weeklyClassFilter, weeklySearchQuery, weeklyExamNameFilter, weeklyDateFilter, weeklyExamTypeLabelFilter]);
 
   const weeklyExamDates = useMemo(() => [...new Set(weeklyResults.map(r => r.weekly_exams?.exam_date).filter(Boolean))].sort(), [weeklyResults]);
 
@@ -492,6 +494,14 @@ export default function ExamResultsView() {
         .filter(Boolean)
     )].sort();
 
+    // Get unique exam type labels from all weekly exams
+    const typeExamTypeLabels = [...new Set(
+      allWeeklyExams
+        .filter(e => type === 'general' ? e.syllabus_type !== 'competitive' : e.syllabus_type === 'competitive')
+        .map(e => e.exam_type_label)
+        .filter(Boolean)
+    )] as string[];
+
     return (
       <>
         {/* Filters */}
@@ -510,6 +520,13 @@ export default function ExamResultsView() {
                 <SelectContent>
                   <SelectItem value="all">All Classes</SelectItem>
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={weeklyExamTypeLabelFilter} onValueChange={setWeeklyExamTypeLabelFilter}>
+                <SelectTrigger className="w-full sm:w-[150px] h-9 text-sm"><SelectValue placeholder="Exam Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {typeExamTypeLabels.map(label => <SelectItem key={label} value={label}>{label}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={weeklyDateFilter} onValueChange={setWeeklyDateFilter}>
