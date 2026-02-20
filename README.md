@@ -42,30 +42,35 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Teachers** | Add, edit, and manage teacher profiles and assignments |
 | **Students** | Student registry with admission numbers, class assignments, and profiles |
 | **Classes** | Create classes with sections and assign class teachers |
-| **Subjects** | Manage subject catalog with codes |
+| **Subjects** | Manage subject catalog with codes and categories (academic/competitive) |
 | **Timetable** | Build and publish weekly timetables per class |
 | **Attendance Reports** | View, filter, search, and export attendance data across all classes |
-| **Exams** | Create exams, manage schedules, and view results |
-| **Leads (CRM)** | Track admission inquiries with status pipeline, follow-ups, and inline status updates |
+| **Exams** | Create exams with 5-step wizard, manage schedules, enter marks, view results (5-tab layout) |
+| **Weekly Exams** | Manage weekly/competitive exam cycles with question papers and student results |
+| **Exam Cycles** | Configure exam cycles with date ranges and exam types |
+| **Syllabus** | Manage syllabus topics per class/subject with completion tracking (shows teacher who completed & date) |
+| **Question Paper Builder** | Build question papers for weekly exams with MCQ support |
+| **Leads (CRM)** | Track admission inquiries with status pipeline, follow-ups, call logs, and Excel import |
 | **Announcements** | Broadcast announcements to specific audiences |
 | **Leave Requests** | Approve or reject leave applications from teachers and students; view/download attachments |
 | **Certificates** | Process certificate requests with document attachment download |
 | **Complaints** | Handle and respond to complaints |
 | **Fees** | Manage fee structures, track payments, and generate receipts |
 | **Messages** | Direct messaging system with file/image sharing |
-| **Settings** | App configuration, module toggles, and lead permissions |
 | **Gallery** | Manage photo gallery with folders |
 | **Settings** | App configuration, module toggles, and lead permissions |
 
 ### 👩‍🏫 Teacher Panel
 | Module | Description |
 |--------|-------------|
-| **Dashboard** | Class overview, upcoming tasks, and quick stats |
+| **Dashboard** | Class overview, upcoming tasks, quick stats, upcoming exam timetable, and competitive exam reminders with countdown badges |
 | **My Classes** | View assigned classes and sections |
 | **Students** | Browse students in assigned classes |
 | **Attendance** | Mark daily attendance with Present/Absent/Late buttons, quick "Mark All" actions, search, and sticky action bar |
 | **Homework** | Assign and manage homework with due dates and file attachments (PDF, Word, images) |
 | **Exam Marks** | Enter and manage exam scores with grading |
+| **Syllabus** | View assigned syllabus topics, filter by type/status/class/subject/exam, and mark topics as completed |
+| **Weekly Exams** | View and manage weekly exam schedules |
 | **Reports** | Create behavioral and academic reports for students |
 | **Announcements** | View school-wide announcements |
 | **Leave Request** | Submit personal leave applications with optional document attachments |
@@ -83,6 +88,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Timetable** | View child's weekly class schedule |
 | **Homework** | Track assigned homework, due dates, and download teacher-uploaded attachments |
 | **Exam Results** | View marks, grades, and performance analysis with exam name filtering |
+| **Syllabus** | View syllabus topics with completion status (completed by teacher with date) |
 | **Progress** | Track academic progress and trends |
 | **Announcements** | Read school announcements |
 | **Leave Request** | Apply for child's leave with optional document attachments |
@@ -163,15 +169,20 @@ src/
 │   ├── adminSidebar.tsx       # Admin navigation config
 │   ├── teacherSidebar.tsx     # Teacher navigation config (dynamic leads toggle)
 │   └── parentSidebar.tsx      # Parent navigation config
+├── components/
+│   ├── exams/                 # Exam wizard (5 steps), marks entry, schedule builder, results view, weekly exams
+│   ├── exam-cycles/           # Exam cycles & weekly exams tab components
+│   ├── gallery/               # Gallery view component
+│   ├── attendance/            # Attendance calendar component
 ├── hooks/
 │   ├── useAuth.tsx            # Authentication context & provider
 │   ├── useLeadPermissions.ts  # Teacher lead access check
 │   ├── useTeacherSidebar.ts   # Dynamic teacher sidebar builder
 │   └── use-toast.ts           # Toast notification hook
 ├── pages/
-│   ├── admin/                 # 16 admin pages
-│   ├── teacher/               # 12 teacher pages
-│   ├── parent/                # 12 parent pages
+│   ├── admin/                 # 20 admin pages (Dashboard, Teachers, Students, Classes, Subjects, Timetable, Attendance, Exams, Weekly Exams, Exam Cycles, Syllabus, Question Papers, Leads, Announcements, Leave, Certificates, Complaints, Fees, Messages, Gallery, Settings)
+│   ├── teacher/               # 15 teacher pages (Dashboard, Classes, Students, Attendance, Homework, Exams, Syllabus, Weekly Exams, Reports, Announcements, Leave, Leads, Gallery, Messages, Timetable)
+│   ├── parent/                # 14 parent pages (Dashboard, Child, Attendance, Timetable, Homework, Exams, Syllabus, Progress, Announcements, Leave, Messages, Certificates, Fees, Gallery)
 │   ├── Auth.tsx               # Login / signup page
 │   ├── Index.tsx              # Landing page
 │   └── NotFound.tsx           # 404 page
@@ -897,6 +908,44 @@ Smart EduConnect uses a semantic design token system with role-based color diffe
 3. **Open** `http://localhost:5173` in your browser
 
 4. **Sign up** as an admin to get started, then create teacher and parent accounts from the admin panel
+
+---
+
+## 📱 Mobile Responsiveness
+
+Smart EduConnect is fully mobile-responsive with optimized layouts:
+
+- **Compact filter grids** — 2-per-row aligned filters on mobile using `w-[calc(50%-4px)]`
+- **Scaled typography** — `text-[9px]` to `text-sm` responsive font sizing
+- **Mobile cards** — Card-based layouts replace tables on small screens
+- **Bottom navigation** — Mobile bottom nav bar for quick access
+- **Sticky action bars** — Fixed position CTAs on mobile for attendance and marks entry
+- **Truncated tabs** — Tab labels truncate gracefully on narrow viewports
+
+---
+
+## 🔄 Recent Updates
+
+### Syllabus Completion Tracking
+- Teachers can mark syllabus topics as completed with timestamp
+- Completion status (date + teacher name) visible in Admin and Parent panels
+- Filter syllabus by status, class, subject, and exam type
+
+### Exam Management Enhancements
+- 5-tab layout: Schedule, Weekly, Marks, Weekly Marks, Results
+- 5-step exam creation wizard with auto/manual scheduling
+- Weekly exam system with question papers and student results
+- Exam cycles management for organizing exam periods
+- Competitive exam support with countdown reminders on Teacher Dashboard
+
+### Teacher Dashboard Widgets
+- Upcoming Exam Timetable widget showing next 5 scheduled exams
+- Competitive Exam Reminders with color-coded urgency countdown badges
+
+### Mobile UI Alignment
+- Consistent 2x2 filter grid alignment across Admin, Teacher, and Parent panels
+- Responsive tab sizing with icons and truncated labels
+- Compact select dropdowns with `h-7`/`h-8` heights on mobile
 
 ---
 
