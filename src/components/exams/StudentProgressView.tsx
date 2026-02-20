@@ -138,12 +138,12 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {/* Download Button */}
       {marks.length > 0 && (
         <div className="flex justify-end">
-          <Button variant="outline" onClick={handleDownloadPDF}>
-            <Download className="h-4 w-4 mr-2" /> Download PDF
+          <Button variant="outline" size="sm" className="h-7 sm:h-9 text-[10px] sm:text-sm" onClick={handleDownloadPDF}>
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Download PDF
           </Button>
         </div>
       )}
@@ -207,13 +207,13 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
       {/* Results by Exam */}
       {Object.entries(groupedByExam).map(([examName, examMarks]) => (
         <Card key={examName} className="overflow-hidden">
-          <CardHeader className="pb-3 bg-muted/30 px-3 sm:px-6">
+          <CardHeader className="pb-2 sm:pb-3 bg-muted/30 px-3 sm:px-6 py-2.5 sm:py-4">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm sm:text-base flex items-center gap-2 min-w-0">
-                <Award className="h-4 w-4 text-primary flex-shrink-0" />
+              <CardTitle className="text-xs sm:text-base flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <Award className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
                 <span className="truncate">{examName}</span>
               </CardTitle>
-              <Badge variant="outline" className="flex-shrink-0 text-xs">
+              <Badge variant="outline" className="flex-shrink-0 text-[10px] sm:text-xs px-1.5 py-0">
                 {examMarks.length} subject{examMarks.length > 1 ? 's' : ''}
               </Badge>
             </div>
@@ -276,9 +276,9 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
 
       {marks.length === 0 && (
         <Card>
-          <CardContent className="py-12 text-center">
-            <Award className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No exam results available yet.</p>
+          <CardContent className="py-8 sm:py-12 text-center">
+            <Award className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+            <p className="text-xs sm:text-sm text-muted-foreground">No exam results available yet.</p>
           </CardContent>
         </Card>
       )}

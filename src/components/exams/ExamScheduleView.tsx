@@ -86,11 +86,11 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {examNames.length > 1 && (
         <div className="flex justify-end">
           <Select value={selectedExamName} onValueChange={setSelectedExamName}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-[150px] sm:w-[200px] h-7 sm:h-9 text-[10px] sm:text-sm">
               <SelectValue placeholder="Filter by exam" />
             </SelectTrigger>
             <SelectContent>
@@ -105,14 +105,14 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
 
       {Object.entries(groupedExams).map(([examName, examList]) => (
         <Card key={examName} className="card-elevated overflow-hidden">
-          <CardHeader className="pb-3 bg-muted/30">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <FileText className="h-5 w-5 text-primary" />
+          <CardHeader className="pb-2 sm:pb-3 bg-muted/30 px-3 sm:px-6 py-2.5 sm:py-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
-              <div>
-                <CardTitle className="font-display text-lg">{examName}</CardTitle>
-                <CardDescription>
+              <div className="min-w-0">
+                <CardTitle className="font-display text-sm sm:text-lg truncate">{examName}</CardTitle>
+                <CardDescription className="text-[10px] sm:text-sm">
                   {examList.length} subject(s) • {new Set(examList.map(e => e.class_id)).size} class(es)
                 </CardDescription>
               </div>
@@ -121,27 +121,27 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
           <CardContent className="p-0">
             <div className="divide-y">
               {examList.map(exam => (
-                <div key={exam.id} className="px-4 py-3 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline" className="text-xs">
+                <div key={exam.id} className="px-3 sm:px-4 py-2.5 sm:py-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0">
                       {exam.classes ? `${exam.classes.name}-${exam.classes.section.toUpperCase()}` : 'All'}
                     </Badge>
-                    <Badge variant="secondary" className="text-xs capitalize">
+                    <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0 capitalize">
                       {exam.subjects?.name || 'All Subjects'}
                     </Badge>
-                    <Badge variant="outline" className="text-xs ml-auto">
+                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0 ml-auto font-semibold">
                       Max: {exam.max_marks}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-[10px] sm:text-xs text-muted-foreground">
                     {exam.exam_date && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-0.5 sm:gap-1">
                         <Calendar className="h-3 w-3" />
-                        {new Date(exam.exam_date).toLocaleDateString()}
+                        {new Date(exam.exam_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </span>
                     )}
                     {exam.exam_time && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-0.5 sm:gap-1">
                         <Clock className="h-3 w-3" />
                         {exam.exam_time}
                       </span>
