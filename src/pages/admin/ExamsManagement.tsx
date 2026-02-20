@@ -11,11 +11,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Plus, Search, Loader2, MoreHorizontal, Trash2, Calendar, FileText, ClipboardList, BarChart3, Clock } from 'lucide-react';
+import { Plus, Search, Loader2, MoreHorizontal, Trash2, Calendar, FileText, ClipboardList, BarChart3, Clock, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import ExamCreationWizard from '@/components/exams/ExamCreationWizard';
 import ExamMarksEntry from '@/components/exams/ExamMarksEntry';
 import ExamResultsView from '@/components/exams/ExamResultsView';
+import WeeklyExamsSection from '@/components/exams/WeeklyExamsSection';
 import { Exam, ClassItem, SubjectItem } from '@/components/exams/types';
 import { BackButton } from '@/components/ui/back-button';
 
@@ -112,16 +113,20 @@ export default function ExamsManagement() {
 
         {/* Tabs for different views */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="schedule" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[520px]">
+            <TabsTrigger value="schedule" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <Calendar className="h-4 w-4" />
               Schedule
             </TabsTrigger>
-            <TabsTrigger value="marks" className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
-              Enter Marks
+            <TabsTrigger value="weekly" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <RotateCcw className="h-4 w-4" />
+              Weekly
             </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-2">
+            <TabsTrigger value="marks" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <ClipboardList className="h-4 w-4" />
+              Marks
+            </TabsTrigger>
+            <TabsTrigger value="results" className="flex items-center gap-1.5 text-xs sm:text-sm">
               <BarChart3 className="h-4 w-4" />
               Results
             </TabsTrigger>
@@ -294,6 +299,10 @@ export default function ExamsManagement() {
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="weekly" className="mt-4">
+            <WeeklyExamsSection />
           </TabsContent>
 
           <TabsContent value="marks" className="mt-4">

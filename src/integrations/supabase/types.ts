@@ -1703,15 +1703,18 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           cycle_id: string | null
+          description: string | null
           duration_minutes: number
           exam_date: string
           exam_time: string
           exam_title: string
+          exam_type_label: string | null
           id: string
           negative_marking: boolean | null
           negative_marks_value: number | null
           reminder_enabled: boolean | null
           status: string
+          subject_id: string | null
           syllabus_type: string
           total_marks: number
           week_number: number | null
@@ -1721,15 +1724,18 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           cycle_id?: string | null
+          description?: string | null
           duration_minutes?: number
           exam_date: string
           exam_time: string
           exam_title: string
+          exam_type_label?: string | null
           id?: string
           negative_marking?: boolean | null
           negative_marks_value?: number | null
           reminder_enabled?: boolean | null
           status?: string
+          subject_id?: string | null
           syllabus_type?: string
           total_marks?: number
           week_number?: number | null
@@ -1739,15 +1745,18 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           cycle_id?: string | null
+          description?: string | null
           duration_minutes?: number
           exam_date?: string
           exam_time?: string
           exam_title?: string
+          exam_type_label?: string | null
           id?: string
           negative_marking?: boolean | null
           negative_marks_value?: number | null
           reminder_enabled?: boolean | null
           status?: string
+          subject_id?: string | null
           syllabus_type?: string
           total_marks?: number
           week_number?: number | null
@@ -1765,6 +1774,13 @@ export type Database = {
             columns: ["cycle_id"]
             isOneToOne: false
             referencedRelation: "exam_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_exams_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
             referencedColumns: ["id"]
           },
         ]

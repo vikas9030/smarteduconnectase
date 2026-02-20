@@ -15,7 +15,6 @@ import {
   Award,
   UserPlus,
   Image,
-  RotateCcw,
 } from 'lucide-react';
 
 export const adminSidebarItems = [
