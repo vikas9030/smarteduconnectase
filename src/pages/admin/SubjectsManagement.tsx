@@ -26,7 +26,10 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Search, Loader2, MoreHorizontal, Edit, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Search, Loader2, MoreHorizontal, Edit, Trash2, BookOpen, FlaskConical, Filter } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +42,7 @@ interface Subject {
   id: string;
   name: string;
   code: string | null;
+  category: string | null;
   created_at: string;
 }
 
@@ -55,9 +59,11 @@ export default function SubjectsManagement() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
 
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [formData, setFormData] = useState({
     name: '',
     code: '',
+    category: 'general',
   });
 
   useEffect(() => {
@@ -97,6 +103,7 @@ export default function SubjectsManagement() {
     const { error } = await supabase.from('subjects').insert({
       name: formData.name.trim(),
       code: formData.code.trim() || null,
+      category: formData.category,
     });
 
     if (error) {
@@ -104,7 +111,7 @@ export default function SubjectsManagement() {
     } else {
       toast({ title: 'Success', description: 'Subject created successfully' });
       setDialogOpen(false);
-      setFormData({ name: '', code: '' });
+      setFormData({ name: '', code: '', category: 'general' });
       fetchSubjects();
     }
 
@@ -123,6 +130,7 @@ export default function SubjectsManagement() {
     const { error } = await supabase.from('subjects').update({
       name: formData.name.trim(),
       code: formData.code.trim() || null,
+      category: formData.category,
     }).eq('id', editingSubject.id);
 
     if (error) {
@@ -131,7 +139,7 @@ export default function SubjectsManagement() {
       toast({ title: 'Success', description: 'Subject updated successfully' });
       setEditDialogOpen(false);
       setEditingSubject(null);
-      setFormData({ name: '', code: '' });
+      setFormData({ name: '', code: '', category: 'general' });
       fetchSubjects();
     }
 
@@ -150,14 +158,16 @@ export default function SubjectsManagement() {
 
   const openEditDialog = (subject: Subject) => {
     setEditingSubject(subject);
-    setFormData({ name: subject.name, code: subject.code || '' });
+    setFormData({ name: subject.name, code: subject.code || '', category: subject.category || 'general' });
     setEditDialogOpen(true);
   };
 
-  const filteredSubjects = subjects.filter((s) =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (s.code && s.code.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredSubjects = subjects.filter((s) => {
+    const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (s.code && s.code.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesCategory = categoryFilter === 'all' || (s.category || 'general') === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -200,6 +210,19 @@ export default function SubjectsManagement() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Category *</Label>
+                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="competitive">Competitive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting} className="w-full gradient-admin">
                     {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -236,6 +259,19 @@ export default function SubjectsManagement() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Category *</Label>
+                  <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="competitive">Competitive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <DialogFooter>
                   <Button type="submit" disabled={isSubmitting} className="w-full gradient-admin">
                     {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -248,7 +284,7 @@ export default function SubjectsManagement() {
         </div>
 
         <Card className="card-elevated">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -258,6 +294,17 @@ export default function SubjectsManagement() {
                 onChange={(e) => setSearchQuery(e.target.value)} 
               />
             </div>
+            <Tabs value={categoryFilter} onValueChange={setCategoryFilter}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="general" className="flex items-center gap-1">
+                  <BookOpen className="h-3.5 w-3.5" /> General
+                </TabsTrigger>
+                <TabsTrigger value="competitive" className="flex items-center gap-1">
+                  <FlaskConical className="h-3.5 w-3.5" /> Competitive
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -282,6 +329,7 @@ export default function SubjectsManagement() {
                     <TableRow>
                       <TableHead>Subject Name</TableHead>
                       <TableHead>Code</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
@@ -292,6 +340,13 @@ export default function SubjectsManagement() {
                         <TableCell className="font-medium">{subject.name}</TableCell>
                         <TableCell className="font-mono text-sm text-muted-foreground">
                           {subject.code || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={(subject.category || 'general') === 'competitive' ? 'default' : 'secondary'} className="text-xs">
+                            {(subject.category || 'general') === 'competitive' ? (
+                              <><FlaskConical className="h-3 w-3 mr-1" />Competitive</>
+                            ) : 'General'}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
                           {new Date(subject.created_at).toLocaleDateString()}
