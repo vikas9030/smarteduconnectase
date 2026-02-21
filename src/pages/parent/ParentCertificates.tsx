@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -20,6 +21,8 @@ interface CertificateRequest {
   status: string;
   created_at: string;
   attachment_url: string | null;
+  description: string | null;
+  admin_remarks: string | null;
 }
 
 const CERTIFICATE_TYPES = [
@@ -43,6 +46,7 @@ export default function ParentCertificates() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedType, setSelectedType] = useState('');
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [description, setDescription] = useState('');
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -114,6 +118,7 @@ export default function ParentCertificates() {
       certificate_type: selectedType,
       requested_by: user.id,
       attachment_url: attachmentUrl,
+      description: description.trim() || null,
     });
 
     if (error) {
@@ -123,6 +128,7 @@ export default function ParentCertificates() {
       setDialogOpen(false);
       setSelectedType('');
       setAttachmentFile(null);
+      setDescription('');
       fetchData();
     }
     setIsSubmitting(false);
@@ -174,6 +180,15 @@ export default function ParentCertificates() {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label>Description / Reason</Label>
+                  <Textarea
+                    placeholder="Write the reason or any details for this certificate request..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Attachment (Optional)</Label>
                   <Input type="file" accept="image/*,.pdf,.doc,.docx" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
                   <p className="text-xs text-muted-foreground">Upload a supporting document or image (optional)</p>
@@ -216,6 +231,12 @@ export default function ParentCertificates() {
                           <p className="text-sm text-muted-foreground">
                             Requested: {new Date(request.created_at).toLocaleDateString()}
                           </p>
+                          {request.description && (
+                            <p className="text-sm mt-1"><span className="font-medium">Your note:</span> {request.description}</p>
+                          )}
+                          {request.admin_remarks && (
+                            <p className="text-sm mt-1"><span className="font-medium">Admin remarks:</span> {request.admin_remarks}</p>
+                          )}
                           {request.attachment_url && (
                             <a href={request.attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1">
                               <Paperclip className="h-3 w-3" /> View Attachment

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Award, CheckCircle2, XCircle, Clock, FileText, Download } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { adminSidebarItems } from '@/config/adminSidebar';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -36,6 +37,7 @@ export default function CertificatesManagement() {
   const [requests, setRequests] = useState<CertificateRequest[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [remarks, setRemarks] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -99,7 +101,8 @@ export default function CertificatesManagement() {
         .from('certificate_requests')
         .update({ 
           status: newStatus,
-          approved_by: user.id
+          approved_by: user.id,
+          admin_remarks: remarks[id]?.trim() || null,
         })
         .eq('id', id);
 
@@ -208,6 +211,12 @@ export default function CertificatesManagement() {
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Requested by: {request.requester_name || 'Parent'} • {new Date(request.created_at).toLocaleDateString()}
                                 </p>
+                                {(request as any).description && (
+                                  <p className="text-sm mt-1"><span className="font-medium">Parent's note:</span> {(request as any).description}</p>
+                                )}
+                                {(request as any).admin_remarks && request.status !== 'pending' && (
+                                  <p className="text-sm mt-1"><span className="font-medium">Admin remarks:</span> {(request as any).admin_remarks}</p>
+                                )}
                                 {(request as any).attachment_url && (
                                   <a href={(request as any).attachment_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1">
                                     <Download className="h-3 w-3" /> Download Attachment
@@ -223,6 +232,14 @@ export default function CertificatesManagement() {
                               </Badge>
                               
                               {request.status === 'pending' && (
+                                <div className="flex flex-col gap-2 w-full md:w-auto">
+                                  <Textarea
+                                    placeholder="Add remarks (optional)..."
+                                    value={remarks[request.id] || ''}
+                                    onChange={(e) => setRemarks(prev => ({ ...prev, [request.id]: e.target.value }))}
+                                    rows={2}
+                                    className="text-sm min-w-[200px]"
+                                  />
                                 <div className="flex gap-2">
                                   <Button
                                     size="sm"
@@ -256,6 +273,7 @@ export default function CertificatesManagement() {
                                       </>
                                     )}
                                   </Button>
+                                </div>
                                 </div>
                               )}
                             </div>

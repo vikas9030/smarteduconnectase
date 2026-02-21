@@ -118,30 +118,36 @@ export type Database = {
       }
       certificate_requests: {
         Row: {
+          admin_remarks: string | null
           approved_by: string | null
           attachment_url: string | null
           certificate_type: string
           created_at: string | null
+          description: string | null
           id: string
           requested_by: string | null
           status: string | null
           student_id: string
         }
         Insert: {
+          admin_remarks?: string | null
           approved_by?: string | null
           attachment_url?: string | null
           certificate_type: string
           created_at?: string | null
+          description?: string | null
           id?: string
           requested_by?: string | null
           status?: string | null
           student_id: string
         }
         Update: {
+          admin_remarks?: string | null
           approved_by?: string | null
           attachment_url?: string | null
           certificate_type?: string
           created_at?: string | null
+          description?: string | null
           id?: string
           requested_by?: string | null
           status?: string | null
