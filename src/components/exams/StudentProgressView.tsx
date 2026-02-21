@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TrendingUp, TrendingDown, Award, BookOpen, BarChart3, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ExamMark {
   id: string;
@@ -94,27 +95,38 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
     return acc;
   }, {} as Record<string, ExamMark[]>);
 
-  const handleDownloadExcel = () => {
-    const sheetData = marks.map(m => {
+  const handleDownloadPDF = () => {
+    const rows = marks.map(m => {
       const pct = m.marks_obtained && m.exams?.max_marks ? ((m.marks_obtained / m.exams.max_marks) * 100).toFixed(1) : '0';
-      return {
-        'Exam': m.exams?.name || '-',
-        'Subject': m.exams?.subjects?.name || '-',
-        'Marks Obtained': m.marks_obtained ?? 0,
-        'Max Marks': m.exams?.max_marks ?? 100,
-        'Percentage': `${pct}%`,
-        'Grade': m.grade || '-',
-        'Remarks': m.remarks || '-',
-      };
+      return [
+        m.exams?.name || '-',
+        m.exams?.subjects?.name || '-',
+        String(m.marks_obtained ?? 0),
+        String(m.exams?.max_marks ?? 100),
+        `${pct}%`,
+        m.grade || '-',
+        m.remarks || '-',
+      ];
     });
 
-    if (sheetData.length === 0) { toast.error('No data to download'); return; }
+    if (rows.length === 0) { toast.error('No data to download'); return; }
 
-    const ws = XLSX.utils.json_to_sheet(sheetData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Results');
-    XLSX.writeFile(wb, `${studentName.replace(/\s+/g, '_')}_Exam_Results.xlsx`);
-    toast.success('Excel file downloaded!');
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`${studentName} - Exam Results`, 14, 18);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 25);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [['Exam', 'Subject', 'Marks', 'Max', '%', 'Grade', 'Remarks']],
+      body: rows,
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`${studentName.replace(/\s+/g, '_')}_Exam_Results.pdf`);
+    toast.success('PDF downloaded!');
   };
 
   return (
@@ -122,8 +134,8 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
       {/* Download Button */}
       {marks.length > 0 && (
         <div className="flex justify-end">
-          <Button variant="outline" size="sm" className="h-7 sm:h-9 text-[10px] sm:text-sm" onClick={handleDownloadExcel}>
-            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Download Excel
+          <Button variant="outline" size="sm" className="h-7 sm:h-9 text-[10px] sm:text-sm" onClick={handleDownloadPDF}>
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Download PDF
           </Button>
         </div>
       )}
