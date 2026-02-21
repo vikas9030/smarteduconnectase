@@ -44,17 +44,31 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
 
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
 
-  // Get unique exam names and classes
+  const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>('all');
+
+  // Get unique exam names
   const examNames = [...new Set(exams.map(e => e.name))];
+  
+  // Cascading: classes filtered by selected exam name
   const classOptions = [...new Map(exams
     .filter(e => e.classes)
+    .filter(e => !selectedExamName || e.name === selectedExamName)
     .map(e => [e.class_id, { id: e.class_id, name: e.classes!.name, section: e.classes!.section }])
   ).values()];
 
-  // Filter exams by selected name and class
+  // Cascading: subjects filtered by selected exam name + class
+  const subjectOptions = [...new Map(exams
+    .filter(e => e.subjects)
+    .filter(e => !selectedExamName || e.name === selectedExamName)
+    .filter(e => selectedClassFilter === 'all' || e.class_id === selectedClassFilter)
+    .map(e => [e.subject_id!, { id: e.subject_id!, name: e.subjects!.name }])
+  ).values()];
+
+  // Filter exams by selected name, class, and subject
   const filteredExams = exams.filter(e => {
     if (selectedExamName && e.name !== selectedExamName) return false;
     if (selectedClassFilter !== 'all' && e.class_id !== selectedClassFilter) return false;
+    if (selectedSubjectFilter !== 'all' && e.subject_id !== selectedSubjectFilter) return false;
     return true;
   });
 
@@ -185,8 +199,9 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
         <CardContent className="space-y-4">
           {/* Filters */}
           <div className="flex flex-wrap gap-1.5 sm:gap-3">
-            <Select value={selectedExamName || 'all'} onValueChange={(v) => setSelectedExamName(v === 'all' ? '' : v)}>
-              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[220px] text-[10px] sm:text-xs h-7 sm:h-9">
+            {/* Step 1: Exam Name */}
+            <Select value={selectedExamName || 'all'} onValueChange={(v) => { setSelectedExamName(v === 'all' ? '' : v); setSelectedClassFilter('all'); setSelectedSubjectFilter('all'); }}>
+              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9">
                 <SelectValue placeholder="All Exams" />
               </SelectTrigger>
               <SelectContent>
@@ -197,8 +212,9 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
               </SelectContent>
             </Select>
 
-            <Select value={selectedClassFilter} onValueChange={setSelectedClassFilter}>
-                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9">
+            {/* Step 2: Class (filtered by exam) */}
+            <Select value={selectedClassFilter} onValueChange={v => { setSelectedClassFilter(v); setSelectedSubjectFilter('all'); }}>
+                <SelectTrigger className="w-[calc(33%-4px)] sm:w-[150px] text-[10px] sm:text-xs h-7 sm:h-9">
                   <SelectValue placeholder="All Classes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -208,6 +224,19 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
                   ))}
                 </SelectContent>
               </Select>
+
+            {/* Step 3: Subject (filtered by exam + class) */}
+            <Select value={selectedSubjectFilter} onValueChange={setSelectedSubjectFilter}>
+              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[150px] text-[10px] sm:text-xs h-7 sm:h-9">
+                <SelectValue placeholder="All Subjects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subjects</SelectItem>
+                {subjectOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {!selectedExamName && selectedClassFilter === 'all' ? (
