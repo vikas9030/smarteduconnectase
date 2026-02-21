@@ -667,18 +667,28 @@ export default function SyllabusManagement() {
               <Input placeholder="Search chapters, topics..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-7 sm:h-9 text-[10px] sm:text-sm" />
             </div>
 
-            {/* Summary */}
-            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-              <Badge variant="outline" className="text-[10px] sm:text-xs">{filteredSyllabus.length} topics</Badge>
-              <Badge variant="outline" className="text-[10px] sm:text-xs">{Object.keys(groupedSyllabus).length} chapters</Badge>
-            </div>
+            {/* Summary & Data - only show when all 3 filters are selected */}
+            {filterClass !== 'all' && filterSubject !== 'all' && filterExam !== 'all' ? (
+              <>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">{filteredSyllabus.length} topics</Badge>
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">{Object.keys(groupedSyllabus).length} chapters</Badge>
+                </div>
 
-            <TabsContent value="general" className="mt-4">
-              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType completedByNames={completedByNames} />
-            </TabsContent>
-            <TabsContent value="competitive" className="mt-4">
-              <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType completedByNames={completedByNames} />
-            </TabsContent>
+                <TabsContent value="general" className="mt-4">
+                  <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType completedByNames={completedByNames} />
+                </TabsContent>
+                <TabsContent value="competitive" className="mt-4">
+                  <SyllabusList groupedSyllabus={groupedSyllabus} teacherMappings={teacherMappings} onEdit={openEdit} onDelete={handleDelete} onAssignTeacher={openTeacherMapping} showExamType completedByNames={completedByNames} />
+                </TabsContent>
+              </>
+            ) : (
+              <div className="mt-6 text-center py-12 text-muted-foreground">
+                <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p className="text-sm font-medium">Select Class, Subject & Exam to view syllabus</p>
+                <p className="text-xs mt-1">Use the filters above to narrow down the syllabus data</p>
+              </div>
+            )}
           </Tabs>
 
           {/* Edit Dialog */}
