@@ -113,7 +113,7 @@ export default function ParentDashboard() {
           .eq('syllabus_type', 'competitive')
           .gte('exam_date', today)
           .order('exam_date', { ascending: true })
-          .limit(5);
+          .limit(1);
 
         if (classIds.length > 0) {
           compExamsQuery.in('class_id', classIds);
