@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TrendingUp, TrendingDown, Award, BookOpen, BarChart3, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 interface ExamMark {
   id: string;
@@ -93,48 +94,27 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
     return acc;
   }, {} as Record<string, ExamMark[]>);
 
-  const handleDownloadPDF = () => {
-    const html = `
-      <html><head><title>${studentName} - Exam Results</title>
-      <style>
-        body { font-family: 'Inter', Arial, sans-serif; padding: 20px; color: #333; }
-        h1 { font-size: 20px; margin-bottom: 4px; }
-        h2 { font-size: 16px; color: #6c7580; margin: 16px 0 8px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 13px; }
-        th { background: #f5f5f5; font-weight: 600; }
-        .summary { display: flex; gap: 20px; margin-bottom: 16px; }
-        .summary-item { background: #f8f8f8; padding: 12px; border-radius: 8px; text-align: center; flex: 1; }
-        .summary-item .value { font-size: 22px; font-weight: 700; }
-        .summary-item .label { font-size: 11px; color: #888; }
-      </style></head><body>
-      <h1>${studentName} - Exam Results Report</h1>
-      <p style="color:#888;font-size:12px;">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-      ${analytics ? `<div class="summary">
-        <div class="summary-item"><div class="value">${analytics.average.toFixed(1)}%</div><div class="label">Average Score</div></div>
-        <div class="summary-item"><div class="value">${analytics.totalExams}</div><div class="label">Total Exams</div></div>
-        <div class="summary-item"><div class="value">${analytics.bestSubject}</div><div class="label">Best Subject</div></div>
-      </div>` : ''}
-      ${Object.entries(groupedByExam).map(([examName, examMarks]) => `
-        <h2>${examName}</h2>
-        <table>
-          <thead><tr><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th><th>Remarks</th></tr></thead>
-          <tbody>${examMarks.map(m => {
-            const pct = m.marks_obtained && m.exams?.max_marks ? ((m.marks_obtained / m.exams.max_marks) * 100).toFixed(0) : '0';
-            return `<tr><td>${m.exams?.subjects?.name || '-'}</td><td>${m.marks_obtained ?? '-'}/${m.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${m.grade || '-'}</td><td>${m.remarks || '-'}</td></tr>`;
-          }).join('')}</tbody>
-        </table>
-      `).join('')}
-      </body></html>
-    `;
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${studentName.replace(/\s+/g, '_')}_Exam_Results.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Report downloaded');
+  const handleDownloadExcel = () => {
+    const sheetData = marks.map(m => {
+      const pct = m.marks_obtained && m.exams?.max_marks ? ((m.marks_obtained / m.exams.max_marks) * 100).toFixed(1) : '0';
+      return {
+        'Exam': m.exams?.name || '-',
+        'Subject': m.exams?.subjects?.name || '-',
+        'Marks Obtained': m.marks_obtained ?? 0,
+        'Max Marks': m.exams?.max_marks ?? 100,
+        'Percentage': `${pct}%`,
+        'Grade': m.grade || '-',
+        'Remarks': m.remarks || '-',
+      };
+    });
+
+    if (sheetData.length === 0) { toast.error('No data to download'); return; }
+
+    const ws = XLSX.utils.json_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    XLSX.writeFile(wb, `${studentName.replace(/\s+/g, '_')}_Exam_Results.xlsx`);
+    toast.success('Excel file downloaded!');
   };
 
   return (
@@ -142,8 +122,8 @@ export default function StudentProgressView({ marks, studentName, showAnalytics 
       {/* Download Button */}
       {marks.length > 0 && (
         <div className="flex justify-end">
-          <Button variant="outline" size="sm" className="h-7 sm:h-9 text-[10px] sm:text-sm" onClick={handleDownloadPDF}>
-            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Download PDF
+          <Button variant="outline" size="sm" className="h-7 sm:h-9 text-[10px] sm:text-sm" onClick={handleDownloadExcel}>
+            <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> Download Excel
           </Button>
         </div>
       )}
