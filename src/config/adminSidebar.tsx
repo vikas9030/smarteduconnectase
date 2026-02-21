@@ -35,6 +35,7 @@ export const adminSidebarItems = [
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Complaints', path: '/admin/complaints' },
   { icon: <CreditCard className="h-5 w-5" />, label: 'Fees', path: '/admin/fees' },
   { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/admin/gallery' },
+  { icon: <Bell className="h-5 w-5" />, label: 'Notifications', path: '/admin/notifications' },
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/admin/messages' },
   { icon: <Settings className="h-5 w-5" />, label: 'Settings', path: '/admin/settings' },
 ];

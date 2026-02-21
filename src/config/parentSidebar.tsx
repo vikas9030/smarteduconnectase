@@ -25,6 +25,7 @@ export const parentSidebarItems = [
   { icon: <TrendingUp className="h-5 w-5" />, label: 'Progress', path: '/parent/progress' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/parent/announcements' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/parent/leave' },
+  { icon: <Bell className="h-5 w-5" />, label: 'Notifications', path: '/parent/notifications' },
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/parent/messages' },
   { icon: <Award className="h-5 w-5" />, label: 'Certificates', path: '/parent/certificates' },
   { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/parent/gallery' },
