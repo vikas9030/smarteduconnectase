@@ -229,7 +229,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         </div>
 
         {/* Sidebar Toggle */}
-        <div className="flex justify-end px-3 pt-2">
+        <div className={cn("flex px-3 pt-2", sidebarOpen ? "justify-end" : "justify-center")}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="w-7 h-7 bg-sidebar-accent border border-sidebar-border rounded-full flex items-center justify-center hover:bg-sidebar-accent/80 transition-colors"
@@ -254,7 +254,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
                   !sidebarOpen && "justify-center px-2"
                 )}
               >
-                <span className="flex-shrink-0">{item.icon}</span>
+                <span className="flex-shrink-0 flex items-center justify-center">{item.icon}</span>
                 {sidebarOpen && <span>{item.label}</span>}
               </button>
             );
