@@ -110,13 +110,24 @@ export default function TeacherDashboard() {
           .maybeSingle();
 
         if (teacher) {
-          // Fetch assigned classes
+          // Fetch assigned classes from teacher_classes table
           const { data: teacherClasses } = await supabase
             .from('teacher_classes')
             .select('class_id')
             .eq('teacher_id', teacher.id);
 
-          const classIds = teacherClasses?.map(tc => tc.class_id) || [];
+          const tcClassIds = teacherClasses?.map(tc => tc.class_id) || [];
+
+          // Also fetch classes where teacher is the class_teacher
+          const { data: ctClasses } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('class_teacher_id', teacher.id);
+
+          const ctClassIds = ctClasses?.map(c => c.id) || [];
+
+          // Merge unique class IDs from both sources
+          const classIds = [...new Set([...tcClassIds, ...ctClassIds])];
           
           // Fetch student count in assigned classes
           let studentCount = 0;
