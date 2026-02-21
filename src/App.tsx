@@ -27,6 +27,7 @@ import SettingsPage from "./pages/admin/SettingsPage";
 import LeadsManagement from "./pages/admin/LeadsManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import SyllabusManagement from "./pages/admin/SyllabusManagement";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 
 
 // Teacher Pages
@@ -45,6 +46,7 @@ import TeacherLeads from "./pages/teacher/TeacherLeads";
 import TeacherGallery from "./pages/teacher/TeacherGallery";
 import TeacherSyllabus from "./pages/teacher/TeacherSyllabus";
 import TeacherWeeklyExams from "./pages/teacher/TeacherWeeklyExams";
+import TeacherNotifications from "./pages/teacher/TeacherNotifications";
 // Parent Pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ParentChild from "./pages/parent/ParentChild";
@@ -60,6 +62,7 @@ import ParentMessages from "./pages/parent/ParentMessages";
 import ParentCertificates from "./pages/parent/ParentCertificates";
 import ParentFees from "./pages/parent/ParentFees";
 import ParentGallery from "./pages/parent/ParentGallery";
+import ParentNotifications from "./pages/parent/ParentNotifications";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +96,7 @@ const App = () => (
             <Route path="/admin/messages" element={<AdminMessages />} />
             <Route path="/admin/leads" element={<LeadsManagement />} />
             <Route path="/admin/gallery" element={<GalleryManagement />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
             
             {/* Teacher Routes */}
@@ -110,6 +114,7 @@ const App = () => (
             <Route path="/teacher/gallery" element={<TeacherGallery />} />
             <Route path="/teacher/syllabus" element={<TeacherSyllabus />} />
             <Route path="/teacher/weekly-exams" element={<TeacherWeeklyExams />} />
+            <Route path="/teacher/notifications" element={<TeacherNotifications />} />
             <Route path="/teacher/messages" element={<TeacherMessages />} />
             
             {/* Parent Routes */}
@@ -126,6 +131,7 @@ const App = () => (
             <Route path="/parent/messages" element={<ParentMessages />} />
             <Route path="/parent/certificates" element={<ParentCertificates />} />
             <Route path="/parent/gallery" element={<ParentGallery />} />
+            <Route path="/parent/notifications" element={<ParentNotifications />} />
             <Route path="/parent/fees" element={<ParentFees />} />
             
             {/* Catch-all */}
