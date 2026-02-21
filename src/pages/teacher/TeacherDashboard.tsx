@@ -153,6 +153,17 @@ export default function TeacherDashboard() {
             .eq('marked_by', teacher.id)
             .eq('date', todayDate);
 
+          // Fetch pending homework count for teacher's classes
+          let homeworkCount = 0;
+          if (classIds.length > 0) {
+            const { count: hwCount } = await supabase
+              .from('homework')
+              .select('*', { count: 'exact', head: true })
+              .in('class_id', classIds)
+              .gte('due_date', todayDate);
+            homeworkCount = hwCount || 0;
+          }
+
           // Fetch upcoming exams (from exams table, next 5 future exams)
           const todayDate2 = new Date().toISOString().split('T')[0];
           const { data: examData } = await supabase
@@ -179,7 +190,7 @@ export default function TeacherDashboard() {
           setStats({
             myClasses: classIds.length,
             totalStudents: studentCount,
-            pendingHomework: 0,
+            pendingHomework: homeworkCount,
             pendingAttendance: (attendanceCount || 0) === 0,
           });
         }
@@ -215,12 +226,14 @@ export default function TeacherDashboard() {
       <div className="space-y-6 animate-fade-in">
         {/* Welcome Section */}
         <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #1a3628, #2a5040)' }}>
-          <h1 className="font-display text-2xl font-bold">Good Morning, {profileName}!</h1>
+          <h1 className="font-display text-2xl font-bold">
+            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}, {profileName}!
+          </h1>
           <p className="text-white/80 mt-1">Ready for another day of inspiring young minds.</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <StatCard
             title="My Classes"
             value={loadingStats ? '...' : stats.myClasses.toString()}
@@ -235,6 +248,11 @@ export default function TeacherDashboard() {
             title="Today's Classes"
             value={loadingStats ? '...' : todaySchedule.length.toString()}
             icon={<Calendar className="h-6 w-6" />}
+          />
+          <StatCard
+            title="Pending Homework"
+            value={loadingStats ? '...' : stats.pendingHomework.toString()}
+            icon={<FileText className="h-6 w-6" />}
           />
           <StatCard
             title="Attendance"
