@@ -100,7 +100,7 @@ export default function AttendanceCalendar({ attendance, childName, className = 
       reason: a.reason || undefined,
     }));
     downloadAttendanceCSV(records, `attendance-${childName}-${format(currentMonth, 'MMM-yyyy')}`);
-    toast.success('CSV downloaded');
+    toast.success('PDF downloaded');
   };
 
   const handleDownloadPDF = () => {
@@ -114,7 +114,7 @@ export default function AttendanceCalendar({ attendance, childName, className = 
       reason: a.reason || undefined,
     }));
     downloadAttendancePDF(records, `Attendance - ${childName}`, format(currentMonth, 'MMMM yyyy'));
-    toast.success('Print window opened');
+    toast.success('PDF downloaded');
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
