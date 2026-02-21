@@ -62,6 +62,9 @@ export default function ParentDashboard() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [upcomingCompExams, setUpcomingCompExams] = useState<UpcomingCompExam[]>([]);
   const [todayExams, setTodayExams] = useState<TodayScheduleExam[]>([]);
+  const [pendingHomework, setPendingHomework] = useState(0);
+  const [upcomingExamCount, setUpcomingExamCount] = useState(0);
+  const [pendingFees, setPendingFees] = useState(0);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -84,6 +87,7 @@ export default function ParentDashboard() {
           .maybeSingle();
 
         let classIds: string[] = [];
+        let studentIds: string[] = [];
 
         if (parentData) {
           // Get linked students
@@ -93,7 +97,7 @@ export default function ParentDashboard() {
             .eq('parent_id', parentData.id);
 
           if (links && links.length > 0) {
-            const studentIds = links.map(l => l.student_id);
+            studentIds = links.map(l => l.student_id);
             const { data: studentsData } = await supabase
               .from('students')
               .select('id, full_name, admission_number, photo_url, status, class_id, classes(name, section)')
@@ -139,7 +143,29 @@ export default function ParentDashboard() {
 
         if (announcementsRes.data) setAnnouncements(announcementsRes.data);
         if (compRes.data) setUpcomingCompExams(compRes.data as unknown as UpcomingCompExam[]);
-        if (todayRes.data) setTodayExams(todayRes.data as unknown as TodayScheduleExam[]);
+        if (todayRes.data) {
+          setTodayExams(todayRes.data as unknown as TodayScheduleExam[]);
+          setUpcomingExamCount((todayRes.data as any[]).length);
+        }
+
+        // Fetch homework count & fee status for children
+        if (classIds.length > 0) {
+          const { count: hwCount } = await supabase
+            .from('homework')
+            .select('*', { count: 'exact', head: true })
+            .in('class_id', classIds)
+            .gte('due_date', today);
+          setPendingHomework(hwCount || 0);
+        }
+
+        if (studentIds.length > 0) {
+          const { count: feeCount } = await supabase
+            .from('fees')
+            .select('*', { count: 'exact', head: true })
+            .in('student_id', studentIds)
+            .eq('payment_status', 'unpaid');
+          setPendingFees(feeCount || 0);
+        }
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -225,19 +251,19 @@ export default function ParentDashboard() {
           />
           <StatCard
             title="Pending Homework"
-            value="--"
+            value={pendingHomework.toString()}
             icon={<BookOpen className="h-6 w-6" />}
           />
           <StatCard
             title="Upcoming Exams"
-            value="--"
+            value={upcomingExamCount.toString()}
             icon={<FileText className="h-6 w-6" />}
           />
           <StatCard
-            title="Fee Status"
-            value="--"
+            title="Unpaid Fees"
+            value={pendingFees.toString()}
             icon={<CreditCard className="h-6 w-6" />}
-            variant="accent"
+            variant={pendingFees > 0 ? 'accent' : 'default'}
           />
         </div>
 
