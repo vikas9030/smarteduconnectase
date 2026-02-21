@@ -609,9 +609,10 @@ export default function SyllabusManagement() {
               </Card>
             )}
 
-            {/* Filters */}
+            {/* Stepwise Filters */}
             <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-4">
-              <Select value={filterClass} onValueChange={setFilterClass}>
+              {/* Step 1: Class */}
+              <Select value={filterClass} onValueChange={v => { setFilterClass(v); setFilterSubject('all'); setFilterExam('all'); }}>
                 <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                   <SelectValue placeholder="Class" />
                 </SelectTrigger>
@@ -620,22 +621,44 @@ export default function SyllabusManagement() {
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Select value={filterSubject} onValueChange={setFilterSubject}>
+              {/* Step 2: Subject (filtered by class) */}
+              <Select value={filterSubject} onValueChange={v => { setFilterSubject(v); setFilterExam('all'); }}>
                 <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                   <SelectValue placeholder="Subject" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Subjects</SelectItem>
-                  {filteredSubjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  {(() => {
+                    const relevantSubjectIds = new Set(
+                      syllabus
+                        .filter(s => s.syllabus_type === (activeTab === 'general' ? 'general' : 'competitive'))
+                        .filter(s => filterClass === 'all' || s.class_id === filterClass)
+                        .map(s => s.subject_id)
+                    );
+                    return filteredSubjects
+                      .filter(s => relevantSubjectIds.has(s.id))
+                      .map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>);
+                  })()}
                 </SelectContent>
               </Select>
+              {/* Step 3: Exam (filtered by class + subject) */}
               <Select value={filterExam} onValueChange={setFilterExam}>
                 <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
                   <SelectValue placeholder="Exam" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Exams</SelectItem>
-                  {examTypeOptions.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {(() => {
+                    const relevantExams = new Set(
+                      syllabus
+                        .filter(s => s.syllabus_type === (activeTab === 'general' ? 'general' : 'competitive'))
+                        .filter(s => filterClass === 'all' || s.class_id === filterClass)
+                        .filter(s => filterSubject === 'all' || s.subject_id === filterSubject)
+                        .map(s => s.exam_type)
+                        .filter(Boolean)
+                    );
+                    return [...relevantExams].sort().map(t => <SelectItem key={t!} value={t!}>{t}</SelectItem>);
+                  })()}
                 </SelectContent>
               </Select>
             </div>
