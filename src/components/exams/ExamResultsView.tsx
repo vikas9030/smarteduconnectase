@@ -91,9 +91,9 @@ export default function ExamResultsView() {
   // === Regular exam logic ===
   const examNames = useMemo(() => [...new Set(results.map(r => r.exams?.name).filter(Boolean))], [results]);
 
-  // Show results when any filter is active
-  const isRegularFilterActive = selectedExamName !== 'all' || selectedClass !== 'all' || selectedStudent !== 'all' || searchQuery.trim() !== '';
-  const isWeeklyFilterActive = weeklyExamNameFilter !== 'all' || weeklyClassFilter !== 'all' || weeklyDateFilter !== 'all' || weeklySearchQuery.trim() !== '';
+  // Show results only when all filters are selected
+  const isRegularFilterActive = selectedExamName !== 'all' && selectedClass !== 'all' && (selectedStudent !== 'all' || searchQuery.trim() !== '');
+  const isWeeklyFilterActive = weeklyExamNameFilter !== 'all' && weeklyClassFilter !== 'all' && (weeklyDateFilter !== 'all' || weeklySearchQuery.trim() !== '');
   
   const filteredResults = useMemo(() => {
     return results.filter(r => {
