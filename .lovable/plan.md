@@ -1,86 +1,75 @@
 
 
-# Mobile Bottom Navigation Bar Implementation Plan
+## Competitive Exam Bell Notifications + Auto-Rotate Reminders
 
-## Overview
-Transform the mobile experience from a slide-out sidebar to a native app-style bottom navigation bar with 4 primary action buttons + a "More" menu, while keeping the desktop sidebar completely unchanged.
+### What This Does
+1. **Automated bell notifications**: When a competitive exam is 3 days or less away, a notification is automatically inserted into the `notifications` table for admins, teachers, and parents -- so they see it in the bell icon dropdown.
+2. **Auto-rotate reminders on dashboards**: The "Competitive Exam Reminders" card on all 3 dashboards (Admin, Teacher, Parent) will only show the **next upcoming exam** (not past ones). Once an exam date passes, it automatically shows the next one.
 
-## How It Will Work
+### Approach
 
-- On mobile screens (below 768px), the current hamburger menu sidebar will be replaced with a **fixed bottom navigation bar** showing 4-5 key buttons
-- A **"More" button** will open a slide-up sheet containing all remaining menu items
-- The **desktop sidebar remains exactly as-is** -- no changes for laptop/desktop users
-- Each role (Admin, Teacher, Parent) gets its own set of primary bottom tabs
+**Backend: Scheduled Edge Function**
 
-## Bottom Navigation Tabs Per Role
+Create a new edge function `notify-competitive-exams` that:
+- Queries `weekly_exams` where `syllabus_type = 'competitive'` and `exam_date` is within 3 days from now (and not past).
+- For each such exam, checks if a notification already exists (to avoid duplicates) by matching on a convention like `type = 'competitive_exam'` and checking message content or using a dedup query.
+- Inserts notifications into the `notifications` table for:
+  - **All admin user IDs** (from `get_admin_user_ids()`)
+  - **All teacher user IDs** (from `teachers` table)
+  - **All parent user IDs** whose children are in the exam's `class_id` (from `student_parents` + `parents` + `students`)
+- Set up a **daily cron job** using `pg_cron` + `pg_net` to call this function once per day.
 
-### Admin (4 tabs + More)
-1. Dashboard
-2. Students
-3. Attendance
-4. Messages
-5. More (opens sheet with: Teachers, Classes, Subjects, Timetable, Exams, Leads, Announcements, Leave, Certificates, Complaints, Fees, Gallery, Settings)
+**Frontend: Dashboard Reminder Cards**
 
-### Teacher (4 tabs + More)
-1. Dashboard
-2. Attendance
-3. Homework
-4. Messages
-5. More (opens sheet with: My Classes, Students, Exam Marks, Reports, Announcements, Leave, Gallery, Leads)
+Update the competitive exam reminder sections on all 3 dashboards:
+- **Filter**: Only show exams where `exam_date >= today` (already done in queries).
+- **Limit to 1**: Show only the single next upcoming competitive exam instead of a list of 5, so it auto-rotates as dates pass.
+- Alternatively, keep showing up to 3-5 but the query already filters out past exams, so it naturally rotates.
 
-### Parent (4 tabs + More)
-1. Dashboard
-2. Attendance
-3. Exams
-4. Messages
-5. More (opens sheet with: My Child, Timetable, Homework, Progress, Announcements, Leave, Certificates, Gallery, Pay Fees)
+### Technical Details
 
-## Visual Design
-- Fixed to bottom of screen, white/card background with top border
-- Active tab highlighted with role-specific color
-- Icons on top, small labels below each icon
-- "More" button uses a grid/dots icon
-- The "More" sheet slides up from bottom with a grid of all remaining items
-- Content area gets bottom padding (about 70px) on mobile to avoid overlap
-
-## Technical Details
-
-### Files to Create
-1. **`src/components/layouts/MobileBottomNav.tsx`** -- New component containing:
-   - Bottom navigation bar with role-based tabs
-   - "More" sheet using the existing `Sheet` component (slides from bottom)
-   - Uses `useIsMobile()` hook to only render on mobile
-   - Accepts `sidebarItems` and `roleColor` props (same as DashboardLayout)
-   - Configured primary items per role via a mapping object
-
-### Files to Modify
-1. **`src/components/layouts/DashboardLayout.tsx`**:
-   - Import and render `MobileBottomNav` component
-   - Remove the mobile hamburger menu button from the header on mobile
-   - Remove the mobile sidebar overlay and slide-out sidebar
-   - Add bottom padding to `<main>` on mobile (via `pb-20 lg:pb-0`)
-   - Keep all desktop sidebar code untouched
-
-### No Other Files Change
-- Sidebar configs (`adminSidebar.tsx`, `teacherSidebar.tsx`, `parentSidebar.tsx`) stay the same
-- All page components stay the same
-- Routing stays the same
-
-### Component Structure
+#### 1. New Edge Function: `supabase/functions/notify-competitive-exams/index.ts`
 
 ```text
-DashboardLayout
-+-- Desktop Sidebar (hidden on mobile, unchanged)
-+-- Main Content Area (added bottom padding on mobile)
-+-- MobileBottomNav (visible only on mobile)
-    +-- 4 primary tab buttons
-    +-- "More" button -> opens Sheet (side="bottom")
-        +-- Grid of remaining menu items
+- Fetch competitive exams within 3 days: 
+    SELECT * FROM weekly_exams 
+    WHERE syllabus_type='competitive' AND exam_date BETWEEN today AND today+3
+- For each exam:
+  - Get admin user IDs via get_admin_user_ids()
+  - Get teacher user IDs from teachers table
+  - Get parent user IDs by joining students (class_id match) -> student_parents -> parents
+  - Check notifications table for existing notification with same exam info to avoid duplicates
+  - Insert notification rows with type='competitive_exam', title, message with days-left info, link to relevant page
 ```
 
-### Key Implementation Notes
-- The `MobileBottomNav` component determines which 4 items to show based on `roleColor` prop
-- Remaining items go into the "More" sheet automatically
-- Active route highlighting uses `useLocation()` from react-router-dom
-- The existing `useIsMobile()` hook handles responsive detection
-- The "More" sheet closes automatically when a menu item is tapped
+#### 2. Daily Cron Job (pg_cron + pg_net)
+
+Run SQL to schedule daily invocation at 7:00 AM:
+```text
+cron.schedule('notify-comp-exams-daily', '0 7 * * *', ...)
+  -> net.http_post to the edge function URL
+```
+
+#### 3. Dashboard Updates (3 files)
+
+- **`src/pages/admin/AdminDashboard.tsx`**: The competitive exams query already filters `>= today`. Will ensure it shows only future exams and limit display.
+- **`src/pages/teacher/TeacherDashboard.tsx`**: Same adjustment -- query already filters future only.
+- **`src/pages/parent/ParentDashboard.tsx`**: Same -- already filters by class and future date.
+
+All three already auto-rotate because the query uses `gte('exam_date', today)`. No change needed for auto-rotation -- past exams are already excluded.
+
+#### 4. NotificationBell Enhancement
+
+Add `'competitive_exam'` type to the icon mapping in `NotificationBell.tsx` so competitive exam notifications get a distinct icon (flask/beaker icon in orange/red).
+
+### Files to Create/Edit
+
+| File | Action |
+|------|--------|
+| `supabase/functions/notify-competitive-exams/index.ts` | Create -- edge function for daily notification generation |
+| `src/components/NotificationBell.tsx` | Edit -- add competitive_exam icon type |
+| `src/pages/admin/AdminDashboard.tsx` | Minor edit -- ensure reminder card only shows next upcoming exam |
+| `src/pages/teacher/TeacherDashboard.tsx` | Minor edit -- same |
+| `src/pages/parent/ParentDashboard.tsx` | Minor edit -- same |
+| Database (pg_cron) | Insert SQL for daily cron schedule |
+
