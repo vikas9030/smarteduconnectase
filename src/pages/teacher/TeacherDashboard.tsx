@@ -171,7 +171,7 @@ export default function TeacherDashboard() {
             .eq('syllabus_type', 'competitive')
             .gte('exam_date', todayDate2)
             .order('exam_date', { ascending: true })
-            .limit(5);
+            .limit(1);
 
           if (compData) setCompExams(compData as CompExam[]);
 

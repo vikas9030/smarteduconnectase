@@ -124,7 +124,7 @@ export default function AdminDashboard() {
             .eq('syllabus_type', 'competitive')
             .gte('exam_date', today)
             .order('exam_date', { ascending: true })
-            .limit(5),
+            .limit(1),
           supabase.from('exams')
             .select('id, name, exam_date, exam_time, max_marks, classes(name, section), subjects(name)')
             .eq('exam_date', today)
