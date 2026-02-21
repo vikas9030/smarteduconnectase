@@ -153,13 +153,14 @@ export default function TeacherDashboard() {
             .eq('marked_by', teacher.id)
             .eq('date', todayDate);
 
-          // Fetch upcoming exams (from exams table, future dates)
+          // Fetch upcoming exams (from exams table, next 5 future exams)
           const todayDate2 = new Date().toISOString().split('T')[0];
           const { data: examData } = await supabase
             .from('exams')
             .select('id, name, exam_date, exam_time, max_marks, classes(name, section), subjects(name)')
             .gte('exam_date', todayDate2)
             .order('exam_date', { ascending: true })
+            .order('exam_time', { ascending: true })
             .limit(5);
 
           if (examData) setUpcomingExams(examData as UpcomingExam[]);
@@ -330,7 +331,7 @@ export default function TeacherDashboard() {
                   <p>No upcoming exams scheduled</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                 <div className="space-y-3">
                   {upcomingExams.map((exam) => (
                     <div key={exam.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
                       <div className="flex-1 min-w-0">
@@ -340,8 +341,9 @@ export default function TeacherDashboard() {
                         </p>
                       </div>
                       <div className="text-right ml-2 shrink-0">
-                        <p className="text-xs font-medium">{new Date(exam.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
+                        <p className="text-xs font-medium">{new Date(exam.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                         {exam.exam_time && <p className="text-xs text-muted-foreground">{exam.exam_time}</p>}
+                        {exam.max_marks && <p className="text-[10px] text-muted-foreground">Max: {exam.max_marks}</p>}
                       </div>
                     </div>
                   ))}

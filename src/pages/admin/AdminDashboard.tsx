@@ -127,8 +127,10 @@ export default function AdminDashboard() {
             .limit(1),
           supabase.from('exams')
             .select('id, name, exam_date, exam_time, max_marks, classes(name, section), subjects(name)')
-            .eq('exam_date', today)
-            .order('exam_time', { ascending: true }),
+            .gte('exam_date', today)
+            .order('exam_date', { ascending: true })
+            .order('exam_time', { ascending: true })
+            .limit(5),
         ]);
 
         // Calculate today's attendance rate
@@ -324,41 +326,49 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="font-display flex items-center gap-2 text-base">
                 <Calendar className="h-5 w-5 text-primary" />
-                Today's Exam Schedule
+                Upcoming Exam Schedule
               </CardTitle>
             </CardHeader>
             <CardContent>
               {todayExams.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
-                  <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No exams scheduled for today</p>
+                   <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                   <p className="text-sm">No upcoming exams scheduled</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {todayExams.map(exam => (
-                    <div key={exam.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-sm truncate">{exam.name}</p>
-                        <Badge variant="outline" className="text-xs shrink-0">Max: {exam.max_marks}</Badge>
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {exam.classes && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {exam.classes.name}-{exam.classes.section}
-                          </Badge>
-                        )}
-                        {exam.subjects && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
-                            {exam.subjects.name}
-                          </Badge>
-                        )}
-                      </div>
-                      {exam.exam_time && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {exam.exam_time}
-                        </p>
-                      )}
-                    </div>
+                     <div key={exam.id} className="p-3 rounded-lg border bg-muted/20 space-y-1.5">
+                       <div className="flex items-center justify-between gap-2">
+                         <p className="font-semibold text-sm truncate">{exam.name}</p>
+                         <Badge variant="outline" className="text-xs shrink-0">Max: {exam.max_marks}</Badge>
+                       </div>
+                       <div className="flex items-center gap-1.5 flex-wrap">
+                         {exam.classes && (
+                           <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                             {exam.classes.name}-{exam.classes.section}
+                           </Badge>
+                         )}
+                         {exam.subjects && (
+                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                             {exam.subjects.name}
+                           </Badge>
+                         )}
+                       </div>
+                       <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                         {exam.exam_date && (
+                           <span className="flex items-center gap-1">
+                             <Calendar className="h-3 w-3" />
+                             {format(new Date(exam.exam_date + 'T00:00:00'), 'dd MMM yyyy')}
+                           </span>
+                         )}
+                         {exam.exam_time && (
+                           <span className="flex items-center gap-1">
+                             <Clock className="h-3 w-3" /> {exam.exam_time}
+                           </span>
+                         )}
+                       </div>
+                     </div>
                   ))}
                 </div>
               )}
