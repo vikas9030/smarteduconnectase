@@ -10,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Bell, Clock, FileText, Award, CheckCircle, CalendarCheck, FlaskConical, BookOpen } from 'lucide-react';
+import { Bell, Clock, FileText, Award, CheckCircle, CalendarCheck, FlaskConical, BookOpen, Megaphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -95,6 +95,7 @@ export default function NotificationBell() {
       case 'competitive_exam': return <FlaskConical className="h-4 w-4 text-red-500" />;
       case 'exam_schedule': return <FileText className="h-4 w-4 text-indigo-500" />;
       case 'homework': return <BookOpen className="h-4 w-4 text-yellow-600" />;
+      case 'announcement': return <Megaphone className="h-4 w-4 text-teal-500" />;
       default: return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
   };

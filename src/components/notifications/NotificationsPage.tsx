@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/popover';
 import {
   Bell, Clock, FileText, Award, CheckCircle, CalendarCheck,
-  FlaskConical, BookOpen, Trash2, CalendarIcon, X,
+  FlaskConical, BookOpen, Trash2, CalendarIcon, X, Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, isSameDay, isToday, isBefore, isAfter, startOfDay } from 'date-fns';
@@ -37,6 +37,7 @@ const getIcon = (type: string) => {
     case 'competitive_exam': return <FlaskConical className="h-5 w-5 text-red-500" />;
     case 'exam_schedule': return <FileText className="h-5 w-5 text-indigo-500" />;
     case 'homework': return <BookOpen className="h-5 w-5 text-yellow-600" />;
+    case 'announcement': return <Megaphone className="h-5 w-5 text-teal-500" />;
     default: return <Bell className="h-5 w-5 text-muted-foreground" />;
   }
 };
