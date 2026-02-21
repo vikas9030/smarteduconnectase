@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Search, Download, Users, Award, BarChart3, BookOpen, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ExamResult {
   id: string;
@@ -219,11 +220,23 @@ export default function ExamResultsView() {
 
     if (sheetData.length === 0) { toast.error('No data to download'); return; }
 
-    const ws = XLSX.utils.json_to_sheet(sheetData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Results');
-    XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success('Excel file downloaded!');
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(filename.replace(/_/g, ' '), 14, 18);
+    doc.setFontSize(9);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 14, 25);
+
+    const headers = Object.keys(sheetData[0]);
+    autoTable(doc, {
+      startY: 30,
+      head: [headers],
+      body: sheetData.map(row => headers.map(h => String(row[h] ?? '-'))),
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    doc.save(`${filename}_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast.success('PDF downloaded!');
   };
 
   if (loading) {
