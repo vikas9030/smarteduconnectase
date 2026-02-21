@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
-import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface AttendanceExportRecord {
   studentName: string;
@@ -15,25 +16,31 @@ export function downloadAttendanceCSV(
   records: AttendanceExportRecord[],
   filename: string = 'attendance-report'
 ) {
-  if (records.length === 0) {
-    return false;
-  }
+  if (records.length === 0) return false;
 
-  const sheetData = records.map(record => ({
-    'Student Name': record.studentName,
-    'Admission No': record.admissionNumber,
-    'Class': record.className,
-    'Date': record.date,
-    'Status': record.status.charAt(0).toUpperCase() + record.status.slice(1),
-    'Session': record.session || 'Full Day',
-    'Reason': record.reason || '-',
-  }));
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text(filename.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), 14, 18);
+  doc.setFontSize(9);
+  doc.text(`Generated: ${format(new Date(), 'PPP')}`, 14, 25);
 
-  const ws = XLSX.utils.json_to_sheet(sheetData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-  XLSX.writeFile(wb, `${filename}-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  autoTable(doc, {
+    startY: 30,
+    head: [['Student Name', 'Adm No', 'Class', 'Date', 'Status', 'Session', 'Reason']],
+    body: records.map(r => [
+      r.studentName,
+      r.admissionNumber,
+      r.className,
+      r.date,
+      r.status.charAt(0).toUpperCase() + r.status.slice(1),
+      r.session || 'Full Day',
+      r.reason || '-',
+    ]),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [59, 130, 246] },
+  });
 
+  doc.save(`${filename}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   return true;
 }
 
@@ -42,9 +49,7 @@ export function downloadAttendancePDF(
   title: string,
   dateRange: string
 ) {
-  if (records.length === 0) {
-    return false;
-  }
+  if (records.length === 0) return false;
 
   const stats = {
     total: records.length,
@@ -52,41 +57,43 @@ export function downloadAttendancePDF(
     absent: records.filter(r => r.status === 'absent').length,
     late: records.filter(r => r.status === 'late').length,
   };
-
-  const percentage = stats.total > 0 
-    ? Math.round(((stats.present + stats.late) / stats.total) * 100) 
+  const percentage = stats.total > 0
+    ? Math.round(((stats.present + stats.late) / stats.total) * 100)
     : 0;
 
-  // Summary row + data
-  const sheetData = records.map(r => ({
-    'Student Name': r.studentName,
-    'Admission No': r.admissionNumber,
-    'Class': r.className,
-    'Date': r.date,
-    'Status': r.status.charAt(0).toUpperCase() + r.status.slice(1),
-    'Session': r.session || 'Full Day',
-    'Reason': r.reason || '-',
-  }));
+  const doc = new jsPDF();
 
-  const ws = XLSX.utils.json_to_sheet(sheetData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+  // Title
+  doc.setFontSize(16);
+  doc.text(title, 14, 18);
+  doc.setFontSize(10);
+  doc.text(`Date Range: ${dateRange}`, 14, 26);
+  doc.text(`Generated: ${format(new Date(), 'PPP')}`, 14, 32);
 
-  // Add a summary sheet
-  const summaryData = [
-    { 'Metric': 'Report', 'Value': title },
-    { 'Metric': 'Date Range', 'Value': dateRange },
-    { 'Metric': 'Total Records', 'Value': stats.total },
-    { 'Metric': 'Present', 'Value': stats.present },
-    { 'Metric': 'Absent', 'Value': stats.absent },
-    { 'Metric': 'Late', 'Value': stats.late },
-    { 'Metric': 'Attendance Rate', 'Value': `${percentage}%` },
-    { 'Metric': 'Generated On', 'Value': format(new Date(), 'PPP') },
-  ];
-  const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+  // Summary box
+  doc.setFontSize(9);
+  doc.setDrawColor(200);
+  doc.setFillColor(245, 247, 250);
+  doc.roundedRect(14, 36, 180, 18, 2, 2, 'FD');
+  doc.text(`Total: ${stats.total}   |   Present: ${stats.present}   |   Absent: ${stats.absent}   |   Late: ${stats.late}   |   Attendance: ${percentage}%`, 20, 47);
 
-  XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  // Table
+  autoTable(doc, {
+    startY: 60,
+    head: [['Student Name', 'Adm No', 'Class', 'Date', 'Status', 'Session', 'Reason']],
+    body: records.map(r => [
+      r.studentName,
+      r.admissionNumber,
+      r.className,
+      r.date,
+      r.status.charAt(0).toUpperCase() + r.status.slice(1),
+      r.session || 'Full Day',
+      r.reason || '-',
+    ]),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [59, 130, 246] },
+  });
 
+  doc.save(`${title.replace(/\s+/g, '_')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   return true;
 }

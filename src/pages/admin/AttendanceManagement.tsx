@@ -175,7 +175,7 @@ export default function AttendanceManagement() {
       reason: record.reason || undefined,
     }));
     downloadAttendanceCSV(records, `attendance-${selectedDateStr}`);
-    toast({ title: 'Download started', description: 'CSV file is being downloaded.' });
+    toast({ title: 'PDF downloaded', description: 'Attendance report saved.' });
   };
 
   const handleExportPDF = () => {
@@ -189,7 +189,7 @@ export default function AttendanceManagement() {
       reason: record.reason || undefined,
     }));
     downloadAttendancePDF(records, `Attendance Report`, format(selectedDate, 'MMMM d, yyyy'));
-    toast({ title: 'Print window opened', description: 'Use the print dialog to save as PDF.' });
+    toast({ title: 'PDF downloaded', description: 'Attendance report with summary saved.' });
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
