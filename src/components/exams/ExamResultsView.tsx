@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Search, Download, Users, Award, BarChart3, BookOpen, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 interface ExamResult {
   id: string;
@@ -176,52 +177,53 @@ export default function ExamResultsView() {
   };
 
   const handleDownload = (dataType: 'regular' | 'weekly', typeResultsData?: WeeklyExamResult[]) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) { toast.error('Please allow popups to download'); return; }
-
-    let rows = '';
-    let title = '';
-    let headers = '';
+    let sheetData: Record<string, string | number>[] = [];
+    let filename = '';
 
     if (dataType === 'regular') {
-      title = 'Exam Results Report';
-      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Class</th><th>Marks</th><th>%</th><th>Grade</th>';
-      rows = filteredResults.map(r => {
-        const pct = r.marks_obtained && r.exams?.max_marks ? ((r.marks_obtained / r.exams.max_marks) * 100).toFixed(0) : '0';
+      filename = 'Exam_Results';
+      sheetData = filteredResults.map(r => {
+        const pct = r.marks_obtained && r.exams?.max_marks ? ((r.marks_obtained / r.exams.max_marks) * 100).toFixed(1) : '0';
         const cls = r.exams?.classes ? `${r.exams.classes.name}-${r.exams.classes.section.toUpperCase()}` : '-';
-        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.exams?.name || '-'}</td><td>${r.exams?.subjects?.name || '-'}</td><td>${cls}</td><td>${r.marks_obtained ?? '-'}/${r.exams?.max_marks ?? 100}</td><td>${pct}%</td><td>${r.grade || '-'}</td></tr>`;
-      }).join('');
+        return {
+          'Student': r.students?.full_name || '-',
+          'Adm No': r.students?.admission_number || '-',
+          'Exam': r.exams?.name || '-',
+          'Subject': r.exams?.subjects?.name || '-',
+          'Class': cls,
+          'Marks Obtained': r.marks_obtained ?? 0,
+          'Max Marks': r.exams?.max_marks ?? 100,
+          'Percentage': `${pct}%`,
+          'Grade': r.grade || '-',
+        };
+      });
     } else {
       const data = typeResultsData || [];
-      title = 'Exam Results Report';
-      headers = '<th>Student</th><th>Adm No</th><th>Exam</th><th>Subject</th><th>Class</th><th>Marks</th><th>%</th><th>Rank</th>';
-      rows = data.map(r => {
-        const pct = r.percentage?.toFixed(0) || '0';
+      filename = 'Weekly_Exam_Results';
+      sheetData = data.map(r => {
+        const pct = r.percentage?.toFixed(1) || '0';
         const cls = r.weekly_exams?.classes ? `${r.weekly_exams.classes.name}-${r.weekly_exams.classes.section.toUpperCase()}` : '-';
-        return `<tr><td>${r.students?.full_name || '-'}</td><td>${r.students?.admission_number || '-'}</td><td>${r.weekly_exams?.exam_title || '-'}</td><td>${r.weekly_exams?.subjects?.name || '-'}</td><td>${cls}</td><td>${r.obtained_marks}/${r.total_marks}</td><td>${pct}%</td><td>${r.rank || '-'}</td></tr>`;
-      }).join('');
+        return {
+          'Student': r.students?.full_name || '-',
+          'Adm No': r.students?.admission_number || '-',
+          'Exam': r.weekly_exams?.exam_title || '-',
+          'Subject': r.weekly_exams?.subjects?.name || '-',
+          'Class': cls,
+          'Marks Obtained': r.obtained_marks,
+          'Total Marks': r.total_marks,
+          'Percentage': `${pct}%`,
+          'Rank': r.rank || '-',
+        };
+      });
     }
 
-    const count = dataType === 'regular' ? filteredResults.length : (typeResultsData?.length || 0);
-    printWindow.document.write(`
-      <html><head><title>${title}</title>
-      <style>
-        body { font-family: 'Inter', Arial, sans-serif; padding: 20px; color: #333; }
-        h1 { font-size: 20px; margin-bottom: 8px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-        th { background: #f5f5f5; font-weight: 600; }
-        .meta { color: #888; font-size: 12px; margin-bottom: 16px; }
-        @media print { body { padding: 0; } }
-      </style></head><body>
-      <h1>${title}</h1>
-      <p class="meta">Generated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} • ${count} records</p>
-      <table><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>
-      </body></html>
-    `);
-    printWindow.document.close();
-    setTimeout(() => { printWindow.print(); }, 300);
-    toast.success('Download initiated');
+    if (sheetData.length === 0) { toast.error('No data to download'); return; }
+
+    const ws = XLSX.utils.json_to_sheet(sheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Excel file downloaded!');
   };
 
   if (loading) {
