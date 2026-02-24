@@ -215,26 +215,26 @@ export default function TeacherTimetable() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="my-schedule">My Schedule</TabsTrigger>
-            <TabsTrigger value="class-timetable">Class Timetables</TabsTrigger>
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+            <TabsTrigger value="my-schedule" className="text-xs sm:text-sm">My Schedule</TabsTrigger>
+            <TabsTrigger value="class-timetable" className="text-xs sm:text-sm">Class Timetables</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="my-schedule" className="mt-6">
-            <div className="flex justify-end mb-4">
-              {mySchedule.length > 0 && (
+          <TabsContent value="my-schedule" className="mt-4 sm:mt-6">
+            {mySchedule.length > 0 && (
+              <div className="flex justify-end mb-3 sm:mb-4">
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleDownloadMyScheduleCSV}>
-                    <Table className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" onClick={handleDownloadMyScheduleCSV} className="text-xs sm:text-sm">
+                    <Table className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     CSV
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownloadMySchedulePDF}>
-                    <FileText className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" onClick={handleDownloadMySchedulePDF} className="text-xs sm:text-sm">
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     PDF
                   </Button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {mySchedule.length === 0 ? (
               <Card className="card-elevated">
@@ -288,11 +288,11 @@ export default function TeacherTimetable() {
             )}
           </TabsContent>
 
-          <TabsContent value="class-timetable" className="mt-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-              <div className="flex items-center gap-4">
+          <TabsContent value="class-timetable" className="mt-4 sm:mt-6 space-y-4">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 sm:justify-between">
                 <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger className="w-64">
+                  <SelectTrigger className="w-full sm:w-64">
                     <SelectValue placeholder="Select class" />
                   </SelectTrigger>
                   <SelectContent>
@@ -303,24 +303,24 @@ export default function TeacherTimetable() {
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedClassName && (
-                  <span className="text-sm text-muted-foreground">
-                    Viewing: {selectedClassName.name} - {selectedClassName.section}
-                  </span>
+
+                {timetable.length > 0 && (
+                  <div className="flex gap-2 self-end sm:self-auto">
+                    <Button variant="outline" size="sm" onClick={handleDownloadClassCSV} className="text-xs sm:text-sm">
+                      <Table className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleDownloadClassPDF} className="text-xs sm:text-sm">
+                      <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      PDF
+                    </Button>
+                  </div>
                 )}
               </div>
-
-              {timetable.length > 0 && (
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleDownloadClassCSV}>
-                    <Table className="h-4 w-4 mr-2" />
-                    CSV
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownloadClassPDF}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    PDF
-                  </Button>
-                </div>
+              {selectedClassName && (
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  Viewing: {selectedClassName.name} - {selectedClassName.section}
+                </span>
               )}
             </div>
 
