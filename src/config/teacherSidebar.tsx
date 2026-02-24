@@ -31,6 +31,7 @@ const baseTeacherSidebarItems: SidebarItem[] = [
   { icon: <Calendar className="h-5 w-5" />, label: 'Weekly Exams', path: '/teacher/weekly-exams' },
   { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements' },
+  { icon: <Clock className="h-5 w-5" />, label: 'Timetable', path: '/teacher/timetable' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/teacher/leave' },
   { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/teacher/gallery' },
   { icon: <Bell className="h-5 w-5" />, label: 'Notifications', path: '/teacher/notifications' },
