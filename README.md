@@ -58,6 +58,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Fees** | Manage fee structures, track payments, and generate receipts |
 | **Messages** | Direct messaging system with file/image sharing |
 | **Gallery** | Manage photo gallery with folders |
+| **Notifications** | View and manage admin notifications |
 | **Settings** | App configuration, module toggles, and lead permissions |
 
 ### 👩‍🏫 Teacher Panel
@@ -76,8 +77,9 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Leave Request** | Submit personal leave applications with optional document attachments |
 | **Leads** | Manage admission leads with inline status dropdown (when enabled by admin) |
 | **Messages** | Communicate with parents and admin with file/image sharing |
-| **Timetable** | View personal teaching schedule |
+| **Timetable** | View personal teaching schedule ("My Schedule" tab) and browse all class timetables ("Class Timetables" tab) with class filter, CSV/PDF export |
 | **Gallery** | View school photo gallery |
+| **Notifications** | View personal notifications |
 
 ### 👨‍👩‍👧 Parent Panel
 | Module | Description |
@@ -96,6 +98,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Certificates** | Request certificates for child with optional document attachments |
 | **Pay Fees** | View fee details and payment status |
 | **Gallery** | View school photo gallery |
+| **Notifications** | View personal notifications |
 
 ---
 
@@ -181,8 +184,8 @@ src/
 │   └── use-toast.ts           # Toast notification hook
 ├── pages/
 │   ├── admin/                 # 20 admin pages (Dashboard, Teachers, Students, Classes, Subjects, Timetable, Attendance, Exams, Weekly Exams, Exam Cycles, Syllabus, Question Papers, Leads, Announcements, Leave, Certificates, Complaints, Fees, Messages, Gallery, Settings)
-│   ├── teacher/               # 15 teacher pages (Dashboard, Classes, Students, Attendance, Homework, Exams, Syllabus, Weekly Exams, Reports, Announcements, Leave, Leads, Gallery, Messages, Timetable)
-│   ├── parent/                # 14 parent pages (Dashboard, Child, Attendance, Timetable, Homework, Exams, Syllabus, Progress, Announcements, Leave, Messages, Certificates, Fees, Gallery)
+│   ├── teacher/               # 16 teacher pages (Dashboard, Classes, Students, Attendance, Homework, Exams, Syllabus, Weekly Exams, Reports, Announcements, Leave, Leads, Gallery, Messages, Timetable, Notifications)
+│   ├── parent/                # 15 parent pages (Dashboard, Child, Attendance, Timetable, Homework, Exams, Syllabus, Progress, Announcements, Leave, Messages, Certificates, Fees, Gallery, Notifications)
 │   ├── Auth.tsx               # Login / signup page
 │   ├── Index.tsx              # Landing page
 │   └── NotFound.tsx           # 404 page
@@ -834,6 +837,7 @@ Images within gallery folders.
 | `create-student` | Creates student records with optional parent account linking |
 | `seed-demo-users` | Seeds demo admin, teacher, and parent accounts for testing |
 | `full-reset` | Resets all demo data (teachers, students, parents, etc.) |
+| `notify-competitive-exams` | Sends notifications for upcoming competitive exams |
 
 All edge functions run on Deno runtime and use the Supabase service role key for privileged operations.
 
@@ -942,10 +946,22 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 - Upcoming Exam Timetable widget showing next 5 scheduled exams
 - Competitive Exam Reminders with color-coded urgency countdown badges
 
+### Teacher Timetable Module
+- **My Schedule** tab: View personal teaching schedule with day-wise cards showing subject, class, and period timings
+- **Class Timetables** tab: Browse any class timetable with class selector filter across all 6 days (Mon–Sat)
+- CSV and PDF export for both personal schedule and class timetables
+- Fully mobile-responsive with compact buttons, full-width selectors, and grid tab layout
+
+### Notifications System
+- Per-user notification bell with unread count badge in the header
+- Dedicated notifications page for Admin, Teacher, and Parent roles
+- Mark as read, delete, and link-based navigation from notifications
+
 ### Mobile UI Alignment
 - Consistent 2x2 filter grid alignment across Admin, Teacher, and Parent panels
 - Responsive tab sizing with icons and truncated labels
 - Compact select dropdowns with `h-7`/`h-8` heights on mobile
+- Mobile bottom navigation bar with "More" menu for additional sidebar items
 
 ---
 
