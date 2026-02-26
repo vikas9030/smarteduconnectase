@@ -5,9 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, Calendar as CalendarIcon, Clock, BookOpen, Tag, AlignLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, BookOpen, Tag, AlignLeft, ChevronLeft, ChevronRight, CheckCircle2, Play, ArrowRight } from 'lucide-react';
 import { format, isSameDay, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+const getExamDateStatus = (examDate: string): { label: string; color: string } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(examDate);
+  date.setHours(0, 0, 0, 0);
+  if (date > today) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' };
+  if (date.getTime() === today.getTime()) return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' };
+  return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
+};
 
 interface WeeklyExam {
   id: string;
@@ -128,9 +138,10 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
             <div className="space-y-1 flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h4 className="font-semibold text-sm">{exam.exam_title}</h4>
-                <Badge className={`text-[10px] px-1.5 py-0 ${statusColors[exam.status] || ''}`}>
-                  {exam.status}
-                </Badge>
+                {(() => {
+                  const ds = getExamDateStatus(exam.exam_date);
+                  return <Badge className={`text-[10px] px-1.5 py-0 ${ds.color}`}>{ds.label}</Badge>;
+                })()}
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {exam.exam_type_label && exam.exam_type_label !== 'General' && (
@@ -248,7 +259,10 @@ export default function WeeklyExamCalendarView({ filterClassIds }: WeeklyExamCal
             <div className="space-y-4">
               {/* Badges */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge className={`text-xs ${statusColors[detailExam.status] || ''}`}>{detailExam.status}</Badge>
+                {(() => {
+                  const ds = getExamDateStatus(detailExam.exam_date);
+                  return <Badge className={`text-xs ${ds.color}`}>{ds.label}</Badge>;
+                })()}
                 {detailExam.exam_type_label && detailExam.exam_type_label !== 'General' && (
                   <Badge className={`text-xs ${typeColors[detailExam.exam_type_label] || ''}`}>
                     <Tag className="h-3 w-3 mr-0.5" />{detailExam.exam_type_label}

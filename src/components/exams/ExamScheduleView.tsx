@@ -3,7 +3,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, FileText, Loader2 } from 'lucide-react';
+import { Calendar, Clock, FileText, Loader2, CheckCircle2, Play, ArrowRight } from 'lucide-react';
+
+const getExamStatus = (examDate: string | null): { label: string; color: string; icon: React.ReactNode } => {
+  if (!examDate) return { label: 'No Date', color: 'bg-muted text-muted-foreground', icon: null };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(examDate);
+  date.setHours(0, 0, 0, 0);
+  if (date > today) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', icon: <ArrowRight className="h-3 w-3" /> };
+  if (date.getTime() === today.getTime()) return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', icon: <Play className="h-3 w-3" /> };
+  return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle2 className="h-3 w-3" /> };
+};
+
+const getGroupStatus = (exams: Exam[]): { label: string; color: string; icon: React.ReactNode } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dates = exams.filter(e => e.exam_date).map(e => new Date(e.exam_date!));
+  if (dates.length === 0) return { label: 'No Date', color: 'bg-muted text-muted-foreground', icon: null };
+  const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+  const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  minDate.setHours(0, 0, 0, 0);
+  maxDate.setHours(0, 0, 0, 0);
+  if (today > maxDate) return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle2 className="h-3 w-3" /> };
+  if (today < minDate) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', icon: <ArrowRight className="h-3 w-3" /> };
+  return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', icon: <Play className="h-3 w-3" /> };
+};
 
 interface Exam {
   id: string;
@@ -110,12 +135,20 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
               <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
                 <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <CardTitle className="font-display text-sm sm:text-lg truncate">{examName}</CardTitle>
                 <CardDescription className="text-[10px] sm:text-sm">
                   {examList.length} subject(s) • {new Set(examList.map(e => e.class_id)).size} class(es)
                 </CardDescription>
               </div>
+              {(() => {
+                const status = getGroupStatus(examList);
+                return (
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-semibold ${status.color}`}>
+                    {status.icon}{status.label}
+                  </span>
+                );
+              })()}
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -129,6 +162,14 @@ export default function ExamScheduleView({ filterClassIds }: ExamScheduleViewPro
                     <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0 capitalize">
                       {exam.subjects?.name || 'All Subjects'}
                     </Badge>
+                    {(() => {
+                      const s = getExamStatus(exam.exam_date);
+                      return (
+                        <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0 text-[10px] sm:text-xs font-medium ${s.color}`}>
+                          {s.icon}{s.label}
+                        </span>
+                      );
+                    })()}
                     <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0 ml-auto font-semibold">
                       Max: {exam.max_marks}
                     </Badge>
