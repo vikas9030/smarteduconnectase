@@ -756,7 +756,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-220px)] md:h-[600px]">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4 h-[calc(100vh-180px)] sm:h-[calc(100vh-220px)] md:h-[600px]">
       {/* Contacts List - hidden on mobile when a contact is selected */}
       <Card className={`md:col-span-1 ${isMobile && selectedContact ? 'hidden' : ''}`}>
         <CardHeader className="py-3">
@@ -1017,7 +1017,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
             </div>
           )}
 
-          <ScrollArea className="h-[500px]">
+          <ScrollArea className="h-[calc(100vh-320px)] sm:h-[500px]">
             {contacts.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground">
                 <p className="text-sm">No contacts available</p>
@@ -1109,7 +1109,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                         className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                          className={`max-w-[85%] sm:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 ${
                             isSender
                               ? 'bg-primary text-primary-foreground rounded-br-sm'
                               : 'bg-muted rounded-bl-sm'
@@ -1147,7 +1147,7 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
-              <div className="p-4 border-t">
+              <div className="p-2 sm:p-4 border-t">
                 {attachmentFile && (
                   <div className="flex items-center gap-2 mb-2 p-2 bg-muted rounded-lg text-sm">
                     <Paperclip className="h-4 w-4 text-muted-foreground" />
@@ -1155,9 +1155,9 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                     <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => setAttachmentFile(null)}>✕</Button>
                   </div>
                 )}
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 sm:gap-2">
                   <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={(e) => { setAttachmentFile(e.target.files?.[0] || null); e.target.value = ''; }} />
-                  <Button variant="ghost" size="icon" className="shrink-0" onClick={() => fileInputRef.current?.click()} disabled={sending}>
+                  <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 sm:h-10 sm:w-10" onClick={() => fileInputRef.current?.click()} disabled={sending}>
                     <Paperclip className="h-4 w-4" />
                   </Button>
                   <Input
@@ -1166,8 +1166,9 @@ export default function MessagingInterface({ currentUserId, currentUserRole, stu
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                     disabled={sending}
+                    className="h-9 sm:h-10 text-sm"
                   />
-                  <Button onClick={sendMessage} disabled={sending || (!newMessage.trim() && !attachmentFile)}>
+                  <Button onClick={sendMessage} disabled={sending || (!newMessage.trim() && !attachmentFile)} className="shrink-0 h-9 w-9 sm:h-10 sm:w-10 p-0">
                     {sending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (

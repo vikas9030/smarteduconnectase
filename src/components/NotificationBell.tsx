@@ -120,8 +120,8 @@ export default function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 max-w-sm p-0" align="end" sideOffset={8}>
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b">
           <h4 className="font-semibold text-sm">Notifications</h4>
           {unreadCount > 0 && (
             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={markAllRead}>
@@ -129,7 +129,7 @@ export default function NotificationBell() {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="max-h-[60vh] sm:max-h-80">
           {notifications.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground text-sm">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
@@ -142,14 +142,14 @@ export default function NotificationBell() {
                   key={n.id}
                   onClick={() => handleClick(n)}
                   className={cn(
-                    "w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3",
+                    "w-full text-left px-3 sm:px-4 py-3 hover:bg-muted/50 transition-colors flex gap-3",
                     !n.is_read && "bg-primary/5"
                   )}
                 >
                   <div className="mt-0.5 shrink-0">{getIcon(n.type)}</div>
                   <div className="min-w-0 flex-1">
-                    <p className={cn("text-sm", !n.is_read && "font-semibold")}>{n.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                    <p className={cn("text-sm leading-snug", !n.is_read && "font-semibold")}>{n.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">{timeAgo(n.created_at)}</p>
                   </div>
                   {!n.is_read && <div className="mt-2 w-2 h-2 rounded-full bg-primary shrink-0" />}
