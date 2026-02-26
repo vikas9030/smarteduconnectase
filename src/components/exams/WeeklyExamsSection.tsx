@@ -15,8 +15,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   Loader2, Plus, Search, Calendar, Clock, BookOpen, MoreVertical,
-  Pencil, Trash2, Bell, FileText, FlaskConical, GraduationCap, Tag, AlignLeft
+  Pencil, Trash2, Bell, FileText, FlaskConical, GraduationCap, Tag, AlignLeft,
+  CheckCircle2, Play, ArrowRight
 } from 'lucide-react';
+
+const getExamDateStatus = (examDate: string): { label: string; color: string } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(examDate);
+  date.setHours(0, 0, 0, 0);
+  if (date > today) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' };
+  if (date.getTime() === today.getTime()) return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' };
+  return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
+};
 import { toast } from 'sonner';
 
 interface WeeklyExam {
@@ -456,9 +467,10 @@ export default function WeeklyExamsSection() {
                       <div className="space-y-1.5 flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <h3 className="font-semibold text-sm leading-tight">{exam.exam_title}</h3>
-                          <Badge className={`text-[10px] px-1.5 py-0 ${statusColors[exam.status] || ''}`}>
-                            {exam.status}
-                          </Badge>
+                          {(() => {
+                            const ds = getExamDateStatus(exam.exam_date);
+                            return <Badge className={`text-[10px] px-1.5 py-0 ${ds.color}`}>{ds.label}</Badge>;
+                          })()}
                         </div>
 
                         {/* Tags row */}
