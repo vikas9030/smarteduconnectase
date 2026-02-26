@@ -129,7 +129,7 @@ export default function NotificationBell() {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-[60vh] sm:max-h-80">
+        <ScrollArea className="max-h-[60vh] sm:max-h-80 [&>div>div[style]]:!overflow-auto [&_::-webkit-scrollbar]:hidden [&>div>div[style]]:[-ms-overflow-style:none] [&>div>div[style]]:[scrollbar-width:none]">
           {notifications.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground text-sm">
               <Bell className="h-8 w-8 mx-auto mb-2 opacity-30" />
