@@ -43,9 +43,15 @@ const getIcon = (type: string) => {
 };
 
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Rewrite notification link to match user's role panel
+  const getRoleLink = (link: string | null): string | null => {
+    if (!link || !userRole) return link;
+    return link.replace(/^\/(admin|teacher|parent)\//, `/${userRole}/`);
+  };
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
@@ -102,7 +108,8 @@ export default function NotificationsPage() {
 
   const handleClick = (n: Notification) => {
     if (!n.is_read) markAsRead(n.id);
-    if (n.link) navigate(n.link);
+    const roleLink = getRoleLink(n.link);
+    if (roleLink) navigate(roleLink);
   };
 
   const getDateLabel = () => {

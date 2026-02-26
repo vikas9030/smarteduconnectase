@@ -24,12 +24,18 @@ interface Notification {
 }
 
 export default function NotificationBell() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  // Rewrite notification link to match user's role panel
+  const getRoleLink = (link: string | null): string | null => {
+    if (!link || !userRole) return link;
+    return link.replace(/^\/(admin|teacher|parent)\//, `/${userRole}/`);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -80,9 +86,10 @@ export default function NotificationBell() {
 
   const handleClick = (n: Notification) => {
     if (!n.is_read) markAsRead(n.id);
-    if (n.link) {
+    const roleLink = getRoleLink(n.link);
+    if (roleLink) {
       setOpen(false);
-      navigate(n.link);
+      navigate(roleLink);
     }
   };
 
