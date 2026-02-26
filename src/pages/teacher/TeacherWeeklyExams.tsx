@@ -11,14 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Search, Calendar, Clock, FileText, BookOpen, CheckCircle2, HelpCircle, AlignLeft, Tag, Play, ArrowRight } from 'lucide-react';
 
-const getExamDateStatus = (examDate: string): { label: string; color: string; icon: React.ReactNode } => {
+const getExamDateStatus = (examDate: string): { status: 'upcoming' | 'running' | 'completed'; label: string; color: string; icon: React.ReactNode } => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const date = new Date(examDate);
+  const [year, month, day] = examDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
   date.setHours(0, 0, 0, 0);
-  if (date > today) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', icon: <ArrowRight className="h-3 w-3" /> };
-  if (date.getTime() === today.getTime()) return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', icon: <Play className="h-3 w-3" /> };
-  return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle2 className="h-3 w-3" /> };
+  if (date > today) return { status: 'upcoming', label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', icon: <ArrowRight className="h-3 w-3" /> };
+  if (date.getTime() === today.getTime()) return { status: 'running', label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', icon: <Play className="h-3 w-3" /> };
+  return { status: 'completed', label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle2 className="h-3 w-3" /> };
 };
 
 interface WeeklyExam {
@@ -144,15 +145,9 @@ export default function TeacherWeeklyExams() {
     return exams.filter(e => e.exam_title.toLowerCase().includes(q) || e.classes?.name?.toLowerCase().includes(q));
   }, [exams, searchQuery]);
 
-  const scheduledExams = filteredExams.filter(e => e.status === 'scheduled');
-  const liveExams = filteredExams.filter(e => e.status === 'live');
-  const completedExams = filteredExams.filter(e => e.status === 'completed');
-
-  const statusColors: Record<string, string> = {
-    scheduled: 'bg-muted text-muted-foreground',
-    live: 'bg-primary/10 text-primary',
-    completed: 'bg-secondary text-secondary-foreground',
-  };
+  const scheduledExams = filteredExams.filter(e => getExamDateStatus(e.exam_date).status === 'upcoming');
+  const liveExams = filteredExams.filter(e => getExamDateStatus(e.exam_date).status === 'running');
+  const completedExams = filteredExams.filter(e => getExamDateStatus(e.exam_date).status === 'completed');
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;

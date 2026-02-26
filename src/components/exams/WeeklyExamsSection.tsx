@@ -19,14 +19,15 @@ import {
   CheckCircle2, Play, ArrowRight
 } from 'lucide-react';
 
-const getExamDateStatus = (examDate: string): { label: string; color: string } => {
+const getExamDateStatus = (examDate: string): { status: 'upcoming' | 'running' | 'completed'; label: string; color: string } => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const date = new Date(examDate);
+  const [year, month, day] = examDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
   date.setHours(0, 0, 0, 0);
-  if (date > today) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' };
-  if (date.getTime() === today.getTime()) return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' };
-  return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
+  if (date > today) return { status: 'upcoming', label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' };
+  if (date.getTime() === today.getTime()) return { status: 'running', label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' };
+  return { status: 'completed', label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' };
 };
 import { toast } from 'sonner';
 
@@ -247,7 +248,7 @@ export default function WeeklyExamsSection() {
     return exams.filter(e => {
       if (e.syllabus_type !== (examTypeTab === 'general' ? 'general' : 'competitive')) return false;
       if (filterClass !== 'all' && e.class_id !== filterClass) return false;
-      if (filterStatus !== 'all' && e.status !== filterStatus) return false;
+      if (filterStatus !== 'all' && getExamDateStatus(e.exam_date).status !== filterStatus) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return e.exam_title.toLowerCase().includes(q) || 
@@ -439,8 +440,8 @@ export default function WeeklyExamsSection() {
           <SelectTrigger className="w-full sm:w-[130px] h-9"><SelectValue placeholder="All Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="live">Live</SelectItem>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="running">Running</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
           </SelectContent>
         </Select>
