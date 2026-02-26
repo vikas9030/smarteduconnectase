@@ -179,30 +179,6 @@ export default function TeacherAttendance() {
   const setStatus = async (studentId: string, status: 'present' | 'absent' | 'late') => {
     setAttendance(prev => ({ ...prev, [studentId]: status }));
     setConfirmed(prev => new Set(prev).add(studentId));
-
-    if (!teacherId) return;
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
-
-    try {
-      // Delete existing record for this student+date, then insert new one
-      await supabase
-        .from('attendance')
-        .delete()
-        .eq('student_id', studentId)
-        .eq('date', dateStr);
-
-      const { error } = await supabase.from('attendance').insert({
-        student_id: studentId,
-        date: dateStr,
-        status,
-        marked_by: teacherId,
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving attendance:', error);
-      toast.error('Failed to save status');
-    }
   };
 
   const markAllAs = (status: 'present' | 'absent' | 'late') => {
