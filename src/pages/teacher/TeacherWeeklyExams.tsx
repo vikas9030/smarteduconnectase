@@ -9,7 +9,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Calendar, Clock, FileText, BookOpen, CheckCircle2, HelpCircle, AlignLeft, Tag } from 'lucide-react';
+import { Loader2, Search, Calendar, Clock, FileText, BookOpen, CheckCircle2, HelpCircle, AlignLeft, Tag, Play, ArrowRight } from 'lucide-react';
+
+const getExamDateStatus = (examDate: string): { label: string; color: string; icon: React.ReactNode } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(examDate);
+  date.setHours(0, 0, 0, 0);
+  if (date > today) return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300', icon: <ArrowRight className="h-3 w-3" /> };
+  if (date.getTime() === today.getTime()) return { label: 'Running', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300', icon: <Play className="h-3 w-3" /> };
+  return { label: 'Completed', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', icon: <CheckCircle2 className="h-3 w-3" /> };
+};
 
 interface WeeklyExam {
   id: string;
@@ -169,7 +179,14 @@ export default function TeacherWeeklyExams() {
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h3 className="font-semibold text-sm">{exam.exam_title}</h3>
-                <Badge className={`text-[10px] px-1.5 py-0 ${statusColors[exam.status]}`}>{exam.status}</Badge>
+                {(() => {
+                  const ds = getExamDateStatus(exam.exam_date);
+                  return (
+                    <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0 text-[10px] font-semibold ${ds.color}`}>
+                      {ds.icon}{ds.label}
+                    </span>
+                  );
+                })()}
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {exam.exam_type_label && exam.exam_type_label !== 'General' && (
