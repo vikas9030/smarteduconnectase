@@ -12,6 +12,7 @@ import {
   CreditCard,
   Image,
   LibraryBig,
+  Settings,
 } from 'lucide-react';
 
 export const parentSidebarItems = [
@@ -30,4 +31,5 @@ export const parentSidebarItems = [
   { icon: <Award className="h-5 w-5" />, label: 'Certificates', path: '/parent/certificates' },
   { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/parent/gallery' },
   { icon: <CreditCard className="h-5 w-5" />, label: 'Pay Fees', path: '/parent/fees' },
+  { icon: <Settings className="h-5 w-5" />, label: 'Settings', path: '/parent/settings' },
 ];

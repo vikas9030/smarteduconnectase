@@ -47,6 +47,7 @@ import TeacherGallery from "./pages/teacher/TeacherGallery";
 import TeacherSyllabus from "./pages/teacher/TeacherSyllabus";
 import TeacherWeeklyExams from "./pages/teacher/TeacherWeeklyExams";
 import TeacherNotifications from "./pages/teacher/TeacherNotifications";
+import TeacherSettings from "./pages/teacher/TeacherSettings";
 // Parent Pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ParentChild from "./pages/parent/ParentChild";
@@ -63,6 +64,7 @@ import ParentCertificates from "./pages/parent/ParentCertificates";
 import ParentFees from "./pages/parent/ParentFees";
 import ParentGallery from "./pages/parent/ParentGallery";
 import ParentNotifications from "./pages/parent/ParentNotifications";
+import ParentSettings from "./pages/parent/ParentSettings";
 
 const queryClient = new QueryClient();
 
@@ -116,6 +118,7 @@ const App = () => (
             <Route path="/teacher/weekly-exams" element={<TeacherWeeklyExams />} />
             <Route path="/teacher/notifications" element={<TeacherNotifications />} />
             <Route path="/teacher/messages" element={<TeacherMessages />} />
+            <Route path="/teacher/settings" element={<TeacherSettings />} />
             
             {/* Parent Routes */}
             <Route path="/parent" element={<ParentDashboard />} />
@@ -133,6 +136,7 @@ const App = () => (
             <Route path="/parent/gallery" element={<ParentGallery />} />
             <Route path="/parent/notifications" element={<ParentNotifications />} />
             <Route path="/parent/fees" element={<ParentFees />} />
+            <Route path="/parent/settings" element={<ParentSettings />} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />

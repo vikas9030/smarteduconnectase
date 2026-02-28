@@ -42,7 +42,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import NotificationBell from '@/components/NotificationBell';
 import InstallAppBanner from '@/components/InstallAppBanner';
-import PushNotificationToggle from '@/components/PushNotificationToggle';
+
 
 interface SidebarItem {
   icon: ReactNode;
@@ -303,7 +303,6 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
           </div>
 
           <div className="flex items-center gap-3">
-            <PushNotificationToggle />
             <NotificationBell />
 
             <DropdownMenu>
