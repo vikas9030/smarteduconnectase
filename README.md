@@ -116,6 +116,10 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Date Handling** | date-fns |
 | **Icons** | Lucide React |
 | **Spreadsheets** | SheetJS (xlsx) for Excel import/export |
+| **PDF Generation** | jsPDF + jspdf-autotable |
+| **PWA** | vite-plugin-pwa (Workbox) for offline support & installability |
+| **Native Mobile** | Capacitor (iOS & Android) |
+| **Push Notifications** | Web Push API + VAPID (web-push library) |
 | **Animations** | CSS animations, Tailwind transitions |
 
 ---
@@ -201,13 +205,31 @@ src/
 ├── index.css                  # Design tokens, theme, component classes
 └── App.tsx                    # Root component with all routes
 
+├── hooks/
+│   ├── usePushNotifications.ts # Web Push subscription management
+│   └── useInstallPrompt.ts    # PWA install prompt hook
+├── components/
+│   ├── PushNotificationToggle.tsx  # Push notification on/off toggle
+│   ├── InstallAppBanner.tsx        # PWA install banner
+│   └── NotificationBell.tsx        # Header notification bell with unread count
+
 supabase/
 ├── config.toml                # Project configuration
 └── functions/
-    ├── create-student/        # Edge function: create student with auth
-    ├── create-user/           # Edge function: create user accounts
-    ├── full-reset/            # Edge function: reset demo data
-    └── seed-demo-users/       # Edge function: seed demo accounts
+    ├── create-student/            # Edge function: create student with auth
+    ├── create-user/               # Edge function: create user accounts
+    ├── full-reset/                # Edge function: reset demo data
+    ├── seed-demo-users/           # Edge function: seed demo accounts
+    ├── send-push-notification/    # Edge function: Web Push delivery via VAPID
+    └── notify-competitive-exams/  # Edge function: scheduled competitive exam reminders
+
+public/
+├── sw-push.js                 # Service worker push event handler
+├── pwa-192x192.png            # PWA icon (192×192)
+├── pwa-512x512.png            # PWA icon (512×512)
+└── ase-logo.jpg               # School logo
+
+capacitor.config.ts            # Capacitor native app configuration
 ```
 
 ---
@@ -837,7 +859,8 @@ Images within gallery folders.
 | `create-student` | Creates student records with optional parent account linking |
 | `seed-demo-users` | Seeds demo admin, teacher, and parent accounts for testing |
 | `full-reset` | Resets all demo data (teachers, students, parents, etc.) |
-| `notify-competitive-exams` | Sends notifications for upcoming competitive exams |
+| `notify-competitive-exams` | Sends notifications for upcoming competitive exams (scheduled via pg_cron at 7 AM daily) |
+| `send-push-notification` | Delivers Web Push notifications via VAPID keys; also serves GET to return public VAPID key for frontend subscription |
 
 All edge functions run on Deno runtime and use the Supabase service role key for privileged operations.
 
@@ -930,6 +953,29 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 
 ## 🔄 Recent Updates
 
+### 📱 Progressive Web App (PWA)
+- Full offline support with Workbox service worker caching
+- Installable from browser to home screen on any device (iOS & Android)
+- Custom manifest with school branding, icons, and standalone display mode
+- Runtime caching for API calls with NetworkFirst strategy
+- Install prompt banner component for user onboarding
+
+### 🔔 Web Push Notifications
+- VAPID-based Web Push notification system
+- Auto-generated VAPID keys stored securely in `push_config` table
+- Per-device push subscriptions stored in `push_subscriptions` table
+- Push toggle component in settings for users to enable/disable
+- Service worker (`sw-push.js`) handles push events and displays native OS notifications
+- Database trigger on `notifications` table auto-sends push to subscribed devices
+- Expired/invalid subscriptions are cleaned up automatically
+
+### 📲 Native Mobile App (Capacitor)
+- Capacitor integration for building native iOS and Android apps
+- Live-reload development server configuration pointing to preview URL
+- App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
+- Supports publishing to Apple App Store and Google Play Store
+- Shared codebase — same React app runs as web, PWA, and native mobile
+
 ### Syllabus Completion Tracking
 - Teachers can mark syllabus topics as completed with timestamp
 - Completion status (date + teacher name) visible in Admin and Parent panels
@@ -956,12 +1002,41 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 - Per-user notification bell with unread count badge in the header
 - Dedicated notifications page for Admin, Teacher, and Parent roles
 - Mark as read, delete, and link-based navigation from notifications
+- Web Push delivery for real-time alerts even when app is closed
 
 ### Mobile UI Alignment
 - Consistent 2x2 filter grid alignment across Admin, Teacher, and Parent panels
 - Responsive tab sizing with icons and truncated labels
 - Compact select dropdowns with `h-7`/`h-8` heights on mobile
 - Mobile bottom navigation bar with "More" menu for additional sidebar items
+
+---
+
+## 🗄 Backend Tables (Push Notifications)
+
+#### `push_config`
+VAPID key pair storage (auto-generated).
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| `id` | uuid | No | `gen_random_uuid()` |
+| `public_key` | text | No | — |
+| `private_key` | text | No | — |
+| `created_at` | timestamptz | Yes | `now()` |
+
+---
+
+#### `push_subscriptions`
+Per-user, per-device push subscription endpoints.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| `id` | uuid | No | `gen_random_uuid()` |
+| `user_id` | uuid | No | — |
+| `endpoint` | text | No | — |
+| `p256dh` | text | No | — |
+| `auth` | text | No | — |
+| `created_at` | timestamptz | No | `now()` |
 
 ---
 
