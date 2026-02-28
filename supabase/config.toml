@@ -2,3 +2,6 @@ project_id = "qvhwvegvjmxfjrtbibpd"
 
 [functions.notify-competitive-exams]
 verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
