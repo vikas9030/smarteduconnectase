@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Save, School, Bell, Shield, UserPlus, Trash2, Key, AlertTriangle } from 'lucide-react';
 import LeadsSettings from '@/components/leads/LeadsSettings';
 import { Switch } from '@/components/ui/switch';
+import PushNotificationToggle from '@/components/PushNotificationToggle';
 import {
   Dialog,
   DialogContent,
@@ -348,6 +349,14 @@ export default function SettingsPage() {
                   checked={settings.parentNotifications}
                   onCheckedChange={(checked) => setSettings({ ...settings, parentNotifications: checked })}
                 />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div>
+                  <p className="font-medium">Push Notifications</p>
+                  <p className="text-sm text-muted-foreground">Receive push alerts on this device even when the app is closed</p>
+                </div>
+                <PushNotificationToggle />
               </div>
             </CardContent>
           </Card>

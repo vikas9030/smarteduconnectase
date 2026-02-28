@@ -12,6 +12,7 @@ import {
   UserPlus,
   Image,
   LibraryBig,
+  Settings,
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -36,6 +37,7 @@ const baseTeacherSidebarItems: SidebarItem[] = [
   { icon: <Image className="h-5 w-5" />, label: 'Gallery', path: '/teacher/gallery' },
   { icon: <Bell className="h-5 w-5" />, label: 'Notifications', path: '/teacher/notifications' },
   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages' },
+  { icon: <Settings className="h-5 w-5" />, label: 'Settings', path: '/teacher/settings' },
 ];
 
 const leadsItem: SidebarItem = {
