@@ -125,8 +125,7 @@ export default function LeadsSettings() {
     try {
       const { error } = await supabase
         .from('app_settings')
-        .update({ setting_value: enabled, updated_by: user.id, updated_at: new Date().toISOString() } as any)
-        .eq('setting_key', 'leads_module_enabled');
+        .upsert({ setting_key: 'leads_module_enabled', setting_value: enabled, updated_by: user.id, updated_at: new Date().toISOString() } as any, { onConflict: 'setting_key' });
 
       if (error) throw error;
 
@@ -147,8 +146,7 @@ export default function LeadsSettings() {
     try {
       const { error } = await supabase
         .from('app_settings')
-        .update({ setting_value: mode, updated_by: user.id, updated_at: new Date().toISOString() } as any)
-        .eq('setting_key', 'leads_permission_mode');
+        .upsert({ setting_key: 'leads_permission_mode', setting_value: mode, updated_by: user.id, updated_at: new Date().toISOString() } as any, { onConflict: 'setting_key' });
 
       if (error) throw error;
 
