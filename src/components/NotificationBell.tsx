@@ -34,7 +34,12 @@ export default function NotificationBell() {
   // Rewrite notification link to match user's role panel
   const getRoleLink = (link: string | null): string | null => {
     if (!link || !userRole) return link;
-    return link.replace(/^\/(admin|teacher|parent)\//, `/${userRole}/`);
+    let rewritten = link.replace(/^\/(admin|teacher|parent)\//, `/${userRole}/`);
+    // Parents don't have a weekly-exams page; redirect to exams
+    if (userRole === 'parent' && rewritten.includes('/parent/weekly-exams')) {
+      rewritten = rewritten.replace('/parent/weekly-exams', '/parent/exams');
+    }
+    return rewritten;
   };
 
   useEffect(() => {
