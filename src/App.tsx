@@ -28,6 +28,7 @@ import LeadsManagement from "./pages/admin/LeadsManagement";
 import GalleryManagement from "./pages/admin/GalleryManagement";
 import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import AdminNotifications from "./pages/admin/AdminNotifications";
+import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
 
 
 // Teacher Pages
@@ -99,6 +100,7 @@ const App = () => (
             <Route path="/admin/leads" element={<LeadsManagement />} />
             <Route path="/admin/gallery" element={<GalleryManagement />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/weekly-exams" element={<WeeklyExamsManagement />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
             
             {/* Teacher Routes */}
