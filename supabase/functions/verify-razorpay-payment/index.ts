@@ -88,12 +88,14 @@ serve(async (req) => {
     const newStatus = newTotalPaid >= netAmount ? 'paid' : 'partial';
     const receiptNumber = `RZP${Date.now().toString().slice(-8)}`;
 
+    const paidAt = new Date().toISOString();
+
     const { error: updateError } = await adminClient
       .from('fees')
       .update({
         payment_status: newStatus,
         paid_amount: newTotalPaid,
-        paid_at: new Date().toISOString(),
+        paid_at: paidAt,
         receipt_number: receiptNumber,
       })
       .eq('id', fee_id);
@@ -101,6 +103,18 @@ serve(async (req) => {
     if (updateError) {
       throw new Error(`Failed to update fee: ${updateError.message}`);
     }
+
+    // Log payment in fee_payments history
+    await adminClient.from('fee_payments').insert({
+      fee_id,
+      student_id: feeRecord.student_id || (await adminClient.from('fees').select('student_id').eq('id', fee_id).single()).data?.student_id,
+      amount,
+      payment_method: 'razorpay',
+      receipt_number: receiptNumber,
+      razorpay_payment_id,
+      paid_at: paidAt,
+      recorded_by: user.id,
+    });
 
     return new Response(JSON.stringify({
       success: true,
