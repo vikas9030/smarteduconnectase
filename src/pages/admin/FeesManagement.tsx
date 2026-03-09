@@ -30,6 +30,7 @@ interface FeeRecord {
   student_id: string;
   fee_type: string;
   amount: number;
+  discount: number | null;
   paid_amount: number | null;
   due_date: string;
   payment_status: string;
@@ -76,7 +77,7 @@ export default function FeesManagement() {
 
     if (feesRes.data) {
       setFees(feesRes.data as FeeRecord[]);
-      const totalDue = feesRes.data.reduce((sum, f) => sum + (f.amount - (f.paid_amount || 0)), 0);
+      const totalDue = feesRes.data.reduce((sum, f) => sum + (f.amount - (f.discount || 0) - (f.paid_amount || 0)), 0);
       const totalPaid = feesRes.data.reduce((sum, f) => sum + (f.paid_amount || 0), 0);
       const overdue = feesRes.data.filter(f => f.payment_status === 'unpaid' && new Date(f.due_date) < new Date()).length;
       setStats({ totalDue, totalPaid, overdue });
@@ -270,10 +271,10 @@ export default function FeesManagement() {
                             <TableCell>{fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : 'N/A'}</TableCell>
                             <TableCell className="capitalize">{fee.fee_type}</TableCell>
                             <TableCell className="font-medium">₹{fee.amount.toLocaleString()}</TableCell>
-                            <TableCell>{((fee as any).discount || 0) > 0 ? <span className="text-success">₹{((fee as any).discount || 0).toLocaleString()}</span> : '-'}</TableCell>
-                            <TableCell className="font-medium">₹{(fee.amount - ((fee as any).discount || 0)).toLocaleString()}</TableCell>
+                            <TableCell>{(fee.discount || 0) > 0 ? <span className="text-success">₹{(fee.discount || 0).toLocaleString()}</span> : '-'}</TableCell>
+                            <TableCell className="font-medium">₹{(fee.amount - (fee.discount || 0)).toLocaleString()}</TableCell>
                             <TableCell className="text-success">₹{(fee.paid_amount || 0).toLocaleString()}</TableCell>
-                            <TableCell className="font-medium text-destructive">₹{(fee.amount - ((fee as any).discount || 0) - (fee.paid_amount || 0)).toLocaleString()}</TableCell>
+                            <TableCell className="font-medium text-destructive">₹{(fee.amount - (fee.discount || 0) - (fee.paid_amount || 0)).toLocaleString()}</TableCell>
                             <TableCell>{new Date(fee.due_date).toLocaleDateString()}</TableCell>
                             
                             <TableCell>{getStatusBadge(fee.payment_status, fee.due_date)}</TableCell>
