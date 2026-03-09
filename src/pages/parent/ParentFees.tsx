@@ -119,6 +119,8 @@ export default function ParentFees() {
   useEffect(() => {
     loadReceiptTemplate().then(setReceiptTemplate);
   }, []);
+
+  useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
     }
