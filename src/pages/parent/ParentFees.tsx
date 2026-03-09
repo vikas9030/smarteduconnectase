@@ -13,6 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BackButton } from '@/components/ui/back-button';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 declare global {
   interface Window {
@@ -46,7 +49,8 @@ export default function ParentFees() {
   const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
   const [payingFeeId, setPayingFeeId] = useState<string | null>(null);
-
+  const [paymentDialogFee, setPaymentDialogFee] = useState<Fee | null>(null);
+  const [customAmount, setCustomAmount] = useState<string>('');
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
@@ -97,17 +101,23 @@ export default function ParentFees() {
 
   const selectedChild = children.find(c => c.id === selectedChildId);
 
-  const handlePayNow = async (fee: Fee) => {
+  const openPaymentDialog = (fee: Fee) => {
+    const netAmount = fee.amount - (fee.discount || 0);
+    const remaining = netAmount - (fee.paid_amount || 0);
+    setCustomAmount(remaining.toString());
+    setPaymentDialogFee(fee);
+  };
+
+  const handlePayNow = async (fee: Fee, payAmount: number) => {
     if (!user || !selectedChild) return;
+    setPaymentDialogFee(null);
     setPayingFeeId(fee.id);
 
     try {
-      const dueAmount = fee.amount - (fee.discount || 0) - (fee.paid_amount || 0);
-
       const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
         body: {
           fee_id: fee.id,
-          amount: dueAmount,
+          amount: payAmount,
           student_name: selectedChild.name,
           fee_type: fee.fee_type,
         },
@@ -132,7 +142,7 @@ export default function ParentFees() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 fee_id: fee.id,
-                amount: dueAmount,
+                amount: payAmount,
               },
             });
 
@@ -318,7 +328,7 @@ export default function ParentFees() {
                               <Button
                                 size="sm"
                                 className="gradient-parent"
-                                onClick={() => handlePayNow(fee)}
+                                onClick={() => openPaymentDialog(fee)}
                                 disabled={payingFeeId === fee.id}
                               >
                                 {payingFeeId === fee.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
@@ -380,7 +390,7 @@ export default function ParentFees() {
                   <p className="font-semibold">Pay all dues at once</p>
                   <p className="text-sm text-muted-foreground">Total due: ₹{totalDue.toLocaleString()}</p>
                 </div>
-                <Button className="gradient-parent" onClick={() => unpaidFees[0] && handlePayNow(unpaidFees[0])}>
+                <Button className="gradient-parent" onClick={() => unpaidFees[0] && openPaymentDialog(unpaidFees[0])}>
                   <CreditCard className="h-4 w-4 mr-2" />
                   Pay ₹{totalDue.toLocaleString()}
                 </Button>
@@ -390,6 +400,73 @@ export default function ParentFees() {
         )}
       </div>
       )}
+
+      {/* Custom Payment Amount Dialog */}
+      <Dialog open={!!paymentDialogFee} onOpenChange={(open) => { if (!open) setPaymentDialogFee(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Enter Payment Amount
+            </DialogTitle>
+          </DialogHeader>
+          {paymentDialogFee && (() => {
+            const fee = paymentDialogFee;
+            const netAmount = fee.amount - (fee.discount || 0);
+            const alreadyPaid = fee.paid_amount || 0;
+            const remaining = netAmount - alreadyPaid;
+            const enteredAmount = parseFloat(customAmount) || 0;
+            const isValid = enteredAmount > 0 && enteredAmount <= remaining;
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="text-muted-foreground">Fee Type</div>
+                  <div className="font-medium capitalize">{fee.fee_type}</div>
+                  <div className="text-muted-foreground">Total Amount</div>
+                  <div className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</div>
+                  {(fee.discount || 0) > 0 && <>
+                    <div className="text-muted-foreground">Discount</div>
+                    <div className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</div>
+                  </>}
+                  <div className="text-muted-foreground">Already Paid</div>
+                  <div className="flex items-center"><IndianRupee className="h-3 w-3" />{alreadyPaid.toLocaleString()}</div>
+                  <div className="text-muted-foreground font-semibold">Remaining Balance</div>
+                  <div className="flex items-center font-bold text-destructive"><IndianRupee className="h-3 w-3" />{remaining.toLocaleString()}</div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payAmount">Amount to Pay (₹)</Label>
+                  <Input
+                    id="payAmount"
+                    type="number"
+                    min={1}
+                    max={remaining}
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    placeholder={`Max ₹${remaining.toLocaleString()}`}
+                  />
+                  {enteredAmount > remaining && (
+                    <p className="text-xs text-destructive">Amount cannot exceed remaining balance of ₹{remaining.toLocaleString()}</p>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPaymentDialogFee(null)}>Cancel</Button>
+                  <Button
+                    className="gradient-parent"
+                    disabled={!isValid}
+                    onClick={() => handlePayNow(fee, enteredAmount)}
+                  >
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Proceed to Pay ₹{isValid ? enteredAmount.toLocaleString() : '0'}
+                  </Button>
+                </DialogFooter>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
