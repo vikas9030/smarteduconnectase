@@ -94,6 +94,8 @@ export default function ParentFees() {
     fetchFees();
   }, [user]);
 
+  const selectedChild = children.find(c => c.id === selectedChildId);
+
   const handlePayNow = async (fee: Fee) => {
     if (!user || !selectedChild) return;
     setPayingFeeId(fee.id);
@@ -164,8 +166,6 @@ export default function ParentFees() {
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-
-  const selectedChild = children.find(c => c.id === selectedChildId);
   const fees = selectedChild?.fees || [];
   const totalDue = fees.filter(f => f.payment_status !== 'paid').reduce((sum, f) => sum + (f.amount - (f.paid_amount || 0)), 0);
   const totalPaid = fees.filter(f => f.payment_status === 'paid').reduce((sum, f) => sum + f.amount, 0);
