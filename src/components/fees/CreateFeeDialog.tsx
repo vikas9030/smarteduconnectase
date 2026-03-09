@@ -629,7 +629,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                 {feeEntries.map(e => `${e.type}${e.amount ? `: ₹${parseFloat(e.amount).toLocaleString()}` : ''}`).join(' • ')}
               </p>
               {enableDiscount && discountMode === 'flat' && parseFloat(flatDiscount) > 0 && (
-                <p className="text-xs text-success">💰 Discount: ₹{parseFloat(flatDiscount).toLocaleString()} per student</p>
+                <p className="text-xs text-success">💰 Discount: {parseFloat(flatDiscount)}% {totalAmount > 0 ? `(₹${Math.round((parseFloat(flatDiscount) / 100) * totalAmount).toLocaleString()} per fee type)` : ''}</p>
               )}
               {enableDiscount && discountMode === 'per-student' && (
                 <p className="text-xs text-success">
