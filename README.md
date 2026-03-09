@@ -1037,6 +1037,20 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 - Responsive tab sizing with icons and truncated labels
 - Compact select dropdowns with `h-7`/`h-8` heights on mobile
 - Mobile bottom navigation bar with "More" menu for additional sidebar items
+### 💰 Fee Management System
+- **Batch fee creation** — Assign multiple fee types to entire classes or individual students in one go
+- **Multi-section targeting** — Selecting a class auto-toggles all sections (A, B, C); individual sections can be deselected
+- **Percentage-based discounts** — Enter discount as a percentage (e.g., 15 = 15% off); auto-calculates the ₹ amount per fee type
+- **Per-student discounts** — Override class-wide discount with individual student-level percentage discounts
+- **Custom partial payments** — Admin "Record Payment" dialog accepts any amount up to the remaining balance
+- **Parent online payments** — Parents enter a custom amount and pay via Razorpay; supports partial payments
+- **Cumulative payment tracking** — `paid_amount` accumulates across multiple payments; status auto-updates to `partial` or `paid`
+- **Payment history log** — Every payment (cash or online) is logged in `fee_payments` table with its own receipt number
+- **Per-transaction receipts** — Each partial payment generates a unique receipt downloadable as PDF
+- **Balance display** — Balance column (`Net - Paid`) shown across admin fee table, student detail dialog, and parent view
+- **Class Summary view** — Collection analytics per class with discount-adjusted totals
+- **Automated reminders** — Edge function sends fee reminders to parents based on configurable due-date windows
+- **Razorpay integration** — Order creation and HMAC SHA256 signature verification via Edge Functions; API keys stored in `app_settings`
 
 ---
 
