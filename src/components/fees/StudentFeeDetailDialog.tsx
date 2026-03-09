@@ -86,6 +86,7 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
       amount: amount || 0,
       paidAmount: paidAmount || 0,
       paidAt,
+      template: template || undefined,
     });
   };
 
