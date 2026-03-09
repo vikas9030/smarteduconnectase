@@ -133,10 +133,11 @@ export default function FeesManagement() {
 
   // Unique students for filter, scoped to selected class
   const studentOptions = (() => {
+    if (!classFilter) return [];
     const map = new Map<string, { id: string; name: string }>();
     fees.forEach(f => {
       if (!f.students) return;
-      if (classFilter !== 'all' && (f.students.classes as any)?.id !== classFilter) return;
+      if ((f.students.classes as any)?.id !== classFilter) return;
       if (!map.has(f.student_id)) {
         map.set(f.student_id, { id: f.student_id, name: f.students.full_name });
       }
@@ -146,16 +147,17 @@ export default function FeesManagement() {
 
   // Reset student filter when class filter changes
   useEffect(() => {
-    setStudentFilter('all');
+    setStudentFilter('');
   }, [classFilter]);
 
-  const filteredFees = fees.filter((f) => {
+  // Only show data when class is selected
+  const filteredFees = (!classFilter) ? [] : fees.filter((f) => {
     const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
-    const matchesClass = classFilter === 'all' || (f.students?.classes as any)?.id === classFilter;
-    const matchesStudent = studentFilter === 'all' || f.student_id === studentFilter;
+    const matchesClass = (f.students?.classes as any)?.id === classFilter;
+    const matchesStudent = !studentFilter || f.student_id === studentFilter;
     return matchesSearch && matchesStatus && matchesClass && matchesStudent;
   });
 
