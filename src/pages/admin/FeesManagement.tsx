@@ -37,7 +37,7 @@ interface FeeRecord {
   payment_status: string;
   paid_at: string | null;
   receipt_number: string | null;
-  students?: { full_name: string; admission_number: string; login_id?: string | null; classes?: { name: string; section: string; id?: string } | null } | null;
+  students?: { full_name: string; admission_number: string; login_id?: string | null; login_id?: string | null; classes?: { name: string; section: string; id?: string } | null } | null;
 }
 
 export default function FeesManagement() {
@@ -78,7 +78,7 @@ export default function FeesManagement() {
   const fetchData = async () => {
     setLoadingData(true);
     const [feesRes, classesRes] = await Promise.all([
-      supabase.from('fees').select('*, students(full_name, admission_number, classes(id, name, section))').order('due_date', { ascending: false }),
+      supabase.from('fees').select('*, students(fullogin_id, l_name, admission_number, classes(id, name, section))').order('due_date', { ascending: false }),
       supabase.from('classes').select('*').order('name'),
     ]);
 
