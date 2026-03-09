@@ -1,70 +1,51 @@
 
 
-## Convert SmartEduConnect to a Native Mobile App using Capacitor
+## Plan: Custom Receipt Builder for Admins
 
-Your app will be wrapped as a native mobile app that can be published to the Apple App Store and Google Play Store using Capacitor.
+### What
+Allow admins to customize the fee receipt PDF layout — configure school name, logo, header text, footer text, and toggle which fields appear on the receipt. Settings are saved to the database and applied whenever any receipt is generated.
 
-### What You'll Get
-- A real native app for both iPhone and Android
-- Full access to phone features (push notifications, camera, etc.)
-- Can be published to Apple App Store and Google Play Store
-- Your existing web app stays intact -- Capacitor wraps it as a native app
+### Changes
 
-### What Lovable Will Do (Code Changes)
+**1. Database: Store receipt settings in `app_settings`**
+No schema change needed. We'll use the existing `app_settings` table with a new key `receipt_template` storing a JSON object:
+```json
+{
+  "schoolName": "ASE School",
+  "schoolAddress": "123 Street",
+  "schoolPhone": "+91...",
+  "headerTitle": "FEE RECEIPT",
+  "footerText": "This is a computer-generated receipt.",
+  "showAdmissionNumber": true,
+  "showClass": true,
+  "showDiscount": true,
+  "showLogo": true,
+  "logoUrl": "https://..."
+}
+```
 
-1. **Install Capacitor dependencies** -- Add the required packages (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`) to your project
+**2. New component: `src/components/fees/ReceiptTemplateSettings.tsx`**
+- A form/dialog accessible from the Fees Management page (new "Receipt Settings" button)
+- Fields: School Name, Address, Phone, Header Title, Footer Text
+- Toggles: Show Admission Number, Show Class, Show Discount, Show Logo
+- Optional logo upload (to existing `photos` storage bucket)
+- Loads/saves from `app_settings` with key `receipt_template`
+- Live preview section showing a mini receipt mockup
 
-2. **Create Capacitor configuration** -- Set up `capacitor.config.ts` with:
-   - App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
-   - App Name: `smarteduconnectase`
-   - Live reload from your preview URL for development
+**3. Update `FeeReceiptGenerator.tsx`**
+- Accept an optional `templateSettings` parameter
+- Use template values for school name, address, header, footer, logo
+- Conditionally show/hide fields based on toggle settings
+- If logo URL provided and enabled, embed it in the PDF header
 
-### What You'll Need to Do (On Your Computer)
+**4. Update receipt generation call sites**
+- `FeesManagement.tsx`, `StudentFeeDetailDialog.tsx`, `ParentFees.tsx`, `RecordPaymentDialog.tsx`
+- Load receipt template from `app_settings` once and pass to `generateFeeReceipt()`
 
-After Lovable makes the code changes, you'll need to follow these steps on your computer:
-
-1. **Connect to GitHub** -- Go to Settings, then the GitHub tab, and transfer your project to your GitHub account
-
-2. **Clone and set up locally**
-   ```
-   git clone <your-repo-url>
-   cd <your-project>
-   npm install
-   ```
-
-3. **Add mobile platforms**
-   ```
-   npx cap add ios        (for iPhone -- requires a Mac with Xcode)
-   npx cap add android    (for Android -- requires Android Studio)
-   ```
-
-4. **Build and sync**
-   ```
-   npm run build
-   npx cap sync
-   ```
-
-5. **Run on your device or emulator**
-   ```
-   npx cap run ios        (opens in Xcode/iPhone simulator)
-   npx cap run android    (opens in Android Studio/emulator)
-   ```
-
-### Requirements
-- **For iPhone**: A Mac computer with Xcode installed (free from Mac App Store)
-- **For Android**: Android Studio installed (free, works on Mac/Windows/Linux)
-- **For App Store publishing**: Apple Developer account ($99/year) and/or Google Play Developer account ($25 one-time)
-
-### Important Notes
-- After any future code changes in Lovable, you'll need to `git pull`, then run `npx cap sync` to update the native app
-- During development, the app connects to your live preview URL for instant updates
-- For production/publishing, you'll build standalone app bundles
-
-### Technical Details
-
-New/modified files:
-- `package.json` -- Add Capacitor dependencies
-- `capacitor.config.ts` -- Capacitor configuration with live reload server pointing to preview URL
-
-For a detailed guide, check out: https://docs.lovable.dev/tips-tricks/mobile-development
+### Files
+- **New**: `src/components/fees/ReceiptTemplateSettings.tsx` — Settings form + preview
+- **Edit**: `src/components/fees/FeeReceiptGenerator.tsx` — Accept template, render custom layout
+- **Edit**: `src/pages/admin/FeesManagement.tsx` — Add "Receipt Settings" button, load template, pass to generator
+- **Edit**: `src/components/fees/StudentFeeDetailDialog.tsx` — Pass template to generator
+- **Edit**: `src/pages/parent/ParentFees.tsx` — Load template, pass to generator
 
