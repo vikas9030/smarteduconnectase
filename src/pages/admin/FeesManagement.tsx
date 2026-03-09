@@ -150,14 +150,14 @@ export default function FeesManagement() {
     setStudentFilter('');
   }, [classFilter]);
 
-  // Only show data when class is selected
-  const filteredFees = (!classFilter) ? [] : fees.filter((f) => {
+  // Only show data when both class and student are selected
+  const filteredFees = (!classFilter || !studentFilter) ? [] : fees.filter((f) => {
     const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
     const matchesClass = (f.students?.classes as any)?.id === classFilter;
-    const matchesStudent = !studentFilter || f.student_id === studentFilter;
+    const matchesStudent = f.student_id === studentFilter;
     return matchesSearch && matchesStatus && matchesClass && matchesStudent;
   });
 
@@ -215,7 +215,6 @@ export default function FeesManagement() {
                   <Select value={studentFilter} onValueChange={setStudentFilter} disabled={!classFilter}>
                     <SelectTrigger className="w-44"><SelectValue placeholder="Select Student" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all-students">All Students</SelectItem>
                       {studentOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -238,7 +237,7 @@ export default function FeesManagement() {
                 {loadingData ? (
                   <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
                 ) : filteredFees.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">{!classFilter ? 'Please select a class to view fee records' : 'No fee records found'}</div>
+                  <div className="text-center py-12 text-muted-foreground">{!classFilter ? 'Please select a class to begin' : !studentFilter ? 'Please select a student to view fee records' : 'No fee records found'}</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
