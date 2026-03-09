@@ -1,0 +1,1 @@
+ALTER TABLE public.fees ADD COLUMN discount numeric DEFAULT 0;

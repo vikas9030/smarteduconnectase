@@ -29,6 +29,7 @@ interface Fee {
   payment_status: string;
   paid_at: string | null;
   receipt_number: string | null;
+  discount: number | null;
 }
 
 interface Child {
@@ -101,7 +102,7 @@ export default function ParentFees() {
     setPayingFeeId(fee.id);
 
     try {
-      const dueAmount = fee.amount - (fee.paid_amount || 0);
+      const dueAmount = fee.amount - (fee.discount || 0) - (fee.paid_amount || 0);
 
       const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
         body: {
@@ -167,8 +168,8 @@ export default function ParentFees() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
   const fees = selectedChild?.fees || [];
-  const totalDue = fees.filter(f => f.payment_status !== 'paid').reduce((sum, f) => sum + (f.amount - (f.paid_amount || 0)), 0);
-  const totalPaid = fees.filter(f => f.payment_status === 'paid').reduce((sum, f) => sum + f.amount, 0);
+  const totalDue = fees.filter(f => f.payment_status !== 'paid').reduce((sum, f) => sum + (f.amount - (f.discount || 0) - (f.paid_amount || 0)), 0);
+  const totalPaid = fees.filter(f => f.payment_status === 'paid').reduce((sum, f) => sum + (f.paid_amount || f.amount), 0);
   const paidFees = fees.filter(f => f.payment_status === 'paid' && f.paid_at);
   const unpaidFees = fees.filter(f => f.payment_status !== 'paid');
 
@@ -272,15 +273,16 @@ export default function ParentFees() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Fee Type</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Paid</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Paid On</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
+                     <TableRow>
+                       <TableHead>Fee Type</TableHead>
+                       <TableHead>Amount</TableHead>
+                       <TableHead>Discount</TableHead>
+                       <TableHead>Net Amount</TableHead>
+                       <TableHead>Paid</TableHead>
+                       <TableHead>Due Date</TableHead>
+                       <TableHead>Status</TableHead>
+                       <TableHead>Action</TableHead>
+                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {fees.map((fee) => {
@@ -290,6 +292,12 @@ export default function ParentFees() {
                         <TableRow key={fee.id}>
                           <TableCell className="font-medium">{fee.fee_type}</TableCell>
                           <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span></TableCell>
+                          <TableCell>
+                            {(fee.discount || 0) > 0 ? (
+                              <span className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell><span className="flex items-center font-medium"><IndianRupee className="h-3 w-3" />{(fee.amount - (fee.discount || 0)).toLocaleString()}</span></TableCell>
                           <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span></TableCell>
                           <TableCell>
                             <div className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-destructive' : ''}`}>
