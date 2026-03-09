@@ -350,6 +350,11 @@ export default function FeesManagement() {
         fee={paymentFee}
         onSuccess={fetchData}
       />
+
+      <ReceiptTemplateSettings
+        open={showReceiptSettings}
+        onOpenChange={setShowReceiptSettings}
+      />
     </DashboardLayout>
   );
 }
