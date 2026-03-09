@@ -202,11 +202,17 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     }));
   };
 
-  const getDiscountForStudent = (studentId: string): number => {
+  const getDiscountForStudent = (studentId: string, feeAmount: number): number => {
     if (!enableDiscount) return 0;
-    if (discountMode === 'flat') return parseFloat(flatDiscount) || 0;
+    if (discountMode === 'flat') {
+      const pct = parseFloat(flatDiscount) || 0;
+      return Math.round((pct / 100) * feeAmount * 100) / 100;
+    }
     const sd = studentDiscounts[studentId];
-    if (sd?.enabled) return parseFloat(sd.amount) || 0;
+    if (sd?.enabled) {
+      const pct = parseFloat(sd.amount) || 0;
+      return Math.round((pct / 100) * feeAmount * 100) / 100;
+    }
     return 0;
   };
 
@@ -260,14 +266,17 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
       const reminderDaysBefore = enableReminder ? parseInt(reminderDays) || 3 : 0;
 
       const feeRecords = studentIds.flatMap(sid =>
-        feeEntries.map(entry => ({
-          student_id: sid,
-          fee_type: entry.type,
-          amount: parseFloat(entry.amount) || 0,
-          discount: getDiscountForStudent(sid),
-          due_date: dueDateStr,
-          reminder_days_before: reminderDaysBefore,
-        }))
+        feeEntries.map(entry => {
+          const feeAmount = parseFloat(entry.amount) || 0;
+          return {
+            student_id: sid,
+            fee_type: entry.type,
+            amount: feeAmount,
+            discount: getDiscountForStudent(sid, feeAmount),
+            due_date: dueDateStr,
+            reminder_days_before: reminderDaysBefore,
+          };
+        })
       );
 
       const { error } = await supabase.from('fees').insert(feeRecords);
@@ -495,15 +504,21 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
 
                   {discountMode === 'flat' && (
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm whitespace-nowrap">Discount ₹</Label>
+                      <Label className="text-sm whitespace-nowrap">Discount %</Label>
                       <Input
                         type="number"
                         placeholder="0"
                         value={flatDiscount}
                         onChange={(e) => setFlatDiscount(e.target.value)}
                         min="0"
+                        max="100"
                         className="w-32"
                       />
+                      {parseFloat(flatDiscount) > 0 && totalAmount > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          = ₹{Math.round((parseFloat(flatDiscount) / 100) * totalAmount).toLocaleString()} off
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -526,14 +541,18 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                               />
                               <span className="text-sm flex-1 truncate">{s.full_name}</span>
                               {sd.enabled && (
-                                <Input
-                                  type="number"
-                                  placeholder="₹ Discount"
-                                  value={sd.amount}
-                                  onChange={(e) => updateStudentDiscount(s.id, e.target.value)}
-                                  min="0"
-                                  className="w-28 h-8 text-sm"
-                                />
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="number"
+                                    placeholder="% Discount"
+                                    value={sd.amount}
+                                    onChange={(e) => updateStudentDiscount(s.id, e.target.value)}
+                                    min="0"
+                                    max="100"
+                                    className="w-24 h-8 text-sm"
+                                  />
+                                  <span className="text-xs text-muted-foreground">%</span>
+                                </div>
                               )}
                             </div>
                           );
@@ -610,7 +629,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                 {feeEntries.map(e => `${e.type}${e.amount ? `: ₹${parseFloat(e.amount).toLocaleString()}` : ''}`).join(' • ')}
               </p>
               {enableDiscount && discountMode === 'flat' && parseFloat(flatDiscount) > 0 && (
-                <p className="text-xs text-success">💰 Discount: ₹{parseFloat(flatDiscount).toLocaleString()} per student</p>
+                <p className="text-xs text-success">💰 Discount: {parseFloat(flatDiscount)}% {totalAmount > 0 ? `(₹${Math.round((parseFloat(flatDiscount) / 100) * totalAmount).toLocaleString()} per fee type)` : ''}</p>
               )}
               {enableDiscount && discountMode === 'per-student' && (
                 <p className="text-xs text-success">
