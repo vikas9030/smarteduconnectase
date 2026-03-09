@@ -18,13 +18,18 @@ interface ReceiptData {
 export async function generateFeeReceipt(data: ReceiptData) {
   const t = data.template;
   const doc = new jsPDF();
-  let y = 15;
+  let y = 14;
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const centerX = pageWidth / 2;
+  const leftMargin = 14;
+  const rightMargin = pageWidth - 14;
 
   // Logo
   if (t?.showLogo && t.logoUrl) {
     try {
       const img = await loadImage(t.logoUrl);
-      doc.addImage(img, 'PNG', 14, y, 16, 16);
+      doc.addImage(img, 'PNG', leftMargin, y - 2, 18, 18);
     } catch {}
   }
 
@@ -32,65 +37,101 @@ export async function generateFeeReceipt(data: ReceiptData) {
   if (t?.schoolName) {
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(t.schoolName, 105, y + 4, { align: 'center' });
-    y += 7;
+    doc.text(t.schoolName, centerX, y + 4, { align: 'center' });
+    y += 8;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    if (t.schoolAddress) { doc.text(t.schoolAddress, 105, y + 4, { align: 'center' }); y += 5; }
-    if (t.schoolPhone) { doc.text(`Ph: ${t.schoolPhone}`, 105, y + 4, { align: 'center' }); y += 5; }
-    y += 4;
+    if (t.schoolAddress) {
+      doc.text(t.schoolAddress, centerX, y + 4, { align: 'center' });
+      y += 5;
+    }
+    if (t.schoolPhone) {
+      doc.text('Ph: ' + t.schoolPhone, centerX, y + 4, { align: 'center' });
+      y += 5;
+    }
+    y += 6;
   }
 
   // Header title
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text(t?.headerTitle || 'Payment Receipt', 105, y + 4, { align: 'center' });
+  doc.text(t?.headerTitle || 'Payment Receipt', centerX, y + 4, { align: 'center' });
   y += 12;
 
-  // Line
-  doc.setDrawColor(200);
-  doc.line(14, y, 196, y);
-  y += 6;
+  // Separator line
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.5);
+  doc.line(leftMargin, y, rightMargin, y);
+  y += 8;
 
-  // Receipt meta
+  // Receipt No and Date on same line
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Receipt No: ${data.receiptNumber}`, 14, y);
-  doc.text(`Date: ${new Date(data.paidAt).toLocaleDateString()}`, 150, y);
+  doc.text('Receipt No: ' + data.receiptNumber, leftMargin, y);
+  doc.text('Date: ' + new Date(data.paidAt).toLocaleDateString(), rightMargin, y, { align: 'right' });
   y += 8;
 
   // Student info
   doc.setFontSize(11);
-  doc.text(`Student: ${data.studentName}`, 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Student: ' + data.studentName, leftMargin, y);
   y += 7;
+
   const showAdm = t ? t.showAdmissionNumber : true;
   const showClass = t ? t.showClass : true;
-  if (showAdm && data.admissionNumber) { doc.text(`Admission No: ${data.admissionNumber}`, 14, y); y += 7; }
-  if (showClass && data.className) { doc.text(`Class: ${data.className}`, 14, y); y += 7; }
-  y += 2;
 
-  // Table
+  if (showAdm && data.admissionNumber) {
+    doc.text('Admission No: ' + data.admissionNumber, leftMargin, y);
+    y += 7;
+  }
+  if (showClass && data.className) {
+    doc.text('Class: ' + data.className, leftMargin, y);
+    y += 7;
+  }
+  y += 4;
+
+  // Table data
   const discount = data.discount || 0;
   const netAmount = data.amount - discount;
   const showDiscount = t ? t.showDiscount : true;
 
   const head = showDiscount
-    ? [['Fee Type', 'Amount (₹)', 'Discount (₹)', 'Net (₹)', 'Paid (₹)']]
-    : [['Fee Type', 'Amount (₹)', 'Net (₹)', 'Paid (₹)']];
+    ? [['Fee Type', 'Amount (Rs.)', 'Discount (Rs.)', 'Net (Rs.)', 'Paid (Rs.)']]
+    : [['Fee Type', 'Amount (Rs.)', 'Net (Rs.)', 'Paid (Rs.)']];
 
   const body = showDiscount
     ? [[data.feeType, data.amount.toLocaleString(), discount.toLocaleString(), netAmount.toLocaleString(), data.paidAmount.toLocaleString()]]
     : [[data.feeType, data.amount.toLocaleString(), netAmount.toLocaleString(), data.paidAmount.toLocaleString()]];
 
-  autoTable(doc, { startY: y, head, body, theme: 'grid' });
+  autoTable(doc, {
+    startY: y,
+    head,
+    body,
+    theme: 'grid',
+    styles: {
+      fontSize: 10,
+      cellPadding: 4,
+      halign: 'center',
+    },
+    headStyles: {
+      fillColor: [41, 128, 185],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { halign: 'left' },
+    },
+    margin: { left: leftMargin, right: 14 },
+  });
 
   // Footer
-  const finalY = (doc as any).lastAutoTable.finalY + 20;
+  const finalY = (doc as any).lastAutoTable.finalY + 25;
   doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
-  doc.text(t?.footerText || 'This is a computer-generated receipt.', 105, finalY, { align: 'center' });
+  doc.text(t?.footerText || 'This is a computer-generated receipt.', centerX, finalY, { align: 'center' });
 
-  doc.save(`Receipt_${data.receiptNumber}.pdf`);
+  doc.save('Receipt_' + data.receiptNumber + '.pdf');
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
