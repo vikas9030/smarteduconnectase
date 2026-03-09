@@ -77,8 +77,8 @@ export default function FeesManagement() {
 
   const fetchData = async () => {
     setLoadingData(true);
-    const [feesRes, classesRes] = await Promise.all([login_id, 
-      supabase.from('feeslogin_id, ').select('*, students(fullogin_id, l_name, admission_number, classes(id, name, section))').order('due_date', { ascending: false }),
+    const [feesRes, classesRes] = await Promise.all([
+      supabase.from('fees').select('*, students(full_name, admission_number, login_id, classes(id, name, section))').order('due_date', { ascending: false }),
       supabase.from('classes').select('*').order('name'),
     ]);
 
