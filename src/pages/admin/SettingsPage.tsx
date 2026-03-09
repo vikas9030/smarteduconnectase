@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, School, Bell, Shield, UserPlus, Trash2, Key, AlertTriangle } from 'lucide-react';
+import { Loader2, Save, School, Bell, Shield, UserPlus, Trash2, Key, AlertTriangle, CreditCard, Eye, EyeOff } from 'lucide-react';
 import LeadsSettings from '@/components/leads/LeadsSettings';
 import { Switch } from '@/components/ui/switch';
 import PushNotificationToggle from '@/components/PushNotificationToggle';
@@ -76,11 +76,64 @@ export default function SettingsPage() {
   const [fullResetting, setFullResetting] = useState(false);
   const [fullResetConfirmText, setFullResetConfirmText] = useState('');
 
+  // Razorpay settings state
+  const [razorpayKeyId, setRazorpayKeyId] = useState('');
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState('');
+  const [showKeySecret, setShowKeySecret] = useState(false);
+  const [savingRazorpay, setSavingRazorpay] = useState(false);
+  const [loadingRazorpay, setLoadingRazorpay] = useState(true);
+
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);
+
+  // Load Razorpay keys from app_settings
+  useEffect(() => {
+    const fetchRazorpayKeys = async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['razorpay_key_id', 'razorpay_key_secret']);
+      
+      if (data) {
+        const keyId = data.find(s => s.setting_key === 'razorpay_key_id');
+        const keySecret = data.find(s => s.setting_key === 'razorpay_key_secret');
+        if (keyId) setRazorpayKeyId(String(keyId.setting_value).replace(/^"|"$/g, ''));
+        if (keySecret) setRazorpayKeySecret(String(keySecret.setting_value).replace(/^"|"$/g, ''));
+      }
+      setLoadingRazorpay(false);
+    };
+    if (user && userRole === 'admin') fetchRazorpayKeys();
+  }, [user, userRole]);
+
+  const handleSaveRazorpay = async () => {
+    if (!razorpayKeyId.trim() || !razorpayKeySecret.trim()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Both Key ID and Key Secret are required' });
+      return;
+    }
+    setSavingRazorpay(true);
+    try {
+      for (const [key, value] of [['razorpay_key_id', razorpayKeyId.trim()], ['razorpay_key_secret', razorpayKeySecret.trim()]]) {
+        const { data: existing } = await supabase
+          .from('app_settings')
+          .select('id')
+          .eq('setting_key', key)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase.from('app_settings').update({ setting_value: JSON.stringify(value) as any, updated_by: user!.id }).eq('setting_key', key);
+        } else {
+          await supabase.from('app_settings').insert({ setting_key: key, setting_value: JSON.stringify(value) as any, updated_by: user!.id });
+        }
+      }
+      toast({ title: 'Razorpay Keys Saved', description: 'Payment gateway credentials updated successfully' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    }
+    setSavingRazorpay(false);
+  };
 
   const handleSave = async () => {
     setIsSubmitting(true);
@@ -487,6 +540,59 @@ export default function SettingsPage() {
                   Sign Out
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Gateway */}
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-primary" />
+                Payment Gateway (Razorpay)
+              </CardTitle>
+              <CardDescription>Configure Razorpay credentials for online fee payments</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingRazorpay ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label>Razorpay Key ID</Label>
+                    <Input
+                      value={razorpayKeyId}
+                      onChange={(e) => setRazorpayKeyId(e.target.value)}
+                      placeholder="rzp_live_xxxxxxxxxx"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Razorpay Key Secret</Label>
+                    <div className="relative">
+                      <Input
+                        type={showKeySecret ? 'text' : 'password'}
+                        value={razorpayKeySecret}
+                        onChange={(e) => setRazorpayKeySecret(e.target.value)}
+                        placeholder="Enter Key Secret"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowKeySecret(!showKeySecret)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showKeySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button onClick={handleSaveRazorpay} disabled={savingRazorpay} size="sm">
+                    {savingRazorpay && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Razorpay Keys
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 

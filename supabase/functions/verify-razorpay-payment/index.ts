@@ -12,11 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
-    if (!RAZORPAY_KEY_SECRET) {
-      throw new Error('Razorpay secret not configured');
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -32,6 +27,20 @@ serve(async (req) => {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Read Razorpay secret from app_settings first, fall back to env
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: settings } = await adminClient
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['razorpay_key_secret']);
+
+    const dbKeySecret = settings?.find(s => s.setting_key === 'razorpay_key_secret')?.setting_value;
+    const RAZORPAY_KEY_SECRET = (typeof dbKeySecret === 'string' ? dbKeySecret.replace(/^"|"$/g, '') : null) || Deno.env.get('RAZORPAY_KEY_SECRET');
+
+    if (!RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay secret not configured. Please set it in Settings.');
     }
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, fee_id, amount } = await req.json();
@@ -63,8 +72,7 @@ serve(async (req) => {
       });
     }
 
-    // Update fee record using service role (bypasses RLS)
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    // Update fee record
     const receiptNumber = `RZP${Date.now().toString().slice(-8)}`;
 
     const { error: updateError } = await adminClient
