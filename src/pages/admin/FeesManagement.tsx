@@ -277,7 +277,7 @@ export default function FeesManagement() {
                             <TableCell>
                               <button className="text-left hover:underline" onClick={() => openStudentDetail(fee.student_id)}>
                                 <div className="font-medium">{fee.students?.full_name || 'N/A'}</div>
-                                <div classlogin_id || fee.students?.Name="text-xs text-muted-foreground font-mono">{fee.students?.admission_number}</div>
+                                <div className="text-xs text-muted-foreground font-mono">{fee.students?.login_id || fee.students?.admission_number}</div>
                               </button>
                             </TableCell>
                             <TableCell>{fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : 'N/A'}</TableCell>
