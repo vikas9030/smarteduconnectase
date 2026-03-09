@@ -334,7 +334,6 @@ export default function ParentFees() {
                                 {payingFeeId === fee.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
                                 Pay Now
                               </Button>
-                              </Button>
                             ) : fee.receipt_number ? (
                               <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
                                 <Download className="h-3 w-3 mr-1" />Receipt
