@@ -368,6 +368,8 @@ export type Database = {
           paid_at: string | null
           payment_status: string | null
           receipt_number: string | null
+          reminder_days_before: number | null
+          reminder_sent: boolean | null
           student_id: string
         }
         Insert: {
@@ -380,6 +382,8 @@ export type Database = {
           paid_at?: string | null
           payment_status?: string | null
           receipt_number?: string | null
+          reminder_days_before?: number | null
+          reminder_sent?: boolean | null
           student_id: string
         }
         Update: {
@@ -392,6 +396,8 @@ export type Database = {
           paid_at?: string | null
           payment_status?: string | null
           receipt_number?: string | null
+          reminder_days_before?: number | null
+          reminder_sent?: boolean | null
           student_id?: string
         }
         Relationships: [
