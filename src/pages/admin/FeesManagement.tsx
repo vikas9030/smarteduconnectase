@@ -37,7 +37,7 @@ interface FeeRecord {
   payment_status: string;
   paid_at: string | null;
   receipt_number: string | null;
-  students?: { full_name: string; admission_number: string; classes?: { name: string; section: string; id?: string } | null } | null;
+  students?: { full_name: string; admission_number: string; login_id?: string | null; classes?: { name: string; section: string; id?: string } | null } | null;
 }
 
 export default function FeesManagement() {
