@@ -12,6 +12,13 @@ import { parentSidebarItems } from '@/config/parentSidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BackButton } from '@/components/ui/back-button';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
+import { useToast } from '@/hooks/use-toast';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface Fee {
   id: string;
@@ -33,9 +40,11 @@ interface Child {
 export default function ParentFees() {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
+  const [payingFeeId, setPayingFeeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
@@ -43,46 +52,114 @@ export default function ParentFees() {
     }
   }, [user, userRole, loading, navigate]);
 
-  useEffect(() => {
-    async function fetchFees() {
-      if (!user) return;
-      setLoadingData(true);
+  const fetchFees = async () => {
+    if (!user) return;
+    setLoadingData(true);
 
-      const { data: parentData } = await supabase
-        .from('parents')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+    const { data: parentData } = await supabase
+      .from('parents')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-      if (parentData) {
-        const { data: links } = await supabase
-          .from('student_parents')
-          .select('student_id, students(full_name)')
-          .eq('parent_id', parentData.id);
+    if (parentData) {
+      const { data: links } = await supabase
+        .from('student_parents')
+        .select('student_id, students(full_name)')
+        .eq('parent_id', parentData.id);
 
-        if (links && links.length > 0) {
-          const childrenData: Child[] = [];
-          for (const link of links) {
-            const { data: feesData } = await supabase
-              .from('fees')
-              .select('*')
-              .eq('student_id', link.student_id)
-              .order('due_date', { ascending: false });
+      if (links && links.length > 0) {
+        const childrenData: Child[] = [];
+        for (const link of links) {
+          const { data: feesData } = await supabase
+            .from('fees')
+            .select('*')
+            .eq('student_id', link.student_id)
+            .order('due_date', { ascending: false });
 
-            childrenData.push({
-              id: link.student_id,
-              name: (link as any).students?.full_name || '',
-              fees: feesData || [],
-            });
-          }
-          setChildren(childrenData);
-          if (childrenData.length > 0) setSelectedChildId(childrenData[0].id);
+          childrenData.push({
+            id: link.student_id,
+            name: (link as any).students?.full_name || '',
+            fees: feesData || [],
+          });
         }
+        setChildren(childrenData);
+        if (!selectedChildId && childrenData.length > 0) setSelectedChildId(childrenData[0].id);
       }
-      setLoadingData(false);
     }
+    setLoadingData(false);
+  };
+
+  useEffect(() => {
     fetchFees();
   }, [user]);
+
+  const handlePayNow = async (fee: Fee) => {
+    if (!user || !selectedChild) return;
+    setPayingFeeId(fee.id);
+
+    try {
+      const dueAmount = fee.amount - (fee.paid_amount || 0);
+
+      const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          fee_id: fee.id,
+          amount: dueAmount,
+          student_name: selectedChild.name,
+          fee_type: fee.fee_type,
+        },
+      });
+
+      if (error || !data?.order_id) {
+        throw new Error(error?.message || 'Failed to create order');
+      }
+
+      const options = {
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'SmartEduConnect',
+        description: `${fee.fee_type} - ${selectedChild.name}`,
+        order_id: data.order_id,
+        handler: async (response: any) => {
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                fee_id: fee.id,
+                amount: dueAmount,
+              },
+            });
+
+            if (verifyError || !verifyData?.success) {
+              throw new Error(verifyError?.message || 'Verification failed');
+            }
+
+            toast({ title: 'Payment Successful!', description: `Receipt: ${verifyData.receipt_number}` });
+            fetchFees();
+          } catch (err: any) {
+            toast({ variant: 'destructive', title: 'Verification Failed', description: err.message });
+          }
+        },
+        prefill: {
+          name: selectedChild.name,
+        },
+        theme: { color: '#1a5c3a' },
+        modal: {
+          ondismiss: () => setPayingFeeId(null),
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Payment Error', description: err.message });
+    } finally {
+      setPayingFeeId(null);
+    }
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -93,6 +170,7 @@ export default function ParentFees() {
   const totalDue = fees.filter(f => f.payment_status !== 'paid').reduce((sum, f) => sum + (f.amount - (f.paid_amount || 0)), 0);
   const totalPaid = fees.filter(f => f.payment_status === 'paid').reduce((sum, f) => sum + f.amount, 0);
   const paidFees = fees.filter(f => f.payment_status === 'paid' && f.paid_at);
+  const unpaidFees = fees.filter(f => f.payment_status !== 'paid');
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -201,7 +279,7 @@ export default function ParentFees() {
                       <TableHead>Due Date</TableHead>
                       <TableHead>Paid On</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Receipt</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -228,10 +306,19 @@ export default function ParentFees() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {fee.receipt_number ? (
+                            {fee.payment_status !== 'paid' ? (
+                              <Button
+                                size="sm"
+                                className="gradient-parent"
+                                onClick={() => handlePayNow(fee)}
+                                disabled={payingFeeId === fee.id}
+                              >
+                                {payingFeeId === fee.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
+                                Pay Now
+                              </Button>
+                            ) : fee.receipt_number ? (
                               <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
-                                <Download className="h-3 w-3 mr-1" />
-                                {fee.receipt_number}
+                                <Download className="h-3 w-3 mr-1" />Receipt
                               </Button>
                             ) : '-'}
                           </TableCell>
@@ -277,17 +364,17 @@ export default function ParentFees() {
           </Card>
         )}
 
-        {totalDue > 0 && (
+        {unpaidFees.length > 0 && (
           <Card className="card-elevated bg-primary/5 border-primary/20">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold">Ready to pay your dues?</p>
-                  <p className="text-sm text-muted-foreground">Contact school office for payment options</p>
+                  <p className="font-semibold">Pay all dues at once</p>
+                  <p className="text-sm text-muted-foreground">Total due: ₹{totalDue.toLocaleString()}</p>
                 </div>
-                <Button className="gradient-parent">
+                <Button className="gradient-parent" onClick={() => unpaidFees[0] && handlePayNow(unpaidFees[0])}>
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Pay Now
+                  Pay ₹{totalDue.toLocaleString()}
                 </Button>
               </div>
             </CardContent>
