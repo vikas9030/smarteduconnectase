@@ -41,6 +41,62 @@ interface Child {
   fees: Fee[];
 }
 
+function PaymentHistorySection({ studentId, studentName }: { studentId: string; studentName: string }) {
+  const [payments, setPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!studentId) return;
+    supabase
+      .from('fee_payments' as any)
+      .select('id, amount, payment_method, receipt_number, paid_at, fee_id')
+      .eq('student_id', studentId)
+      .order('paid_at', { ascending: false })
+      .then(({ data }) => setPayments((data as any[]) || []));
+  }, [studentId]);
+
+  if (payments.length === 0) return null;
+
+  return (
+    <Card className="card-elevated">
+      <CardHeader>
+        <CardTitle className="font-display flex items-center gap-2">
+          <History className="h-5 w-5 text-primary" />
+          Payment History ({payments.length} transactions)
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {payments.map((p: any) => (
+            <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div>
+                <p className="font-medium flex items-center gap-1">
+                  <IndianRupee className="h-3 w-3" />{Number(p.amount).toLocaleString()}
+                  <Badge variant="outline" className="ml-2 text-xs capitalize">{p.payment_method}</Badge>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(p.paid_at).toLocaleString()} · Receipt: {p.receipt_number}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => {
+                generateFeeReceipt({
+                  receiptNumber: p.receipt_number,
+                  studentName,
+                  feeType: 'Payment',
+                  amount: Number(p.amount),
+                  paidAmount: Number(p.amount),
+                  paidAt: p.paid_at,
+                });
+              }}>
+                <Download className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ParentFees() {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
