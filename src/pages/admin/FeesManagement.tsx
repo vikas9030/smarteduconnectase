@@ -47,8 +47,8 @@ export default function FeesManagement() {
   const [loadingData, setLoadingData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [classFilter, setClassFilter] = useState('all');
-  const [studentFilter, setStudentFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState('');
+  const [studentFilter, setStudentFilter] = useState('');
   const [stats, setStats] = useState({ totalDue: 0, totalPaid: 0, overdue: 0 });
 
   // Dialogs
@@ -133,10 +133,11 @@ export default function FeesManagement() {
 
   // Unique students for filter, scoped to selected class
   const studentOptions = (() => {
+    if (!classFilter) return [];
     const map = new Map<string, { id: string; name: string }>();
     fees.forEach(f => {
       if (!f.students) return;
-      if (classFilter !== 'all' && (f.students.classes as any)?.id !== classFilter) return;
+      if ((f.students.classes as any)?.id !== classFilter) return;
       if (!map.has(f.student_id)) {
         map.set(f.student_id, { id: f.student_id, name: f.students.full_name });
       }
@@ -146,16 +147,17 @@ export default function FeesManagement() {
 
   // Reset student filter when class filter changes
   useEffect(() => {
-    setStudentFilter('all');
+    setStudentFilter('');
   }, [classFilter]);
 
-  const filteredFees = fees.filter((f) => {
+  // Only show data when class is selected
+  const filteredFees = (!classFilter) ? [] : fees.filter((f) => {
     const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
-    const matchesClass = classFilter === 'all' || (f.students?.classes as any)?.id === classFilter;
-    const matchesStudent = studentFilter === 'all' || f.student_id === studentFilter;
+    const matchesClass = (f.students?.classes as any)?.id === classFilter;
+    const matchesStudent = !studentFilter || f.student_id === studentFilter;
     return matchesSearch && matchesStatus && matchesClass && matchesStudent;
   });
 
@@ -205,16 +207,15 @@ export default function FeesManagement() {
                     <Input placeholder="Search by student or fee type..." className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                   </div>
                   <Select value={classFilter} onValueChange={setClassFilter}>
-                    <SelectTrigger className="w-40"><SelectValue placeholder="Class" /></SelectTrigger>
+                    <SelectTrigger className="w-40"><SelectValue placeholder="Select Class" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Classes</SelectItem>
                       {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={studentFilter} onValueChange={setStudentFilter}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder="Student" /></SelectTrigger>
+                  <Select value={studentFilter} onValueChange={setStudentFilter} disabled={!classFilter}>
+                    <SelectTrigger className="w-44"><SelectValue placeholder="Select Student" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Students</SelectItem>
+                      <SelectItem value="all-students">All Students</SelectItem>
                       {studentOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -237,7 +238,7 @@ export default function FeesManagement() {
                 {loadingData ? (
                   <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
                 ) : filteredFees.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">No fee records found</div>
+                  <div className="text-center py-12 text-muted-foreground">{!classFilter ? 'Please select a class to view fee records' : 'No fee records found'}</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
