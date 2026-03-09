@@ -7,6 +7,7 @@ interface FeeRecord {
   student_id: string;
   fee_type: string;
   amount: number;
+  discount: number | null;
   paid_amount: number | null;
   due_date: string;
   payment_status: string;
@@ -35,8 +36,9 @@ export default function ClassSummaryView({ fees, classes, onClassSelect }: Props
 
     const uniqueStudents = new Set(classFees.map(f => f.student_id)).size;
     const totalFees = classFees.reduce((s, f) => s + f.amount, 0);
+    const totalDiscount = classFees.reduce((s, f) => s + (f.discount || 0), 0);
     const totalCollected = classFees.reduce((s, f) => s + (f.paid_amount || 0), 0);
-    const totalDue = totalFees - totalCollected;
+    const totalDue = totalFees - totalDiscount - totalCollected;
     const overdueCount = classFees.filter(f => f.payment_status !== 'paid' && new Date(f.due_date) < new Date()).length;
 
     return { cls, uniqueStudents, totalFees, totalCollected, totalDue, overdueCount };
