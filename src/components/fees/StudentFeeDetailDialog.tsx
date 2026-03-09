@@ -40,8 +40,15 @@ interface Props {
 export default function StudentFeeDetailDialog({ open, onOpenChange, studentName, admissionNumber, className, fees }: Props) {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
+  const [template, setTemplate] = useState<ReceiptTemplate | null>(null);
 
   const feeIds = fees.map(f => f.id);
+
+  useEffect(() => {
+    if (open) {
+      loadReceiptTemplate().then(setTemplate);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open && feeIds.length > 0) {
