@@ -504,15 +504,21 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
 
                   {discountMode === 'flat' && (
                     <div className="flex items-center gap-2">
-                      <Label className="text-sm whitespace-nowrap">Discount ₹</Label>
+                      <Label className="text-sm whitespace-nowrap">Discount %</Label>
                       <Input
                         type="number"
                         placeholder="0"
                         value={flatDiscount}
                         onChange={(e) => setFlatDiscount(e.target.value)}
                         min="0"
+                        max="100"
                         className="w-32"
                       />
+                      {parseFloat(flatDiscount) > 0 && totalAmount > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          = ₹{Math.round((parseFloat(flatDiscount) / 100) * totalAmount).toLocaleString()} off
+                        </span>
+                      )}
                     </div>
                   )}
 
