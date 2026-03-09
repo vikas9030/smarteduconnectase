@@ -1,70 +1,42 @@
 
 
-## Convert SmartEduConnect to a Native Mobile App using Capacitor
+## Plan: Add Class-Section Selector, Per-Student Discounts, and Show Discount to Parents
 
-Your app will be wrapped as a native mobile app that can be published to the Apple App Store and Google Play Store using Capacitor.
+### Overview
+Add a discount system where admins can assign per-student discounts when creating fees. The discount is stored in the `fees` table and automatically shown to parents with net amount calculations. The Razorpay payment amount will be `amount - discount`.
 
-### What You'll Get
-- A real native app for both iPhone and Android
-- Full access to phone features (push notifications, camera, etc.)
-- Can be published to Apple App Store and Google Play Store
-- Your existing web app stays intact -- Capacitor wraps it as a native app
+### 1. Database Migration
+Add `discount` column to `fees` table:
+```sql
+ALTER TABLE public.fees ADD COLUMN discount numeric DEFAULT 0;
+```
 
-### What Lovable Will Do (Code Changes)
+### 2. Update `CreateFeeDialog.tsx`
+- **Class selector**: Already shows `name - section` — no change needed.
+- **Fetch students when class is selected** (both modes) so we can show discount UI.
+- **Discount section** (after fee entries):
+  - Toggle: "Enable Discount"
+  - Two sub-modes: "Same for all" (single input) vs "Per student" (list of students with individual discount inputs and checkboxes)
+  - In "Per student" mode, show all students in the selected class with name + checkbox + discount amount input
+- **Submission**: Include `discount` field per fee record based on student-specific or flat discount value.
 
-1. **Install Capacitor dependencies** -- Add the required packages (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`) to your project
+### 3. Update `ParentFees.tsx`
+- Show discount and net payable amount in the fee table (new columns: "Discount", "Net Amount")
+- Summary cards: adjust "Total Due" to use `amount - discount - paid_amount`
+- Razorpay `handlePayNow`: calculate `dueAmount = fee.amount - (fee.discount || 0) - (fee.paid_amount || 0)`
+- Fee interface: add `discount` field
 
-2. **Create Capacitor configuration** -- Set up `capacitor.config.ts` with:
-   - App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
-   - App Name: `smarteduconnectase`
-   - Live reload from your preview URL for development
+### 4. Update `FeesManagement.tsx`
+- Show discount column in admin fees table when applicable
 
-### What You'll Need to Do (On Your Computer)
+### 5. Update `FeeReceiptGenerator.tsx` and `StudentFeeDetailDialog.tsx`
+- Show discount and net amount on receipts and detail dialogs
 
-After Lovable makes the code changes, you'll need to follow these steps on your computer:
-
-1. **Connect to GitHub** -- Go to Settings, then the GitHub tab, and transfer your project to your GitHub account
-
-2. **Clone and set up locally**
-   ```
-   git clone <your-repo-url>
-   cd <your-project>
-   npm install
-   ```
-
-3. **Add mobile platforms**
-   ```
-   npx cap add ios        (for iPhone -- requires a Mac with Xcode)
-   npx cap add android    (for Android -- requires Android Studio)
-   ```
-
-4. **Build and sync**
-   ```
-   npm run build
-   npx cap sync
-   ```
-
-5. **Run on your device or emulator**
-   ```
-   npx cap run ios        (opens in Xcode/iPhone simulator)
-   npx cap run android    (opens in Android Studio/emulator)
-   ```
-
-### Requirements
-- **For iPhone**: A Mac computer with Xcode installed (free from Mac App Store)
-- **For Android**: Android Studio installed (free, works on Mac/Windows/Linux)
-- **For App Store publishing**: Apple Developer account ($99/year) and/or Google Play Developer account ($25 one-time)
-
-### Important Notes
-- After any future code changes in Lovable, you'll need to `git pull`, then run `npx cap sync` to update the native app
-- During development, the app connects to your live preview URL for instant updates
-- For production/publishing, you'll build standalone app bundles
-
-### Technical Details
-
-New/modified files:
-- `package.json` -- Add Capacitor dependencies
-- `capacitor.config.ts` -- Capacitor configuration with live reload server pointing to preview URL
-
-For a detailed guide, check out: https://docs.lovable.dev/tips-tricks/mobile-development
+### Files to modify
+- **Migration**: Add `discount` column
+- `src/components/fees/CreateFeeDialog.tsx` — discount UI with per-student selection
+- `src/pages/parent/ParentFees.tsx` — display discount, adjust payment amounts
+- `src/pages/admin/FeesManagement.tsx` — show discount column
+- `src/components/fees/FeeReceiptGenerator.tsx` — include discount on receipt
+- `src/components/fees/StudentFeeDetailDialog.tsx` — show discount in detail view
 
