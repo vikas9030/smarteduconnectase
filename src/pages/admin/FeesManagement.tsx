@@ -48,6 +48,7 @@ export default function FeesManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
+  const [studentFilter, setStudentFilter] = useState('all');
   const [stats, setStats] = useState({ totalDue: 0, totalPaid: 0, overdue: 0 });
 
   // Dialogs
