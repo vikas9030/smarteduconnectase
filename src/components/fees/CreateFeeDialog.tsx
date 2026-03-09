@@ -11,13 +11,18 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, Users, User, CreditCard, Bell } from 'lucide-react';
+import { CalendarIcon, Loader2, Users, User, CreditCard, Bell, X } from 'lucide-react';
 
 const FEE_TYPES = [
   'Tuition', 'Transport', 'Lab', 'Exam', 'Library', 'Sports',
   'Uniform', 'Admission', 'Unit 1 Fees', 'Unit 2 Fees',
-  'Unit 3 Fees', 'Unit 4 Fees', 'Custom'
+  'Unit 3 Fees', 'Unit 4 Fees',
 ];
+
+interface FeeEntry {
+  type: string;
+  amount: string;
+}
 
 interface Props {
   open: boolean;
@@ -35,9 +40,9 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
   const [assignMode, setAssignMode] = useState<'class' | 'student'>('class');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [feeType, setFeeType] = useState('');
+  const [feeEntries, setFeeEntries] = useState<FeeEntry[]>([]);
   const [customFeeType, setCustomFeeType] = useState('');
-  const [amount, setAmount] = useState('');
+  const [customFeeAmount, setCustomFeeAmount] = useState('');
   const [dueDate, setDueDate] = useState<Date>();
   const [enableReminder, setEnableReminder] = useState(true);
   const [reminderDays, setReminderDays] = useState('3');
@@ -59,9 +64,9 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     setAssignMode('class');
     setSelectedClassId('');
     setSelectedStudentId('');
-    setFeeType('');
+    setFeeEntries([]);
     setCustomFeeType('');
-    setAmount('');
+    setCustomFeeAmount('');
     setDueDate(undefined);
     setEnableReminder(true);
     setReminderDays('3');
@@ -84,33 +89,57 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     setLoadingStudents(false);
   };
 
+  const toggleFeeType = (type: string) => {
+    setFeeEntries(prev => {
+      const exists = prev.find(e => e.type === type);
+      if (exists) return prev.filter(e => e.type !== type);
+      return [...prev, { type, amount: '' }];
+    });
+  };
+
+  const updateFeeAmount = (type: string, amount: string) => {
+    setFeeEntries(prev => prev.map(e => e.type === type ? { ...e, amount } : e));
+  };
+
+  const addCustomFee = () => {
+    const name = customFeeType.trim();
+    if (!name) return;
+    if (feeEntries.find(e => e.type === name)) {
+      toast({ variant: 'destructive', title: 'Duplicate', description: 'This fee type is already added' });
+      return;
+    }
+    setFeeEntries(prev => [...prev, { type: name, amount: customFeeAmount }]);
+    setCustomFeeType('');
+    setCustomFeeAmount('');
+  };
+
+  const removeFeeEntry = (type: string) => {
+    setFeeEntries(prev => prev.filter(e => e.type !== type));
+  };
+
+  const totalAmount = feeEntries.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+
   const handleSubmit = async () => {
-    const finalFeeType = feeType === 'Custom' ? customFeeType.trim() : feeType;
-    if (!finalFeeType || !dueDate || !selectedClassId) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please select fee type, class, and due date' });
+    if (feeEntries.length === 0) {
+      toast({ variant: 'destructive', title: 'No Fee Types', description: 'Please select at least one fee type' });
+      return;
+    }
+    if (!dueDate || !selectedClassId) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please select class and due date' });
       return;
     }
 
-    const numAmount = amount ? parseFloat(amount) : 0;
-    if (amount && (isNaN(numAmount) || numAmount < 0)) {
-      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Amount must be a valid number' });
-      return;
-    }
-
-    if (numAmount > 10000000) {
-      toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Amount exceeds maximum limit' });
-      return;
+    for (const entry of feeEntries) {
+      const amt = entry.amount ? parseFloat(entry.amount) : 0;
+      if (entry.amount && (isNaN(amt) || amt < 0)) {
+        toast({ variant: 'destructive', title: 'Invalid Amount', description: `Invalid amount for ${entry.type}` });
+        return;
+      }
     }
 
     setLoading(true);
-
     try {
-      const baseFee = {
-        fee_type: finalFeeType,
-        amount: numAmount,
-        due_date: format(dueDate, 'yyyy-MM-dd'),
-        reminder_days_before: enableReminder ? parseInt(reminderDays) || 3 : 0,
-      };
+      let studentIds: string[] = [];
 
       if (assignMode === 'student') {
         if (!selectedStudentId) {
@@ -118,14 +147,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
           setLoading(false);
           return;
         }
-
-        const { error } = await supabase.from('fees').insert({
-          ...baseFee,
-          student_id: selectedStudentId,
-        });
-
-        if (error) throw error;
-        toast({ title: 'Fee Created', description: `${finalFeeType} fee assigned to student` });
+        studentIds = [selectedStudentId];
       } else {
         const { data: classStudents } = await supabase
           .from('students')
@@ -138,17 +160,30 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
           setLoading(false);
           return;
         }
-
-        const feeRecords = classStudents.map(s => ({
-          ...baseFee,
-          student_id: s.id,
-        }));
-
-        const { error } = await supabase.from('fees').insert(feeRecords);
-        if (error) throw error;
-
-        toast({ title: 'Fees Created', description: `${finalFeeType} fee assigned to ${classStudents.length} students` });
+        studentIds = classStudents.map(s => s.id);
       }
+
+      const dueDateStr = format(dueDate, 'yyyy-MM-dd');
+      const reminderDaysBefore = enableReminder ? parseInt(reminderDays) || 3 : 0;
+
+      // Build all fee records: each fee type × each student
+      const feeRecords = studentIds.flatMap(sid =>
+        feeEntries.map(entry => ({
+          student_id: sid,
+          fee_type: entry.type,
+          amount: parseFloat(entry.amount) || 0,
+          due_date: dueDateStr,
+          reminder_days_before: reminderDaysBefore,
+        }))
+      );
+
+      const { error } = await supabase.from('fees').insert(feeRecords);
+      if (error) throw error;
+
+      toast({
+        title: 'Fees Created',
+        description: `${feeEntries.length} fee type(s) assigned to ${studentIds.length} student(s)`,
+      });
 
       onOpenChange(false);
       onSuccess();
@@ -167,7 +202,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Assign Mode Toggle */}
+          {/* Assign Mode */}
           <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
             <Button
               variant={assignMode === 'class' ? 'default' : 'ghost'}
@@ -187,7 +222,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </Button>
           </div>
 
-          {/* Class Selection */}
+          {/* Class */}
           <div className="space-y-1.5">
             <Label>Class *</Label>
             <Select value={selectedClassId} onValueChange={setSelectedClassId}>
@@ -200,7 +235,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </Select>
           </div>
 
-          {/* Student Selection (individual mode) */}
+          {/* Student (individual mode) */}
           {assignMode === 'student' && selectedClassId && (
             <div className="space-y-1.5">
               <Label>Student *</Label>
@@ -223,46 +258,83 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </div>
           )}
 
-          {/* Fee Type - Button Grid */}
+          {/* Fee Type Buttons */}
           <div className="space-y-1.5">
-            <Label>Fee Type *</Label>
+            <Label>Select Fee Types * <span className="text-muted-foreground text-xs">(click to add)</span></Label>
             <div className="grid grid-cols-3 gap-2">
               {FEE_TYPES.map(t => (
                 <Button
                   key={t}
                   type="button"
-                  variant={feeType === t ? 'default' : 'outline'}
+                  variant={feeEntries.some(e => e.type === t) ? 'default' : 'outline'}
                   size="sm"
                   className="text-xs"
-                  onClick={() => { setFeeType(t); if (t !== 'Custom') setCustomFeeType(''); }}
+                  onClick={() => toggleFeeType(t)}
                 >
                   {t}
                 </Button>
               ))}
             </div>
-            {feeType === 'Custom' && (
+          </div>
+
+          {/* Custom Fee Type */}
+          <div className="space-y-1.5">
+            <Label>Add Custom Fee Type</Label>
+            <div className="flex gap-2">
               <Input
-                placeholder="Enter custom fee type name"
+                placeholder="Custom name"
                 value={customFeeType}
                 onChange={(e) => setCustomFeeType(e.target.value)}
                 maxLength={50}
-                className="mt-2"
+                className="flex-1"
               />
-            )}
+              <Input
+                type="number"
+                placeholder="₹ Amount"
+                value={customFeeAmount}
+                onChange={(e) => setCustomFeeAmount(e.target.value)}
+                min="0"
+                className="w-28"
+              />
+              <Button type="button" size="sm" onClick={addCustomFee} disabled={!customFeeType.trim()}>
+                Add
+              </Button>
+            </div>
           </div>
 
-          {/* Amount (optional) */}
-          <div className="space-y-1.5">
-            <Label>Amount (₹) <span className="text-muted-foreground text-xs">(optional)</span></Label>
-            <Input
-              type="number"
-              placeholder="Enter amount (leave empty if not decided)"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              min="0"
-              max="10000000"
-            />
-          </div>
+          {/* Selected Fee Entries with Individual Amounts */}
+          {feeEntries.length > 0 && (
+            <div className="space-y-2">
+              <Label>Fee Amounts <span className="text-muted-foreground text-xs">(optional per type)</span></Label>
+              {feeEntries.map(entry => (
+                <div key={entry.type} className="flex items-center gap-2 p-2 rounded-md bg-muted/30 border">
+                  <span className="text-sm font-medium flex-1 truncate">{entry.type}</span>
+                  <Input
+                    type="number"
+                    placeholder="₹ Amount"
+                    value={entry.amount}
+                    onChange={(e) => updateFeeAmount(entry.type, e.target.value)}
+                    min="0"
+                    className="w-28 h-8 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeFeeEntry(entry.type)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              {totalAmount > 0 && (
+                <div className="text-sm font-medium text-right text-primary">
+                  Total: ₹{totalAmount.toLocaleString()}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Due Date */}
           <div className="space-y-1.5">
@@ -289,7 +361,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </Popover>
           </div>
 
-          {/* Reminder Toggle */}
+          {/* Reminder */}
           <div className="p-3 rounded-lg bg-muted/50 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -314,16 +386,22 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
           </div>
 
           {/* Summary */}
-          {selectedClassId && feeType && (
-            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm">
+          {selectedClassId && feeEntries.length > 0 && (
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
               <p className="font-medium">Summary:</p>
               <p className="text-muted-foreground">
+                {feeEntries.length} fee type(s){totalAmount > 0 ? ` totalling ₹${totalAmount.toLocaleString()}` : ''} →{' '}
                 {assignMode === 'class'
-                  ? `Assign ${feeType === 'Custom' ? customFeeType : feeType} fee${amount ? ` of ₹${parseFloat(amount || '0').toLocaleString()}` : ''} to all students in ${classes.find(c => c.id === selectedClassId)?.name} - ${classes.find(c => c.id === selectedClassId)?.section}`
-                  : `Assign ${feeType === 'Custom' ? customFeeType : feeType} fee${amount ? ` of ₹${parseFloat(amount || '0').toLocaleString()}` : ''} to ${students.find(s => s.id === selectedStudentId)?.full_name || 'selected student'}`
+                  ? `all students in ${classes.find(c => c.id === selectedClassId)?.name} - ${classes.find(c => c.id === selectedClassId)?.section}`
+                  : students.find(s => s.id === selectedStudentId)?.full_name || 'selected student'
                 }
-                {enableReminder && ` • Reminder ${reminderDays} days before`}
               </p>
+              <p className="text-xs text-muted-foreground">
+                {feeEntries.map(e => `${e.type}${e.amount ? `: ₹${parseFloat(e.amount).toLocaleString()}` : ''}`).join(' • ')}
+              </p>
+              {enableReminder && (
+                <p className="text-xs text-muted-foreground">📢 Reminder {reminderDays} days before due date</p>
+              )}
             </div>
           )}
 
