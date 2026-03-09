@@ -1,70 +1,36 @@
 
 
-## Convert SmartEduConnect to a Native Mobile App using Capacitor
+## Plan: Admin-Configurable Razorpay Keys via Settings
 
-Your app will be wrapped as a native mobile app that can be published to the Apple App Store and Google Play Store using Capacitor.
+### Overview
+Allow admins to set/update Razorpay Key ID and Key Secret from the Settings page. The keys will be stored in the `app_settings` table (encrypted-like, as JSON values). The edge functions (`create-razorpay-order`, `verify-razorpay-payment`) will read keys from `app_settings` first, falling back to environment secrets.
 
-### What You'll Get
-- A real native app for both iPhone and Android
-- Full access to phone features (push notifications, camera, etc.)
-- Can be published to Apple App Store and Google Play Store
-- Your existing web app stays intact -- Capacitor wraps it as a native app
+### Approach
+Since edge functions cannot directly query the database mid-request efficiently, and the `app_settings` table is already used for config, the edge functions will accept the Razorpay keys passed from the frontend. However, that exposes secrets client-side. 
 
-### What Lovable Will Do (Code Changes)
+**Better approach**: Store keys in `app_settings` and have edge functions read them from the DB using the service role client.
 
-1. **Install Capacitor dependencies** -- Add the required packages (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`) to your project
+### 1. Settings Page (`SettingsPage.tsx`)
+- Add a new "Payment Gateway" card with:
+  - Razorpay Key ID input
+  - Razorpay Key Secret input (password-masked)
+  - Save button
+- On load, fetch existing values from `app_settings` (keys: `razorpay_key_id`, `razorpay_key_secret`)
+- On save, upsert both keys into `app_settings`
 
-2. **Create Capacitor configuration** -- Set up `capacitor.config.ts` with:
-   - App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
-   - App Name: `smarteduconnectase`
-   - Live reload from your preview URL for development
+### 2. Update Edge Functions
+**`create-razorpay-order/index.ts`**:
+- Use service role client to query `app_settings` for `razorpay_key_id` and `razorpay_key_secret`
+- Fall back to `Deno.env.get()` if not found in DB
+- Use whichever source has values
 
-### What You'll Need to Do (On Your Computer)
+**`verify-razorpay-payment/index.ts`**:
+- Same pattern — read secret from `app_settings` first, fall back to env
 
-After Lovable makes the code changes, you'll need to follow these steps on your computer:
+### 3. Files to Modify
+- `src/pages/admin/SettingsPage.tsx` — Add Payment Gateway card with key inputs
+- `supabase/functions/create-razorpay-order/index.ts` — Read keys from DB
+- `supabase/functions/verify-razorpay-payment/index.ts` — Read secret from DB
 
-1. **Connect to GitHub** -- Go to Settings, then the GitHub tab, and transfer your project to your GitHub account
-
-2. **Clone and set up locally**
-   ```
-   git clone <your-repo-url>
-   cd <your-project>
-   npm install
-   ```
-
-3. **Add mobile platforms**
-   ```
-   npx cap add ios        (for iPhone -- requires a Mac with Xcode)
-   npx cap add android    (for Android -- requires Android Studio)
-   ```
-
-4. **Build and sync**
-   ```
-   npm run build
-   npx cap sync
-   ```
-
-5. **Run on your device or emulator**
-   ```
-   npx cap run ios        (opens in Xcode/iPhone simulator)
-   npx cap run android    (opens in Android Studio/emulator)
-   ```
-
-### Requirements
-- **For iPhone**: A Mac computer with Xcode installed (free from Mac App Store)
-- **For Android**: Android Studio installed (free, works on Mac/Windows/Linux)
-- **For App Store publishing**: Apple Developer account ($99/year) and/or Google Play Developer account ($25 one-time)
-
-### Important Notes
-- After any future code changes in Lovable, you'll need to `git pull`, then run `npx cap sync` to update the native app
-- During development, the app connects to your live preview URL for instant updates
-- For production/publishing, you'll build standalone app bundles
-
-### Technical Details
-
-New/modified files:
-- `package.json` -- Add Capacitor dependencies
-- `capacitor.config.ts` -- Capacitor configuration with live reload server pointing to preview URL
-
-For a detailed guide, check out: https://docs.lovable.dev/tips-tricks/mobile-development
+No database migration needed — `app_settings` table already exists with `setting_key` / `setting_value` columns.
 
