@@ -328,11 +328,12 @@ export default function ParentFees() {
                               <Button
                                 size="sm"
                                 className="gradient-parent"
-                                onClick={() => handlePayNow(fee)}
+                                onClick={() => openPaymentDialog(fee)}
                                 disabled={payingFeeId === fee.id}
                               >
                                 {payingFeeId === fee.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
                                 Pay Now
+                              </Button>
                               </Button>
                             ) : fee.receipt_number ? (
                               <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
@@ -390,7 +391,7 @@ export default function ParentFees() {
                   <p className="font-semibold">Pay all dues at once</p>
                   <p className="text-sm text-muted-foreground">Total due: ₹{totalDue.toLocaleString()}</p>
                 </div>
-                <Button className="gradient-parent" onClick={() => unpaidFees[0] && handlePayNow(unpaidFees[0])}>
+                <Button className="gradient-parent" onClick={() => unpaidFees[0] && openPaymentDialog(unpaidFees[0])}>
                   <CreditCard className="h-4 w-4 mr-2" />
                   Pay ₹{totalDue.toLocaleString()}
                 </Button>
