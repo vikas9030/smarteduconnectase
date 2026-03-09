@@ -55,7 +55,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Leave Requests** | Approve or reject leave applications from teachers and students; view/download attachments |
 | **Certificates** | Process certificate requests with document attachment download |
 | **Complaints** | Handle and respond to complaints |
-| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation, Razorpay online payments, automated reminders |
+| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation, Razorpay online payments, automated remindernts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation, Razorpay online payments, automated reminders |
 | **Messages** | Direct messaging system with file/image sharing |
 | **Gallery** | Manage photo gallery with folders |
 | **Notifications** | View and manage admin notifications |
@@ -94,7 +94,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Progress** | Track academic progress and trends |
 | **Announcements** | Read school announcements |
 | **Leave Request** | Apply for child's leave with optional document attachments |
-| **Messages** | Communicate with all teachers and admin, with file/image sharing |
+| **Messages** |with discount & balance breakdown, pay custom partial amounts via Razorpay, view per-transaction payment history with individual receipts, download PDF receipt all teachers and admin, with file/image sharing |
 | **Certificates** | Request certificates for child with optional document attachments |
 | **Pay Fees** | View fee details and payment status |
 | **Gallery** | View school photo gallery |
