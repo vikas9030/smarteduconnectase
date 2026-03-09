@@ -150,14 +150,14 @@ export default function FeesManagement() {
     setStudentFilter('');
   }, [classFilter]);
 
-  // Only show data when class is selected
-  const filteredFees = (!classFilter) ? [] : fees.filter((f) => {
+  // Only show data when both class and student are selected
+  const filteredFees = (!classFilter || !studentFilter) ? [] : fees.filter((f) => {
     const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
     const matchesClass = (f.students?.classes as any)?.id === classFilter;
-    const matchesStudent = !studentFilter || f.student_id === studentFilter;
+    const matchesStudent = f.student_id === studentFilter;
     return matchesSearch && matchesStatus && matchesClass && matchesStudent;
   });
 
