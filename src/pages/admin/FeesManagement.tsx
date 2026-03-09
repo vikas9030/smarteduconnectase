@@ -244,7 +244,7 @@ export default function FeesManagement() {
                             <TableCell className="font-medium">₹{(fee.amount - ((fee as any).discount || 0)).toLocaleString()}</TableCell>
                             <TableCell className="text-success">₹{(fee.paid_amount || 0).toLocaleString()}</TableCell>
                             <TableCell>{new Date(fee.due_date).toLocaleDateString()}</TableCell>
-                            <TableCell>{fee.paid_at ? new Date(fee.paid_at).toLocaleDateString() : '-'}</TableCell>
+                            
                             <TableCell>{getStatusBadge(fee.payment_status, fee.due_date)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
