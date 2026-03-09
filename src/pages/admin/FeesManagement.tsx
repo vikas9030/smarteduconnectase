@@ -290,6 +290,12 @@ export default function FeesManagement() {
           fees={selectedStudent.fees}
         />
       )}
+
+      <CreateFeeDialog
+        open={showCreateFee}
+        onOpenChange={setShowCreateFee}
+        onSuccess={fetchData}
+      />
     </DashboardLayout>
   );
 }
