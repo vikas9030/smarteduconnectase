@@ -209,37 +209,62 @@ export default function ReceiptTemplateSettings({ open, onOpenChange }: Props) {
             {/* Preview */}
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Eye className="h-4 w-4" /> Preview</h3>
-              <div className="border rounded-lg p-4 bg-background text-sm space-y-3">
-                <div className="text-center space-y-1">
+              <div className="border rounded-lg p-5 bg-white text-sm space-y-3 text-black">
+                {/* Header with logo left + school info */}
+                <div className="flex items-start gap-3">
                   {template.showLogo && template.logoUrl && (
-                    <img src={template.logoUrl} alt="Logo" className="h-10 w-10 mx-auto rounded object-contain" />
+                    <img src={template.logoUrl} alt="Logo" className="h-12 w-12 rounded object-contain flex-shrink-0" />
                   )}
-                  {template.schoolName && <p className="font-bold text-base">{template.schoolName}</p>}
-                  {template.schoolAddress && <p className="text-xs text-muted-foreground">{template.schoolAddress}</p>}
-                  {template.schoolPhone && <p className="text-xs text-muted-foreground">Ph: {template.schoolPhone}</p>}
-                  <p className="font-semibold tracking-wide border-b pb-2">{template.headerTitle || 'FEE RECEIPT'}</p>
+                  <div className={`flex-1 ${template.showLogo && template.logoUrl ? 'text-center' : 'text-center'}`}>
+                    {template.schoolName && <p className="font-bold text-base">{template.schoolName}</p>}
+                    {template.schoolAddress && <p className="text-xs text-gray-500">{template.schoolAddress}</p>}
+                    {template.schoolPhone && <p className="text-xs text-gray-500">Ph: {template.schoolPhone}</p>}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1 text-xs">
-                  <p>Receipt No: <span className="font-mono">RCP12345678</span></p>
-                  <p className="text-right">Date: {new Date().toLocaleDateString()}</p>
+
+                {/* Title */}
+                <p className="font-bold text-sm tracking-wide text-center">{template.headerTitle || 'FEE RECEIPT'}</p>
+
+                {/* Separator */}
+                <hr className="border-gray-300" />
+
+                {/* Receipt meta */}
+                <div className="flex justify-between text-xs">
+                  <span>Receipt No: <span className="font-mono">RCP12345678</span></span>
+                  <span>Date: {new Date().toLocaleDateString()}</span>
+                </div>
+
+                {/* Student info */}
+                <div className="text-xs space-y-0.5">
                   <p>Student: <strong>Sample Student</strong></p>
                   {template.showAdmissionNumber && <p>Admission No: <span className="font-mono">ADM001</span></p>}
                   {template.showClass && <p>Class: 10-A</p>}
                 </div>
-                <div className="border rounded text-xs">
-                  <div className="grid grid-cols-4 font-semibold bg-muted p-1.5">
-                    <span>Fee Type</span><span>Amount</span>
-                    {template.showDiscount && <span>Discount</span>}
-                    <span>Paid</span>
-                  </div>
-                  <div className="grid grid-cols-4 p-1.5">
-                    <span>Tuition</span><span>₹10,000</span>
-                    {template.showDiscount && <span>₹500</span>}
-                    <span>₹9,500</span>
-                  </div>
-                </div>
+
+                {/* Table matching PDF style */}
+                <table className="w-full text-xs border border-gray-300">
+                  <thead>
+                    <tr className="bg-[#2980b3] text-white">
+                      <th className="p-1.5 text-left border border-gray-300">Fee Type</th>
+                      <th className="p-1.5 text-center border border-gray-300">Amount (Rs.)</th>
+                      {template.showDiscount && <th className="p-1.5 text-center border border-gray-300">Discount (Rs.)</th>}
+                      <th className="p-1.5 text-center border border-gray-300">Net (Rs.)</th>
+                      <th className="p-1.5 text-center border border-gray-300">Paid (Rs.)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="p-1.5 text-left border border-gray-300">Tuition</td>
+                      <td className="p-1.5 text-center border border-gray-300">10,000</td>
+                      {template.showDiscount && <td className="p-1.5 text-center border border-gray-300">500</td>}
+                      <td className="p-1.5 text-center border border-gray-300">9,500</td>
+                      <td className="p-1.5 text-center border border-gray-300">9,500</td>
+                    </tr>
+                  </tbody>
+                </table>
+
                 {template.footerText && (
-                  <p className="text-xs text-center text-muted-foreground italic">{template.footerText}</p>
+                  <p className="text-xs text-center text-gray-400 italic pt-2">{template.footerText}</p>
                 )}
               </div>
             </div>
