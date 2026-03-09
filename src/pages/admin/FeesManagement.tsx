@@ -37,7 +37,7 @@ interface FeeRecord {
   payment_status: string;
   paid_at: string | null;
   receipt_number: string | null;
-  students?: { full_name: string; admission_number: string; classes?: { name: string; section: string; id?: string } | null } | null;
+  students?: { full_name: string; admission_number: string; login_id?: string | null; classes?: { name: string; section: string; id?: string } | null } | null;
 }
 
 export default function FeesManagement() {
@@ -78,7 +78,7 @@ export default function FeesManagement() {
   const fetchData = async () => {
     setLoadingData(true);
     const [feesRes, classesRes] = await Promise.all([
-      supabase.from('fees').select('*, students(full_name, admission_number, classes(id, name, section))').order('due_date', { ascending: false }),
+      supabase.from('fees').select('*, students(full_name, admission_number, login_id, classes(id, name, section))').order('due_date', { ascending: false }),
       supabase.from('classes').select('*').order('name'),
     ]);
 
@@ -113,7 +113,7 @@ export default function FeesManagement() {
     generateFeeReceipt({
       receiptNumber: fee.receipt_number,
       studentName: fee.students?.full_name || 'N/A',
-      admissionNumber: fee.students?.admission_number,
+      admissionNumber: fee.students?.login_id || fee.students?.admission_number,
       className: fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : undefined,
       feeType: fee.fee_type,
       amount: fee.amount,
@@ -129,7 +129,7 @@ export default function FeesManagement() {
     if (!first?.students) return;
     setSelectedStudent({
       name: first.students.full_name,
-      admission: first.students.admission_number,
+      admission: first.students.login_id || first.students.admission_number,
       className: first.students.classes ? `${first.students.classes.name} - ${first.students.classes.section}` : 'N/A',
       fees: studentFees,
     });
@@ -277,7 +277,7 @@ export default function FeesManagement() {
                             <TableCell>
                               <button className="text-left hover:underline" onClick={() => openStudentDetail(fee.student_id)}>
                                 <div className="font-medium">{fee.students?.full_name || 'N/A'}</div>
-                                <div className="text-xs text-muted-foreground font-mono">{fee.students?.admission_number}</div>
+                                <div className="text-xs text-muted-foreground font-mono">{fee.students?.login_id || fee.students?.admission_number}</div>
                               </button>
                             </TableCell>
                             <TableCell>{fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : 'N/A'}</TableCell>
