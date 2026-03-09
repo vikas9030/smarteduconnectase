@@ -400,6 +400,73 @@ export default function ParentFees() {
         )}
       </div>
       )}
+
+      {/* Custom Payment Amount Dialog */}
+      <Dialog open={!!paymentDialogFee} onOpenChange={(open) => { if (!open) setPaymentDialogFee(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
+              Enter Payment Amount
+            </DialogTitle>
+          </DialogHeader>
+          {paymentDialogFee && (() => {
+            const fee = paymentDialogFee;
+            const netAmount = fee.amount - (fee.discount || 0);
+            const alreadyPaid = fee.paid_amount || 0;
+            const remaining = netAmount - alreadyPaid;
+            const enteredAmount = parseFloat(customAmount) || 0;
+            const isValid = enteredAmount > 0 && enteredAmount <= remaining;
+
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="text-muted-foreground">Fee Type</div>
+                  <div className="font-medium capitalize">{fee.fee_type}</div>
+                  <div className="text-muted-foreground">Total Amount</div>
+                  <div className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</div>
+                  {(fee.discount || 0) > 0 && <>
+                    <div className="text-muted-foreground">Discount</div>
+                    <div className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</div>
+                  </>}
+                  <div className="text-muted-foreground">Already Paid</div>
+                  <div className="flex items-center"><IndianRupee className="h-3 w-3" />{alreadyPaid.toLocaleString()}</div>
+                  <div className="text-muted-foreground font-semibold">Remaining Balance</div>
+                  <div className="flex items-center font-bold text-destructive"><IndianRupee className="h-3 w-3" />{remaining.toLocaleString()}</div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="payAmount">Amount to Pay (₹)</Label>
+                  <Input
+                    id="payAmount"
+                    type="number"
+                    min={1}
+                    max={remaining}
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(e.target.value)}
+                    placeholder={`Max ₹${remaining.toLocaleString()}`}
+                  />
+                  {enteredAmount > remaining && (
+                    <p className="text-xs text-destructive">Amount cannot exceed remaining balance of ₹{remaining.toLocaleString()}</p>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPaymentDialogFee(null)}>Cancel</Button>
+                  <Button
+                    className="gradient-parent"
+                    disabled={!isValid}
+                    onClick={() => handlePayNow(fee, enteredAmount)}
+                  >
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Proceed to Pay ₹{isValid ? enteredAmount.toLocaleString() : '0'}
+                  </Button>
+                </DialogFooter>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
