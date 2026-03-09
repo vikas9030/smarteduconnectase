@@ -75,7 +75,7 @@ serve(async (req) => {
     // Fetch current fee to accumulate paid_amount
     const { data: feeRecord, error: feeError } = await adminClient
       .from('fees')
-      .select('amount, discount, paid_amount')
+      .select('amount, discount, paid_amount, student_id')
       .eq('id', fee_id)
       .single();
 
@@ -107,7 +107,7 @@ serve(async (req) => {
     // Log payment in fee_payments history
     await adminClient.from('fee_payments').insert({
       fee_id,
-      student_id: feeRecord.student_id || (await adminClient.from('fees').select('student_id').eq('id', fee_id).single()).data?.student_id,
+      student_id: feeRecord.student_id,
       amount,
       payment_method: 'razorpay',
       receipt_number: receiptNumber,

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface FeeRecord {
   id: string;
+  student_id?: string;
   fee_type: string;
   amount: number;
   discount?: number | null;
@@ -81,7 +82,7 @@ export default function RecordPaymentDialog({ open, onOpenChange, fee, onSuccess
     // Log payment in fee_payments history
     await supabase.from('fee_payments' as any).insert({
       fee_id: fee.id,
-      student_id: (fee as any).student_id || '',
+      student_id: fee.student_id || '',
       amount: enteredAmount,
       payment_method: 'cash',
       receipt_number: receiptNumber,
