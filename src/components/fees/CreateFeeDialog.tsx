@@ -541,14 +541,18 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                               />
                               <span className="text-sm flex-1 truncate">{s.full_name}</span>
                               {sd.enabled && (
-                                <Input
-                                  type="number"
-                                  placeholder="₹ Discount"
-                                  value={sd.amount}
-                                  onChange={(e) => updateStudentDiscount(s.id, e.target.value)}
-                                  min="0"
-                                  className="w-28 h-8 text-sm"
-                                />
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="number"
+                                    placeholder="% Discount"
+                                    value={sd.amount}
+                                    onChange={(e) => updateStudentDiscount(s.id, e.target.value)}
+                                    min="0"
+                                    max="100"
+                                    className="w-24 h-8 text-sm"
+                                  />
+                                  <span className="text-xs text-muted-foreground">%</span>
+                                </div>
                               )}
                             </div>
                           );
