@@ -12,15 +12,11 @@ serve(async (req) => {
   }
 
   try {
-    const RAZORPAY_KEY_ID = Deno.env.get('RAZORPAY_KEY_ID');
-    const RAZORPAY_KEY_SECRET = Deno.env.get('RAZORPAY_KEY_SECRET');
-    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
-      throw new Error('Razorpay credentials not configured');
-    }
-
-    // Verify auth
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // Verify auth
     const authHeader = req.headers.get('Authorization');
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader || '' } },
@@ -31,6 +27,23 @@ serve(async (req) => {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Read Razorpay keys from app_settings first, fall back to env
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const { data: settings } = await adminClient
+      .from('app_settings')
+      .select('setting_key, setting_value')
+      .in('setting_key', ['razorpay_key_id', 'razorpay_key_secret']);
+
+    const dbKeyId = settings?.find(s => s.setting_key === 'razorpay_key_id')?.setting_value;
+    const dbKeySecret = settings?.find(s => s.setting_key === 'razorpay_key_secret')?.setting_value;
+
+    const RAZORPAY_KEY_ID = (typeof dbKeyId === 'string' ? dbKeyId.replace(/^"|"$/g, '') : null) || Deno.env.get('RAZORPAY_KEY_ID');
+    const RAZORPAY_KEY_SECRET = (typeof dbKeySecret === 'string' ? dbKeySecret.replace(/^"|"$/g, '') : null) || Deno.env.get('RAZORPAY_KEY_SECRET');
+
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay credentials not configured. Please set them in Settings.');
     }
 
     const { fee_id, amount, student_name, fee_type } = await req.json();
@@ -46,7 +59,7 @@ serve(async (req) => {
         'Authorization': 'Basic ' + btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`),
       },
       body: JSON.stringify({
-        amount: Math.round(amount * 100), // paise
+        amount: Math.round(amount * 100),
         currency: 'INR',
         receipt: `fee_${fee_id.slice(0, 8)}`,
         notes: {
