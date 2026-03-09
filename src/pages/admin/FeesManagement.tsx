@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus } from 'lucide-react';
+import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/StatCard';
 import { BackButton } from '@/components/ui/back-button';
@@ -24,6 +24,7 @@ import StudentFeeDetailDialog from '@/components/fees/StudentFeeDetailDialog';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
 import CreateFeeDialog from '@/components/fees/CreateFeeDialog';
 import RecordPaymentDialog from '@/components/fees/RecordPaymentDialog';
+import ReceiptTemplateSettings, { loadReceiptTemplate, type ReceiptTemplate } from '@/components/fees/ReceiptTemplateSettings';
 
 interface FeeRecord {
   id: string;
