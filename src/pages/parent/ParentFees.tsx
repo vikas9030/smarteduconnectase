@@ -44,6 +44,11 @@ interface Child {
 
 function PaymentHistorySection({ studentId, studentName }: { studentId: string; studentName: string }) {
   const [payments, setPayments] = useState<any[]>([]);
+  const [template, setTemplate] = useState<ReceiptTemplate | null>(null);
+
+  useEffect(() => {
+    loadReceiptTemplate().then(setTemplate);
+  }, []);
 
   useEffect(() => {
     if (!studentId) return;
