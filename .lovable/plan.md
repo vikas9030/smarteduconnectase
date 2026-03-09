@@ -1,70 +1,50 @@
 
 
-## Convert SmartEduConnect to a Native Mobile App using Capacitor
+## Plan: Custom Partial Payment with Auto Balance Display
 
-Your app will be wrapped as a native mobile app that can be published to the Apple App Store and Google Play Store using Capacitor.
+### Problem
+Currently, "Mark Paid" always records the full fee amount. There's no way to enter a custom/partial payment amount, and the remaining balance isn't prominently shown.
 
-### What You'll Get
-- A real native app for both iPhone and Android
-- Full access to phone features (push notifications, camera, etc.)
-- Can be published to Apple App Store and Google Play Store
-- Your existing web app stays intact -- Capacitor wraps it as a native app
+### Changes
 
-### What Lovable Will Do (Code Changes)
+**1. Add a Payment Dialog (`src/components/fees/RecordPaymentDialog.tsx` — new file)**
+- A dialog with an input field for custom payment amount
+- Shows: fee type, total amount, discount, already paid, and auto-calculated remaining balance
+- Pre-fills with the remaining balance but allows any custom amount
+- Validates that amount > 0 and doesn't exceed remaining balance
+- On submit, updates the fee record with accumulated `paid_amount`, sets status to `paid` if fully paid or `partial` if not, generates receipt
 
-1. **Install Capacitor dependencies** -- Add the required packages (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`) to your project
+**2. Update `FeesManagement.tsx`**
+- Replace the inline `handleMarkPaid(fee.id, fee.amount)` button with opening the new `RecordPaymentDialog`
+- Pass the selected fee to the dialog
+- Add a "Balance" column in the table showing `Net - Paid` for each row
+- Update `handleMarkPaid` to accept custom amount and accumulate: `paid_amount = (existing_paid + new_payment)`, auto-set `payment_status` to `'paid'` or `'partial'`
 
-2. **Create Capacitor configuration** -- Set up `capacitor.config.ts` with:
-   - App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
-   - App Name: `smarteduconnectase`
-   - Live reload from your preview URL for development
+**3. Update `StudentFeeDetailDialog.tsx`**
+- Add a "Balance" column per fee row showing `Net - Paid`
+- Already has summary cards for total balance — these auto-calculate correctly
 
-### What You'll Need to Do (On Your Computer)
+### Key Logic
+```typescript
+// In RecordPaymentDialog / handleMarkPaid:
+const netAmount = fee.amount - (fee.discount || 0);
+const alreadyPaid = fee.paid_amount || 0;
+const remaining = netAmount - alreadyPaid;
+const newTotalPaid = alreadyPaid + customAmount;
+const newStatus = newTotalPaid >= netAmount ? 'paid' : 'partial';
 
-After Lovable makes the code changes, you'll need to follow these steps on your computer:
+await supabase.from('fees').update({
+  paid_amount: newTotalPaid,
+  payment_status: newStatus,
+  paid_at: new Date().toISOString(),
+  receipt_number: receiptNumber
+}).eq('id', fee.id);
+```
 
-1. **Connect to GitHub** -- Go to Settings, then the GitHub tab, and transfer your project to your GitHub account
+### Files
+- **New**: `src/components/fees/RecordPaymentDialog.tsx`
+- **Edit**: `src/pages/admin/FeesManagement.tsx` — add Balance column, open payment dialog instead of instant mark-paid
+- **Edit**: `src/components/fees/StudentFeeDetailDialog.tsx` — add Balance column per row
 
-2. **Clone and set up locally**
-   ```
-   git clone <your-repo-url>
-   cd <your-project>
-   npm install
-   ```
-
-3. **Add mobile platforms**
-   ```
-   npx cap add ios        (for iPhone -- requires a Mac with Xcode)
-   npx cap add android    (for Android -- requires Android Studio)
-   ```
-
-4. **Build and sync**
-   ```
-   npm run build
-   npx cap sync
-   ```
-
-5. **Run on your device or emulator**
-   ```
-   npx cap run ios        (opens in Xcode/iPhone simulator)
-   npx cap run android    (opens in Android Studio/emulator)
-   ```
-
-### Requirements
-- **For iPhone**: A Mac computer with Xcode installed (free from Mac App Store)
-- **For Android**: Android Studio installed (free, works on Mac/Windows/Linux)
-- **For App Store publishing**: Apple Developer account ($99/year) and/or Google Play Developer account ($25 one-time)
-
-### Important Notes
-- After any future code changes in Lovable, you'll need to `git pull`, then run `npx cap sync` to update the native app
-- During development, the app connects to your live preview URL for instant updates
-- For production/publishing, you'll build standalone app bundles
-
-### Technical Details
-
-New/modified files:
-- `package.json` -- Add Capacitor dependencies
-- `capacitor.config.ts` -- Capacitor configuration with live reload server pointing to preview URL
-
-For a detailed guide, check out: https://docs.lovable.dev/tips-tricks/mobile-development
+No database changes needed — `paid_amount` already supports partial values.
 
