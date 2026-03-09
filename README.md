@@ -886,6 +886,9 @@ Images within gallery folders.
 | `full-reset` | Resets all demo data (teachers, students, parents, etc.) |
 | `notify-competitive-exams` | Sends notifications for upcoming competitive exams (scheduled via pg_cron at 7 AM daily) |
 | `send-push-notification` | Delivers Web Push notifications via VAPID keys; also serves GET to return public VAPID key for frontend subscription |
+| `create-razorpay-order` | Creates Razorpay payment orders for online fee payments (reads API keys from `app_settings`) |
+| `verify-razorpay-payment` | Verifies Razorpay payment signatures (HMAC SHA256), accumulates `paid_amount`, auto-sets payment status, and logs transaction in `fee_payments` |
+| `send-fee-reminders` | Sends automated fee reminders to parents based on configurable due-date windows |
 
 All edge functions run on Deno runtime and use the Supabase service role key for privileged operations.
 
