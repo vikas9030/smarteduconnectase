@@ -211,6 +211,13 @@ export default function FeesManagement() {
                       {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <Select value={studentFilter} onValueChange={setStudentFilter}>
+                    <SelectTrigger className="w-44"><SelectValue placeholder="Student" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Students</SelectItem>
+                      {studentOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
                     <SelectContent>
