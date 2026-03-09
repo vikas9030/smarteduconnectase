@@ -15,13 +15,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download } from 'lucide-react';
+import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/StatCard';
 import { BackButton } from '@/components/ui/back-button';
 import ClassSummaryView from '@/components/fees/ClassSummaryView';
 import StudentFeeDetailDialog from '@/components/fees/StudentFeeDetailDialog';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
+import CreateFeeDialog from '@/components/fees/CreateFeeDialog';
 
 interface FeeRecord {
   id: string;
@@ -49,8 +50,9 @@ export default function FeesManagement() {
   const [classFilter, setClassFilter] = useState('all');
   const [stats, setStats] = useState({ totalDue: 0, totalPaid: 0, overdue: 0 });
 
-  // Student detail dialog
+  // Dialogs
   const [selectedStudent, setSelectedStudent] = useState<{ name: string; admission: string; className: string; fees: FeeRecord[] } | null>(null);
+  const [showCreateFee, setShowCreateFee] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -150,10 +152,16 @@ export default function FeesManagement() {
             <h1 className="font-display text-2xl font-bold">Fees Management</h1>
             <p className="text-muted-foreground">Track and manage student fees</p>
           </div>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCreateFee(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Fee
+            </Button>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
