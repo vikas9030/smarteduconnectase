@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,12 @@ interface StudentInfo {
   admission_number: string;
 }
 
+interface ClassInfo {
+  id: string;
+  name: string;
+  section: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,7 +45,7 @@ interface Props {
 
 export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props) {
   const { toast } = useToast();
-  const [classes, setClasses] = useState<{ id: string; name: string; section: string }[]>([]);
+  const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [students, setStudents] = useState<StudentInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
@@ -61,6 +67,22 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
   const [flatDiscount, setFlatDiscount] = useState('');
   const [studentDiscounts, setStudentDiscounts] = useState<Record<string, { enabled: boolean; amount: string }>>({});
 
+  // Derived: unique class names
+  const classNames = useMemo(() => {
+    const names = [...new Set(classes.map(c => c.name))];
+    names.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.replace(/\D/g, '')) || 0;
+      return numA - numB || a.localeCompare(b);
+    });
+    return names;
+  }, [classes]);
+
+  // Derived: sections for selected class name
+  const availableSections = useMemo(() => {
+    return classes.filter(c => c.name === selectedClassName);
+  }, [classes, selectedClassName]);
+
   useEffect(() => {
     if (open) {
       fetchClasses();
@@ -68,11 +90,24 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     }
   }, [open]);
 
+  // When class name changes, auto-select all sections
   useEffect(() => {
-    if (selectedClassId) {
-      fetchStudentsByClass(selectedClassId);
+    if (selectedClassName) {
+      const sectionIds = availableSections.map(c => c.id);
+      setSelectedSectionIds(sectionIds);
+    } else {
+      setSelectedSectionIds([]);
     }
-  }, [selectedClassId]);
+  }, [selectedClassName, availableSections]);
+
+  // Fetch students when selected sections change
+  useEffect(() => {
+    if (selectedSectionIds.length > 0) {
+      fetchStudentsBySections(selectedSectionIds);
+    } else {
+      setStudents([]);
+    }
+  }, [selectedSectionIds]);
 
   // Initialize student discounts when students change
   useEffect(() => {
@@ -85,7 +120,8 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
 
   const resetForm = () => {
     setAssignMode('class');
-    setSelectedClassId('');
+    setSelectedClassName('');
+    setSelectedSectionIds([]);
     setSelectedStudentId('');
     setFeeEntries([]);
     setCustomFeeType('');
@@ -104,16 +140,24 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     if (data) setClasses(data);
   };
 
-  const fetchStudentsByClass = async (classId: string) => {
+  const fetchStudentsBySections = async (classIds: string[]) => {
     setLoadingStudents(true);
     const { data } = await supabase
       .from('students')
       .select('id, full_name, admission_number')
-      .eq('class_id', classId)
+      .in('class_id', classIds)
       .eq('status', 'active')
       .order('full_name');
     if (data) setStudents(data);
     setLoadingStudents(false);
+  };
+
+  const toggleSection = (classId: string) => {
+    setSelectedSectionIds(prev =>
+      prev.includes(classId)
+        ? prev.filter(id => id !== classId)
+        : [...prev, classId]
+    );
   };
 
   const toggleFeeType = (type: string) => {
@@ -173,8 +217,8 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
       toast({ variant: 'destructive', title: 'No Fee Types', description: 'Please select at least one fee type' });
       return;
     }
-    if (!dueDate || !selectedClassId) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please select class and due date' });
+    if (!dueDate || selectedSectionIds.length === 0) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please select class, sections and due date' });
       return;
     }
 
@@ -201,11 +245,11 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
         const { data: classStudents } = await supabase
           .from('students')
           .select('id')
-          .eq('class_id', selectedClassId)
+          .in('class_id', selectedSectionIds)
           .eq('status', 'active');
 
         if (!classStudents || classStudents.length === 0) {
-          toast({ variant: 'destructive', title: 'No Students', description: 'No active students found in this class' });
+          toast({ variant: 'destructive', title: 'No Students', description: 'No active students found in selected sections' });
           setLoading(false);
           return;
         }
@@ -243,6 +287,11 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     }
   };
 
+  const selectedSectionsLabel = availableSections
+    .filter(c => selectedSectionIds.includes(c.id))
+    .map(c => c.section)
+    .join(', ');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -271,21 +320,47 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </Button>
           </div>
 
-          {/* Class */}
+          {/* Class Name Selector */}
           <div className="space-y-1.5">
             <Label>Class *</Label>
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
+            <Select value={selectedClassName} onValueChange={setSelectedClassName}>
               <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
               <SelectContent>
-                {classes.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
+                {classNames.map(name => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
+          {/* Section Multi-Select */}
+          {selectedClassName && availableSections.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Sections <span className="text-muted-foreground text-xs">(auto-selected all)</span></Label>
+              <div className="flex flex-wrap gap-2">
+                {availableSections.map(c => (
+                  <Button
+                    key={c.id}
+                    type="button"
+                    variant={selectedSectionIds.includes(c.id) ? 'default' : 'outline'}
+                    size="sm"
+                    className="min-w-[48px]"
+                    onClick={() => toggleSection(c.id)}
+                  >
+                    {c.section}
+                  </Button>
+                ))}
+              </div>
+              {selectedSectionIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {selectedSectionsLabel} ({students.length} students)
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Student (individual mode) */}
-          {assignMode === 'student' && selectedClassId && (
+          {assignMode === 'student' && selectedSectionIds.length > 0 && (
             <div className="space-y-1.5">
               <Label>Student *</Label>
               {loadingStudents ? (
@@ -386,7 +461,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
           )}
 
           {/* Discount Section */}
-          {selectedClassId && feeEntries.length > 0 && (
+          {selectedSectionIds.length > 0 && feeEntries.length > 0 && (
             <div className="p-3 rounded-lg bg-muted/50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -439,7 +514,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                           <Loader2 className="h-4 w-4 animate-spin" /> Loading students...
                         </div>
                       ) : students.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No students in this class</p>
+                        <p className="text-sm text-muted-foreground">No students in selected sections</p>
                       ) : (
                         students.map(s => {
                           const sd = studentDiscounts[s.id] || { enabled: false, amount: '' };
@@ -521,13 +596,13 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
           </div>
 
           {/* Summary */}
-          {selectedClassId && feeEntries.length > 0 && (
+          {selectedSectionIds.length > 0 && feeEntries.length > 0 && (
             <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm space-y-1">
               <p className="font-medium">Summary:</p>
               <p className="text-muted-foreground">
                 {feeEntries.length} fee type(s){totalAmount > 0 ? ` totalling ₹${totalAmount.toLocaleString()}` : ''} →{' '}
                 {assignMode === 'class'
-                  ? `all students in ${classes.find(c => c.id === selectedClassId)?.name} - ${classes.find(c => c.id === selectedClassId)?.section}`
+                  ? `all students in ${selectedClassName} (${selectedSectionsLabel})`
                   : students.find(s => s.id === selectedStudentId)?.full_name || 'selected student'
                 }
               </p>
