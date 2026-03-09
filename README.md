@@ -55,7 +55,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Leave Requests** | Approve or reject leave applications from teachers and students; view/download attachments |
 | **Certificates** | Process certificate requests with document attachment download |
 | **Complaints** | Handle and respond to complaints |
-| **Fees** | Manage fee structures, track payments, and generate receipts |
+| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation, Razorpay online payments, automated remindernts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation, Razorpay online payments, automated reminders |
 | **Messages** | Direct messaging system with file/image sharing |
 | **Gallery** | Manage photo gallery with folders |
 | **Notifications** | View and manage admin notifications |
@@ -94,7 +94,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Progress** | Track academic progress and trends |
 | **Announcements** | Read school announcements |
 | **Leave Request** | Apply for child's leave with optional document attachments |
-| **Messages** | Communicate with all teachers and admin, with file/image sharing |
+| **Messages** |with discount & balance breakdown, pay custom partial amounts via Razorpay, view per-transaction payment history with individual receipts, download PDF receipt all teachers and admin, with file/image sharing |
 | **Certificates** | Request certificates for child with optional document attachments |
 | **Pay Fees** | View fee details and payment status |
 | **Gallery** | View school photo gallery |
@@ -545,7 +545,7 @@ Behavioral/academic reports.
 ### Administrative Tables
 
 #### `fees`
-Fee records with payment tracking.
+Fee records with payment tracking, percentage-based discounts, and partial payment support.
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
@@ -553,16 +553,41 @@ Fee records with payment tracking.
 | `student_id` | uuid (→ `students.id`) | No | — |
 | `fee_type` | text | No | — |
 | `amount` | numeric | No | — |
+| `discount` | numeric | Yes | `0` |
 | `due_date` | date | No | — |
 | `paid_amount` | numeric | Yes | `0` |
 | `payment_status` | text | Yes | `'unpaid'` |
 | `receipt_number` | text | Yes | — |
 | `paid_at` | timestamptz | Yes | — |
+| `reminder_sent` | boolean | Yes | `false` |
+| `reminder_days_before` | integer | Yes | `3` |
 | `created_at` | timestamptz | Yes | `now()` |
 
 **RLS Policies:**
 - Admins can manage fees (ALL)
 - Parents can view their children's fees (SELECT)
+
+---
+
+#### `fee_payments`
+Individual payment transaction log for partial/full payments with per-receipt tracking.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| `id` | uuid | No | `gen_random_uuid()` |
+| `fee_id` | uuid (→ `fees.id`) | No | — |
+| `student_id` | uuid (→ `students.id`) | No | — |
+| `amount` | numeric | No | — |
+| `payment_method` | text | No | `'cash'` |
+| `receipt_number` | text | No | — |
+| `razorpay_payment_id` | text | Yes | — |
+| `paid_at` | timestamptz | No | `now()` |
+| `recorded_by` | uuid | Yes | — |
+| `created_at` | timestamptz | No | `now()` |
+
+**RLS Policies:**
+- Admins can manage fee payments (ALL)
+- Parents can view their children's fee payments (SELECT)
 
 ---
 
@@ -861,6 +886,9 @@ Images within gallery folders.
 | `full-reset` | Resets all demo data (teachers, students, parents, etc.) |
 | `notify-competitive-exams` | Sends notifications for upcoming competitive exams (scheduled via pg_cron at 7 AM daily) |
 | `send-push-notification` | Delivers Web Push notifications via VAPID keys; also serves GET to return public VAPID key for frontend subscription |
+| `create-razorpay-order` | Creates Razorpay payment orders for online fee payments (reads API keys from `app_settings`) |
+| `verify-razorpay-payment` | Verifies Razorpay payment signatures (HMAC SHA256), accumulates `paid_amount`, auto-sets payment status, and logs transaction in `fee_payments` |
+| `send-fee-reminders` | Sends automated fee reminders to parents based on configurable due-date windows |
 
 All edge functions run on Deno runtime and use the Supabase service role key for privileged operations.
 
@@ -1009,6 +1037,20 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 - Responsive tab sizing with icons and truncated labels
 - Compact select dropdowns with `h-7`/`h-8` heights on mobile
 - Mobile bottom navigation bar with "More" menu for additional sidebar items
+### 💰 Fee Management System
+- **Batch fee creation** — Assign multiple fee types to entire classes or individual students in one go
+- **Multi-section targeting** — Selecting a class auto-toggles all sections (A, B, C); individual sections can be deselected
+- **Percentage-based discounts** — Enter discount as a percentage (e.g., 15 = 15% off); auto-calculates the ₹ amount per fee type
+- **Per-student discounts** — Override class-wide discount with individual student-level percentage discounts
+- **Custom partial payments** — Admin "Record Payment" dialog accepts any amount up to the remaining balance
+- **Parent online payments** — Parents enter a custom amount and pay via Razorpay; supports partial payments
+- **Cumulative payment tracking** — `paid_amount` accumulates across multiple payments; status auto-updates to `partial` or `paid`
+- **Payment history log** — Every payment (cash or online) is logged in `fee_payments` table with its own receipt number
+- **Per-transaction receipts** — Each partial payment generates a unique receipt downloadable as PDF
+- **Balance display** — Balance column (`Net - Paid`) shown across admin fee table, student detail dialog, and parent view
+- **Class Summary view** — Collection analytics per class with discount-adjusted totals
+- **Automated reminders** — Edge function sends fee reminders to parents based on configurable due-date windows
+- **Razorpay integration** — Order creation and HMAC SHA256 signature verification via Edge Functions; API keys stored in `app_settings`
 
 ---
 
