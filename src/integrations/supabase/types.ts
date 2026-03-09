@@ -357,6 +357,60 @@ export type Database = {
           },
         ]
       }
+      fee_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          fee_id: string
+          id: string
+          paid_at: string
+          payment_method: string
+          razorpay_payment_id: string | null
+          receipt_number: string
+          recorded_by: string | null
+          student_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fee_id: string
+          id?: string
+          paid_at?: string
+          payment_method?: string
+          razorpay_payment_id?: string | null
+          receipt_number: string
+          recorded_by?: string | null
+          student_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fee_id?: string
+          id?: string
+          paid_at?: string
+          payment_method?: string
+          razorpay_payment_id?: string | null
+          receipt_number?: string
+          recorded_by?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_payments_fee_id_fkey"
+            columns: ["fee_id"]
+            isOneToOne: false
+            referencedRelation: "fees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fees: {
         Row: {
           amount: number

@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { IndianRupee, Download, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { IndianRupee, Download, CheckCircle2, Clock, AlertCircle, History } from 'lucide-react';
 import { generateFeeReceipt } from './FeeReceiptGenerator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FeeRecord {
   id: string;
@@ -17,6 +19,14 @@ interface FeeRecord {
   receipt_number: string | null;
 }
 
+interface PaymentRecord {
+  id: string;
+  amount: number;
+  payment_method: string;
+  receipt_number: string;
+  paid_at: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +37,26 @@ interface Props {
 }
 
 export default function StudentFeeDetailDialog({ open, onOpenChange, studentName, admissionNumber, className, fees }: Props) {
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
+
+  const feeIds = fees.map(f => f.id);
+
+  useEffect(() => {
+    if (open && feeIds.length > 0) {
+      setLoadingPayments(true);
+      supabase
+        .from('fee_payments' as any)
+        .select('id, amount, payment_method, receipt_number, paid_at')
+        .in('fee_id', feeIds)
+        .order('paid_at', { ascending: false })
+        .then(({ data }) => {
+          setPayments((data as any as PaymentRecord[]) || []);
+          setLoadingPayments(false);
+        });
+    }
+  }, [open, JSON.stringify(feeIds)]);
+
   const totalFees = fees.reduce((s, f) => s + f.amount, 0);
   const totalDiscount = fees.reduce((s, f) => s + (f.discount || 0), 0);
   const totalPaid = fees.reduce((s, f) => s + (f.paid_amount || 0), 0);
@@ -38,17 +68,16 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
     return <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 flex items-center gap-1 w-fit"><AlertCircle className="h-3 w-3" />Unpaid</Badge>;
   };
 
-  const handleDownloadReceipt = (fee: FeeRecord) => {
-    if (!fee.receipt_number || !fee.paid_at) return;
+  const handleDownloadReceipt = (receiptNumber: string, paidAt: string, feeType?: string, amount?: number, paidAmount?: number) => {
     generateFeeReceipt({
-      receiptNumber: fee.receipt_number,
+      receiptNumber,
       studentName,
       admissionNumber,
       className,
-      feeType: fee.fee_type,
-      amount: fee.amount,
-      paidAmount: fee.paid_amount || 0,
-      paidAt: fee.paid_at,
+      feeType: feeType || 'Payment',
+      amount: amount || 0,
+      paidAmount: paidAmount || 0,
+      paidAt,
     });
   };
 
@@ -106,12 +135,12 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
                 <TableCell>{(fee.discount || 0) > 0 ? <span className="text-success">₹{(fee.discount || 0).toLocaleString()}</span> : '-'}</TableCell>
                 <TableCell className="font-medium">₹{(fee.amount - (fee.discount || 0)).toLocaleString()}</TableCell>
                 <TableCell>₹{(fee.paid_amount || 0).toLocaleString()}</TableCell>
-                <TableCell className="font-medium text-destructive">₹{(fee.amount - (fee.discount || 0) - (fee.paid_amount || 0)).toLocaleString()}</TableCell>
                 <TableCell>{new Date(fee.due_date).toLocaleDateString()}</TableCell>
+                <TableCell className="font-medium text-destructive">₹{(fee.amount - (fee.discount || 0) - (fee.paid_amount || 0)).toLocaleString()}</TableCell>
                 <TableCell>{getStatusBadge(fee.payment_status)}</TableCell>
                 <TableCell>
                   {fee.receipt_number ? (
-                    <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
+                    <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee.receipt_number!, fee.paid_at!, fee.fee_type, fee.amount, fee.paid_amount || 0)}>
                       <Download className="h-3 w-3 mr-1" />
                       {fee.receipt_number}
                     </Button>
@@ -121,6 +150,34 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
             ))}
           </TableBody>
         </Table>
+
+        {/* Payment History */}
+        {payments.length > 0 && (
+          <div className="mt-6">
+            <h3 className="font-display text-sm font-semibold flex items-center gap-2 mb-3">
+              <History className="h-4 w-4 text-primary" />
+              Payment History ({payments.length} transactions)
+            </h3>
+            <div className="space-y-2">
+              {payments.map(p => (
+                <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 text-sm">
+                  <div>
+                    <p className="font-medium flex items-center gap-1">
+                      <IndianRupee className="h-3 w-3" />{p.amount.toLocaleString()}
+                      <Badge variant="outline" className="ml-2 text-xs capitalize">{p.payment_method}</Badge>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(p.paid_at).toLocaleString()} · Receipt: {p.receipt_number}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(p.receipt_number, p.paid_at, 'Payment', p.amount, p.amount)}>
+                    <Download className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface FeeRecord {
   id: string;
+  student_id?: string;
   fee_type: string;
   amount: number;
   discount?: number | null;
@@ -60,26 +61,40 @@ export default function RecordPaymentDialog({ open, onOpenChange, fee, onSuccess
     const newStatus = newTotalPaid >= netAmount ? 'paid' : 'partial';
     const receiptNumber = `RCP${Date.now().toString().slice(-8)}`;
 
+    const paidAt = new Date().toISOString();
+
     const { error } = await supabase
       .from('fees')
       .update({
         paid_amount: newTotalPaid,
         payment_status: newStatus,
-        paid_at: new Date().toISOString(),
+        paid_at: paidAt,
         receipt_number: receiptNumber,
       })
       .eq('id', fee.id);
 
-    setSaving(false);
-
     if (error) {
+      setSaving(false);
       toast({ variant: 'destructive', title: 'Error', description: error.message });
-    } else {
-      toast({ title: 'Payment recorded', description: `₹${enteredAmount.toLocaleString()} recorded. ${newStatus === 'paid' ? 'Fully paid!' : `Balance: ₹${(remaining - enteredAmount).toLocaleString()}`}` });
-      onOpenChange(false);
-      setAmount('');
-      onSuccess();
+      return;
     }
+
+    // Log payment in fee_payments history
+    await supabase.from('fee_payments' as any).insert({
+      fee_id: fee.id,
+      student_id: fee.student_id || '',
+      amount: enteredAmount,
+      payment_method: 'cash',
+      receipt_number: receiptNumber,
+      paid_at: paidAt,
+      recorded_by: (await supabase.auth.getUser()).data.user?.id,
+    });
+
+    setSaving(false);
+    toast({ title: 'Payment recorded', description: `₹${enteredAmount.toLocaleString()} recorded. ${newStatus === 'paid' ? 'Fully paid!' : `Balance: ₹${(remaining - enteredAmount).toLocaleString()}`}` });
+    onOpenChange(false);
+    setAmount('');
+    onSuccess();
   };
 
   return (

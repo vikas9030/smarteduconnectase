@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CreditCard, Calendar, CheckCircle2, Clock, AlertCircle, IndianRupee, Download } from 'lucide-react';
+import { Loader2, CreditCard, Calendar, CheckCircle2, Clock, AlertCircle, IndianRupee, Download, History } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BackButton } from '@/components/ui/back-button';
@@ -39,6 +39,62 @@ interface Child {
   id: string;
   name: string;
   fees: Fee[];
+}
+
+function PaymentHistorySection({ studentId, studentName }: { studentId: string; studentName: string }) {
+  const [payments, setPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!studentId) return;
+    supabase
+      .from('fee_payments' as any)
+      .select('id, amount, payment_method, receipt_number, paid_at, fee_id')
+      .eq('student_id', studentId)
+      .order('paid_at', { ascending: false })
+      .then(({ data }) => setPayments((data as any[]) || []));
+  }, [studentId]);
+
+  if (payments.length === 0) return null;
+
+  return (
+    <Card className="card-elevated">
+      <CardHeader>
+        <CardTitle className="font-display flex items-center gap-2">
+          <History className="h-5 w-5 text-primary" />
+          Payment History ({payments.length} transactions)
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {payments.map((p: any) => (
+            <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div>
+                <p className="font-medium flex items-center gap-1">
+                  <IndianRupee className="h-3 w-3" />{Number(p.amount).toLocaleString()}
+                  <Badge variant="outline" className="ml-2 text-xs capitalize">{p.payment_method}</Badge>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(p.paid_at).toLocaleString()} · Receipt: {p.receipt_number}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => {
+                generateFeeReceipt({
+                  receiptNumber: p.receipt_number,
+                  studentName,
+                  feeType: 'Payment',
+                  amount: Number(p.amount),
+                  paidAmount: Number(p.amount),
+                  paidAt: p.paid_at,
+                });
+              }}>
+                <Download className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function ParentFees() {
@@ -350,37 +406,8 @@ export default function ParentFees() {
           </CardContent>
         </Card>
 
-        {/* Payment History */}
-        {paidFees.length > 0 && (
-          <Card className="card-elevated">
-            <CardHeader>
-              <CardTitle className="font-display flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-                Payment History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {paidFees.map(fee => (
-                  <div key={fee.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="font-medium capitalize">{fee.fee_type}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Paid on {new Date(fee.paid_at!).toLocaleDateString()} · Receipt: {fee.receipt_number}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-success flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span>
-                      <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(fee)}>
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Payment History from fee_payments table */}
+        <PaymentHistorySection studentId={selectedChildId} studentName={selectedChild?.name || ''} />
 
         {unpaidFees.length > 0 && (
           <Card className="card-elevated bg-primary/5 border-primary/20">
