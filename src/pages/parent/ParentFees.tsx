@@ -101,17 +101,23 @@ export default function ParentFees() {
 
   const selectedChild = children.find(c => c.id === selectedChildId);
 
-  const handlePayNow = async (fee: Fee) => {
+  const openPaymentDialog = (fee: Fee) => {
+    const netAmount = fee.amount - (fee.discount || 0);
+    const remaining = netAmount - (fee.paid_amount || 0);
+    setCustomAmount(remaining.toString());
+    setPaymentDialogFee(fee);
+  };
+
+  const handlePayNow = async (fee: Fee, payAmount: number) => {
     if (!user || !selectedChild) return;
+    setPaymentDialogFee(null);
     setPayingFeeId(fee.id);
 
     try {
-      const dueAmount = fee.amount - (fee.discount || 0) - (fee.paid_amount || 0);
-
       const { data, error } = await supabase.functions.invoke('create-razorpay-order', {
         body: {
           fee_id: fee.id,
-          amount: dueAmount,
+          amount: payAmount,
           student_name: selectedChild.name,
           fee_type: fee.fee_type,
         },
@@ -136,7 +142,7 @@ export default function ParentFees() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 fee_id: fee.id,
-                amount: dueAmount,
+                amount: payAmount,
               },
             });
 
