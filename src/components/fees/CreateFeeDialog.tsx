@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, Users, User } from 'lucide-react';
+import { CalendarIcon, Loader2, Users, User, CreditCard } from 'lucide-react';
 
 const FEE_TYPES = ['Tuition', 'Transport', 'Lab', 'Exam', 'Library', 'Sports', 'Uniform', 'Admission', 'Other'];
 
