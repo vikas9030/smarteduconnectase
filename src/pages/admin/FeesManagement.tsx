@@ -48,6 +48,7 @@ export default function FeesManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [classFilter, setClassFilter] = useState('all');
+  const [studentFilter, setStudentFilter] = useState('all');
   const [stats, setStats] = useState({ totalDue: 0, totalPaid: 0, overdue: 0 });
 
   // Dialogs
@@ -130,13 +131,32 @@ export default function FeesManagement() {
     return <Badge className="bg-primary/10 text-primary border-primary/20">Unpaid</Badge>;
   };
 
+  // Unique students for filter, scoped to selected class
+  const studentOptions = (() => {
+    const map = new Map<string, { id: string; name: string }>();
+    fees.forEach(f => {
+      if (!f.students) return;
+      if (classFilter !== 'all' && (f.students.classes as any)?.id !== classFilter) return;
+      if (!map.has(f.student_id)) {
+        map.set(f.student_id, { id: f.student_id, name: f.students.full_name });
+      }
+    });
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
+  // Reset student filter when class filter changes
+  useEffect(() => {
+    setStudentFilter('all');
+  }, [classFilter]);
+
   const filteredFees = fees.filter((f) => {
     const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
     const matchesClass = classFilter === 'all' || (f.students?.classes as any)?.id === classFilter;
-    return matchesSearch && matchesStatus && matchesClass;
+    const matchesStudent = studentFilter === 'all' || f.student_id === studentFilter;
+    return matchesSearch && matchesStatus && matchesClass && matchesStudent;
   });
 
   if (loading) {
@@ -189,6 +209,13 @@ export default function FeesManagement() {
                     <SelectContent>
                       <SelectItem value="all">All Classes</SelectItem>
                       {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={studentFilter} onValueChange={setStudentFilter}>
+                    <SelectTrigger className="w-44"><SelectValue placeholder="Student" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Students</SelectItem>
+                      {studentOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
