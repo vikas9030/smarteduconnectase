@@ -93,6 +93,7 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
               <TableHead>Net</TableHead>
               <TableHead>Paid</TableHead>
               <TableHead>Due Date</TableHead>
+              <TableHead>Balance</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Receipt</TableHead>
             </TableRow>
@@ -105,9 +106,9 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
                 <TableCell>{(fee.discount || 0) > 0 ? <span className="text-success">₹{(fee.discount || 0).toLocaleString()}</span> : '-'}</TableCell>
                 <TableCell className="font-medium">₹{(fee.amount - (fee.discount || 0)).toLocaleString()}</TableCell>
                 <TableCell>₹{(fee.paid_amount || 0).toLocaleString()}</TableCell>
+                <TableCell className="font-medium text-destructive">₹{(fee.amount - (fee.discount || 0) - (fee.paid_amount || 0)).toLocaleString()}</TableCell>
                 <TableCell>{new Date(fee.due_date).toLocaleDateString()}</TableCell>
                 <TableCell>{getStatusBadge(fee.payment_status)}</TableCell>
-                <TableCell>{fee.paid_at ? new Date(fee.paid_at).toLocaleDateString() : '-'}</TableCell>
                 <TableCell>
                   {fee.receipt_number ? (
                     <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>

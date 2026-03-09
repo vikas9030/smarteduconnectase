@@ -23,6 +23,7 @@ import ClassSummaryView from '@/components/fees/ClassSummaryView';
 import StudentFeeDetailDialog from '@/components/fees/StudentFeeDetailDialog';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
 import CreateFeeDialog from '@/components/fees/CreateFeeDialog';
+import RecordPaymentDialog from '@/components/fees/RecordPaymentDialog';
 
 interface FeeRecord {
   id: string;
@@ -54,6 +55,7 @@ export default function FeesManagement() {
   // Dialogs
   const [selectedStudent, setSelectedStudent] = useState<{ name: string; admission: string; className: string; fees: FeeRecord[] } | null>(null);
   const [showCreateFee, setShowCreateFee] = useState(false);
+  const [paymentFee, setPaymentFee] = useState<FeeRecord | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
@@ -250,9 +252,10 @@ export default function FeesManagement() {
                           <TableHead>Discount</TableHead>
                           <TableHead>Net</TableHead>
                           <TableHead>Paid</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
+                           <TableHead>Balance</TableHead>
+                           <TableHead>Due Date</TableHead>
+                           <TableHead>Status</TableHead>
+                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -270,14 +273,15 @@ export default function FeesManagement() {
                             <TableCell>{((fee as any).discount || 0) > 0 ? <span className="text-success">₹{((fee as any).discount || 0).toLocaleString()}</span> : '-'}</TableCell>
                             <TableCell className="font-medium">₹{(fee.amount - ((fee as any).discount || 0)).toLocaleString()}</TableCell>
                             <TableCell className="text-success">₹{(fee.paid_amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="font-medium text-destructive">₹{(fee.amount - ((fee as any).discount || 0) - (fee.paid_amount || 0)).toLocaleString()}</TableCell>
                             <TableCell>{new Date(fee.due_date).toLocaleDateString()}</TableCell>
                             
                             <TableCell>{getStatusBadge(fee.payment_status, fee.due_date)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 {fee.payment_status !== 'paid' && (
-                                  <Button size="sm" variant="outline" onClick={() => handleMarkPaid(fee.id, fee.amount)}>
-                                    <DollarSign className="h-3 w-3 mr-1" />Mark Paid
+                                  <Button size="sm" variant="outline" onClick={() => setPaymentFee(fee)}>
+                                    <DollarSign className="h-3 w-3 mr-1" />Record Payment
                                   </Button>
                                 )}
                                 {fee.receipt_number && (
@@ -324,6 +328,13 @@ export default function FeesManagement() {
       <CreateFeeDialog
         open={showCreateFee}
         onOpenChange={setShowCreateFee}
+        onSuccess={fetchData}
+      />
+
+      <RecordPaymentDialog
+        open={!!paymentFee}
+        onOpenChange={(open) => !open && setPaymentFee(null)}
+        fee={paymentFee}
         onSuccess={fetchData}
       />
     </DashboardLayout>
