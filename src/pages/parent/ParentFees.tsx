@@ -6,10 +6,12 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, CreditCard, Calendar, CheckCircle2, Clock, AlertCircle, IndianRupee } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, CreditCard, Calendar, CheckCircle2, Clock, AlertCircle, IndianRupee, Download } from 'lucide-react';
 import { parentSidebarItems } from '@/config/parentSidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BackButton } from '@/components/ui/back-button';
+import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
 
 interface Fee {
   id: string;
@@ -22,11 +24,17 @@ interface Fee {
   receipt_number: string | null;
 }
 
+interface Child {
+  id: string;
+  name: string;
+  fees: Fee[];
+}
+
 export default function ParentFees() {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
-  const [fees, setFees] = useState<Fee[]>([]);
-  const [childName, setChildName] = useState('');
+  const [children, setChildren] = useState<Child[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -53,16 +61,22 @@ export default function ParentFees() {
           .eq('parent_id', parentData.id);
 
         if (links && links.length > 0) {
-          const studentId = links[0].student_id;
-          setChildName((links[0] as any).students?.full_name || '');
+          const childrenData: Child[] = [];
+          for (const link of links) {
+            const { data: feesData } = await supabase
+              .from('fees')
+              .select('*')
+              .eq('student_id', link.student_id)
+              .order('due_date', { ascending: false });
 
-          const { data: feesData } = await supabase
-            .from('fees')
-            .select('*')
-            .eq('student_id', studentId)
-            .order('due_date', { ascending: false });
-
-          if (feesData) setFees(feesData);
+            childrenData.push({
+              id: link.student_id,
+              name: (link as any).students?.full_name || '',
+              fees: feesData || [],
+            });
+          }
+          setChildren(childrenData);
+          if (childrenData.length > 0) setSelectedChildId(childrenData[0].id);
         }
       }
       setLoadingData(false);
@@ -74,56 +88,79 @@ export default function ParentFees() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const isLoadingContent = loadingData;
-
+  const selectedChild = children.find(c => c.id === selectedChildId);
+  const fees = selectedChild?.fees || [];
   const totalDue = fees.filter(f => f.payment_status !== 'paid').reduce((sum, f) => sum + (f.amount - (f.paid_amount || 0)), 0);
   const totalPaid = fees.filter(f => f.payment_status === 'paid').reduce((sum, f) => sum + f.amount, 0);
+  const paidFees = fees.filter(f => f.payment_status === 'paid' && f.paid_at);
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'paid': return { icon: <CheckCircle2 className="h-4 w-4" />, class: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' };
-      case 'partial': return { icon: <Clock className="h-4 w-4" />, class: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' };
-      default: return { icon: <AlertCircle className="h-4 w-4" />, class: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+      case 'paid': return { icon: <CheckCircle2 className="h-4 w-4" />, class: 'bg-success/10 text-success' };
+      case 'partial': return { icon: <Clock className="h-4 w-4" />, class: 'bg-warning/10 text-warning' };
+      default: return { icon: <AlertCircle className="h-4 w-4" />, class: 'bg-destructive/10 text-destructive' };
     }
+  };
+
+  const handleDownloadReceipt = (fee: Fee) => {
+    if (!fee.receipt_number || !fee.paid_at) return;
+    generateFeeReceipt({
+      receiptNumber: fee.receipt_number,
+      studentName: selectedChild?.name || '',
+      feeType: fee.fee_type,
+      amount: fee.amount,
+      paidAmount: fee.paid_amount || 0,
+      paidAt: fee.paid_at,
+    });
   };
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
-      {isLoadingContent ? (
+      {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/parent" />
-        <div>
-          <h1 className="font-display text-2xl font-bold">Fee Payment</h1>
-          <p className="text-muted-foreground">{childName}'s fee details and payment history</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-bold">Fee Payment</h1>
+            <p className="text-muted-foreground">{selectedChild?.name}'s fee details and payment history</p>
+          </div>
+          {children.length > 1 && (
+            <Select value={selectedChildId} onValueChange={setSelectedChildId}>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Select child" /></SelectTrigger>
+              <SelectContent>
+                {children.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="card-elevated border-l-4 border-l-red-500">
+          <Card className="card-elevated border-l-4 border-l-destructive">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Due</p>
-                  <p className="text-2xl font-bold text-red-500 flex items-center">
+                  <p className="text-2xl font-bold text-destructive flex items-center">
                     <IndianRupee className="h-5 w-5" />{totalDue.toLocaleString()}
                   </p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-red-500/50" />
+                <AlertCircle className="h-8 w-8 text-destructive/50" />
               </div>
             </CardContent>
           </Card>
-          <Card className="card-elevated border-l-4 border-l-green-500">
+          <Card className="card-elevated border-l-4 border-l-success">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Paid</p>
-                  <p className="text-2xl font-bold text-green-500 flex items-center">
+                  <p className="text-2xl font-bold text-success flex items-center">
                     <IndianRupee className="h-5 w-5" />{totalPaid.toLocaleString()}
                   </p>
                 </div>
-                <CheckCircle2 className="h-8 w-8 text-green-500/50" />
+                <CheckCircle2 className="h-8 w-8 text-success/50" />
               </div>
             </CardContent>
           </Card>
@@ -154,51 +191,91 @@ export default function ParentFees() {
             {fees.length === 0 ? (
               <p className="text-center py-8 text-muted-foreground">No fee records found.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fee Type</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Paid</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Receipt</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fees.map((fee) => {
-                    const style = getStatusStyle(fee.payment_status);
-                    const isOverdue = fee.payment_status !== 'paid' && new Date(fee.due_date) < new Date();
-                    
-                    return (
-                      <TableRow key={fee.id}>
-                        <TableCell className="font-medium">{fee.fee_type}</TableCell>
-                        <TableCell className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</TableCell>
-                        <TableCell className="flex items-center">
-                          <IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-red-500' : ''}`}>
-                            <Calendar className="h-3 w-3" />
-                            {new Date(fee.due_date).toLocaleDateString()}
-                            {isOverdue && <Badge variant="destructive" className="ml-1 text-xs">Overdue</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={`${style.class} flex items-center gap-1 w-fit`}>
-                            {style.icon}
-                            {fee.payment_status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{fee.receipt_number || '-'}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fee Type</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Paid</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Paid On</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Receipt</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {fees.map((fee) => {
+                      const style = getStatusStyle(fee.payment_status);
+                      const isOverdue = fee.payment_status !== 'paid' && new Date(fee.due_date) < new Date();
+                      return (
+                        <TableRow key={fee.id}>
+                          <TableCell className="font-medium">{fee.fee_type}</TableCell>
+                          <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span></TableCell>
+                          <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span></TableCell>
+                          <TableCell>
+                            <div className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-destructive' : ''}`}>
+                              <Calendar className="h-3 w-3" />
+                              {new Date(fee.due_date).toLocaleDateString()}
+                              {isOverdue && <Badge variant="destructive" className="ml-1 text-xs">Overdue</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>{fee.paid_at ? new Date(fee.paid_at).toLocaleDateString() : '-'}</TableCell>
+                          <TableCell>
+                            <Badge className={`${style.class} flex items-center gap-1 w-fit`}>
+                              {style.icon}
+                              {fee.payment_status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {fee.receipt_number ? (
+                              <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
+                                <Download className="h-3 w-3 mr-1" />
+                                {fee.receipt_number}
+                              </Button>
+                            ) : '-'}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Payment History */}
+        {paidFees.length > 0 && (
+          <Card className="card-elevated">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                Payment History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {paidFees.map(fee => (
+                  <div key={fee.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div>
+                      <p className="font-medium capitalize">{fee.fee_type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Paid on {new Date(fee.paid_at!).toLocaleDateString()} · Receipt: {fee.receipt_number}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-success flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span>
+                      <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(fee)}>
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {totalDue > 0 && (
           <Card className="card-elevated bg-primary/5 border-primary/20">
