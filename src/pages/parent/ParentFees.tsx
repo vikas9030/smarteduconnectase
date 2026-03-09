@@ -49,7 +49,8 @@ export default function ParentFees() {
   const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [loadingData, setLoadingData] = useState(true);
   const [payingFeeId, setPayingFeeId] = useState<string | null>(null);
-
+  const [paymentDialogFee, setPaymentDialogFee] = useState<Fee | null>(null);
+  const [customAmount, setCustomAmount] = useState<string>('');
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
