@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { CalendarIcon, Loader2, Users, User, CreditCard, Bell, X } from 'lucide-react';
+import { CalendarIcon, Loader2, Users, User, CreditCard, Bell, X, Percent } from 'lucide-react';
 
 const FEE_TYPES = [
   'Tuition', 'Transport', 'Lab', 'Exam', 'Library', 'Sports',
@@ -24,6 +25,12 @@ interface FeeEntry {
   amount: string;
 }
 
+interface StudentInfo {
+  id: string;
+  full_name: string;
+  admission_number: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,7 +40,7 @@ interface Props {
 export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props) {
   const { toast } = useToast();
   const [classes, setClasses] = useState<{ id: string; name: string; section: string }[]>([]);
-  const [students, setStudents] = useState<{ id: string; full_name: string; admission_number: string }[]>([]);
+  const [students, setStudents] = useState<StudentInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
 
@@ -47,6 +54,12 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
   const [enableReminder, setEnableReminder] = useState(true);
   const [reminderDays, setReminderDays] = useState('3');
 
+  // Discount state
+  const [enableDiscount, setEnableDiscount] = useState(false);
+  const [discountMode, setDiscountMode] = useState<'flat' | 'per-student'>('flat');
+  const [flatDiscount, setFlatDiscount] = useState('');
+  const [studentDiscounts, setStudentDiscounts] = useState<Record<string, { enabled: boolean; amount: string }>>({});
+
   useEffect(() => {
     if (open) {
       fetchClasses();
@@ -55,10 +68,19 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
   }, [open]);
 
   useEffect(() => {
-    if (selectedClassId && assignMode === 'student') {
+    if (selectedClassId) {
       fetchStudentsByClass(selectedClassId);
     }
-  }, [selectedClassId, assignMode]);
+  }, [selectedClassId]);
+
+  // Initialize student discounts when students change
+  useEffect(() => {
+    const discounts: Record<string, { enabled: boolean; amount: string }> = {};
+    students.forEach(s => {
+      discounts[s.id] = studentDiscounts[s.id] || { enabled: false, amount: '' };
+    });
+    setStudentDiscounts(discounts);
+  }, [students]);
 
   const resetForm = () => {
     setAssignMode('class');
@@ -70,6 +92,10 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     setDueDate(undefined);
     setEnableReminder(true);
     setReminderDays('3');
+    setEnableDiscount(false);
+    setDiscountMode('flat');
+    setFlatDiscount('');
+    setStudentDiscounts({});
   };
 
   const fetchClasses = async () => {
@@ -115,6 +141,28 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
 
   const removeFeeEntry = (type: string) => {
     setFeeEntries(prev => prev.filter(e => e.type !== type));
+  };
+
+  const toggleStudentDiscount = (studentId: string, checked: boolean) => {
+    setStudentDiscounts(prev => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], enabled: checked },
+    }));
+  };
+
+  const updateStudentDiscount = (studentId: string, amount: string) => {
+    setStudentDiscounts(prev => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], amount },
+    }));
+  };
+
+  const getDiscountForStudent = (studentId: string): number => {
+    if (!enableDiscount) return 0;
+    if (discountMode === 'flat') return parseFloat(flatDiscount) || 0;
+    const sd = studentDiscounts[studentId];
+    if (sd?.enabled) return parseFloat(sd.amount) || 0;
+    return 0;
   };
 
   const totalAmount = feeEntries.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
@@ -166,12 +214,12 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
       const dueDateStr = format(dueDate, 'yyyy-MM-dd');
       const reminderDaysBefore = enableReminder ? parseInt(reminderDays) || 3 : 0;
 
-      // Build all fee records: each fee type × each student
       const feeRecords = studentIds.flatMap(sid =>
         feeEntries.map(entry => ({
           student_id: sid,
           fee_type: entry.type,
           amount: parseFloat(entry.amount) || 0,
+          discount: getDiscountForStudent(sid),
           due_date: dueDateStr,
           reminder_days_before: reminderDaysBefore,
         }))
@@ -336,6 +384,92 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </div>
           )}
 
+          {/* Discount Section */}
+          {selectedClassId && feeEntries.length > 0 && (
+            <div className="p-3 rounded-lg bg-muted/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-primary" />
+                  <Label className="cursor-pointer">Enable Discount</Label>
+                </div>
+                <Switch checked={enableDiscount} onCheckedChange={setEnableDiscount} />
+              </div>
+
+              {enableDiscount && (
+                <div className="space-y-3">
+                  {/* Discount mode toggle */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant={discountMode === 'flat' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDiscountMode('flat')}
+                    >
+                      Same for all
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={discountMode === 'per-student' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setDiscountMode('per-student')}
+                    >
+                      Per student
+                    </Button>
+                  </div>
+
+                  {discountMode === 'flat' && (
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm whitespace-nowrap">Discount ₹</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={flatDiscount}
+                        onChange={(e) => setFlatDiscount(e.target.value)}
+                        min="0"
+                        className="w-32"
+                      />
+                    </div>
+                  )}
+
+                  {discountMode === 'per-student' && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {loadingStudents ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Loading students...
+                        </div>
+                      ) : students.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No students in this class</p>
+                      ) : (
+                        students.map(s => {
+                          const sd = studentDiscounts[s.id] || { enabled: false, amount: '' };
+                          return (
+                            <div key={s.id} className="flex items-center gap-2 p-2 rounded-md bg-background border">
+                              <Checkbox
+                                checked={sd.enabled}
+                                onCheckedChange={(checked) => toggleStudentDiscount(s.id, !!checked)}
+                              />
+                              <span className="text-sm flex-1 truncate">{s.full_name}</span>
+                              {sd.enabled && (
+                                <Input
+                                  type="number"
+                                  placeholder="₹ Discount"
+                                  value={sd.amount}
+                                  onChange={(e) => updateStudentDiscount(s.id, e.target.value)}
+                                  min="0"
+                                  className="w-28 h-8 text-sm"
+                                />
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Due Date */}
           <div className="space-y-1.5">
             <Label>Due Date *</Label>
@@ -399,6 +533,14 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
               <p className="text-xs text-muted-foreground">
                 {feeEntries.map(e => `${e.type}${e.amount ? `: ₹${parseFloat(e.amount).toLocaleString()}` : ''}`).join(' • ')}
               </p>
+              {enableDiscount && discountMode === 'flat' && parseFloat(flatDiscount) > 0 && (
+                <p className="text-xs text-success">💰 Discount: ₹{parseFloat(flatDiscount).toLocaleString()} per student</p>
+              )}
+              {enableDiscount && discountMode === 'per-student' && (
+                <p className="text-xs text-success">
+                  💰 Per-student discounts: {Object.values(studentDiscounts).filter(d => d.enabled && parseFloat(d.amount) > 0).length} student(s)
+                </p>
+              )}
               {enableReminder && (
                 <p className="text-xs text-muted-foreground">📢 Reminder {reminderDays} days before due date</p>
               )}

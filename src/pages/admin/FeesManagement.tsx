@@ -216,13 +216,14 @@ export default function FeesManagement() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Student</TableHead>
+                         <TableHead>Student</TableHead>
                           <TableHead>Class</TableHead>
                           <TableHead>Fee Type</TableHead>
                           <TableHead>Amount</TableHead>
+                          <TableHead>Discount</TableHead>
+                          <TableHead>Net</TableHead>
                           <TableHead>Paid</TableHead>
                           <TableHead>Due Date</TableHead>
-                          <TableHead>Paid On</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -239,6 +240,8 @@ export default function FeesManagement() {
                             <TableCell>{fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : 'N/A'}</TableCell>
                             <TableCell className="capitalize">{fee.fee_type}</TableCell>
                             <TableCell className="font-medium">₹{fee.amount.toLocaleString()}</TableCell>
+                            <TableCell>{((fee as any).discount || 0) > 0 ? <span className="text-success">₹{((fee as any).discount || 0).toLocaleString()}</span> : '-'}</TableCell>
+                            <TableCell className="font-medium">₹{(fee.amount - ((fee as any).discount || 0)).toLocaleString()}</TableCell>
                             <TableCell className="text-success">₹{(fee.paid_amount || 0).toLocaleString()}</TableCell>
                             <TableCell>{new Date(fee.due_date).toLocaleDateString()}</TableCell>
                             <TableCell>{fee.paid_at ? new Date(fee.paid_at).toLocaleDateString() : '-'}</TableCell>

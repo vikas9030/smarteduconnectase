@@ -8,6 +8,7 @@ interface ReceiptData {
   className?: string;
   feeType: string;
   amount: number;
+  discount?: number;
   paidAmount: number;
   paidAt: string;
 }
@@ -27,10 +28,13 @@ export function generateFeeReceipt(data: ReceiptData) {
   if (data.admissionNumber) doc.text(`Admission No: ${data.admissionNumber}`, 14, 58);
   if (data.className) doc.text(`Class: ${data.className}`, 14, 66);
 
+  const discount = data.discount || 0;
+  const netAmount = data.amount - discount;
+
   autoTable(doc, {
     startY: 75,
-    head: [['Fee Type', 'Amount (₹)', 'Paid (₹)']],
-    body: [[data.feeType, data.amount.toLocaleString(), data.paidAmount.toLocaleString()]],
+    head: [['Fee Type', 'Amount (₹)', 'Discount (₹)', 'Net (₹)', 'Paid (₹)']],
+    body: [[data.feeType, data.amount.toLocaleString(), discount.toLocaleString(), netAmount.toLocaleString(), data.paidAmount.toLocaleString()]],
     theme: 'grid',
   });
 
