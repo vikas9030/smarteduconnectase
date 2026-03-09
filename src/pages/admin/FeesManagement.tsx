@@ -119,6 +119,7 @@ export default function FeesManagement() {
       amount: fee.amount,
       paidAmount: fee.paid_amount || 0,
       paidAt: fee.paid_at,
+      template: receiptTemplate || undefined,
     });
   };
 
