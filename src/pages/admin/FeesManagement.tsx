@@ -207,16 +207,15 @@ export default function FeesManagement() {
                     <Input placeholder="Search by student or fee type..." className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                   </div>
                   <Select value={classFilter} onValueChange={setClassFilter}>
-                    <SelectTrigger className="w-40"><SelectValue placeholder="Class" /></SelectTrigger>
+                    <SelectTrigger className="w-40"><SelectValue placeholder="Select Class" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Classes</SelectItem>
                       {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Select value={studentFilter} onValueChange={setStudentFilter}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder="Student" /></SelectTrigger>
+                  <Select value={studentFilter} onValueChange={setStudentFilter} disabled={!classFilter}>
+                    <SelectTrigger className="w-44"><SelectValue placeholder="Select Student" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Students</SelectItem>
+                      <SelectItem value="all-students">All Students</SelectItem>
                       {studentOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
