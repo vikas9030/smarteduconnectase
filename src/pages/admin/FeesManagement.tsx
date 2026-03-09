@@ -238,7 +238,7 @@ export default function FeesManagement() {
                 {loadingData ? (
                   <div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
                 ) : filteredFees.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">No fee records found</div>
+                  <div className="text-center py-12 text-muted-foreground">{!classFilter ? 'Please select a class to view fee records' : 'No fee records found'}</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
