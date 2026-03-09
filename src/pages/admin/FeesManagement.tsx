@@ -215,7 +215,6 @@ export default function FeesManagement() {
                   <Select value={studentFilter} onValueChange={setStudentFilter} disabled={!classFilter}>
                     <SelectTrigger className="w-44"><SelectValue placeholder="Select Student" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all-students">All Students</SelectItem>
                       {studentOptions.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
