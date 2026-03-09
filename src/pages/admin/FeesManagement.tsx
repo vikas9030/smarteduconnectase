@@ -185,10 +185,14 @@ export default function FeesManagement() {
             <h1 className="font-display text-2xl font-bold">Fees Management</h1>
             <p className="text-muted-foreground">Track and manage student fees</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={() => setShowCreateFee(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Fee
+            </Button>
+            <Button variant="outline" onClick={() => setShowReceiptSettings(true)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Receipt Settings
             </Button>
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
