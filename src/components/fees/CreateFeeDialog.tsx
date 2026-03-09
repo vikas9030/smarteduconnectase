@@ -266,14 +266,17 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
       const reminderDaysBefore = enableReminder ? parseInt(reminderDays) || 3 : 0;
 
       const feeRecords = studentIds.flatMap(sid =>
-        feeEntries.map(entry => ({
-          student_id: sid,
-          fee_type: entry.type,
-          amount: parseFloat(entry.amount) || 0,
-          discount: getDiscountForStudent(sid),
-          due_date: dueDateStr,
-          reminder_days_before: reminderDaysBefore,
-        }))
+        feeEntries.map(entry => {
+          const feeAmount = parseFloat(entry.amount) || 0;
+          return {
+            student_id: sid,
+            fee_type: entry.type,
+            amount: feeAmount,
+            discount: getDiscountForStudent(sid, feeAmount),
+            due_date: dueDateStr,
+            reminder_days_before: reminderDaysBefore,
+          };
+        })
       );
 
       const { error } = await supabase.from('fees').insert(feeRecords);
