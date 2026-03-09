@@ -25,31 +25,45 @@ export async function generateFeeReceipt(data: ReceiptData) {
   const leftMargin = 14;
   const rightMargin = pageWidth - 14;
 
-  // Logo
-  if (t?.showLogo && t.logoUrl) {
+  const hasLogo = !!(t?.showLogo && t.logoUrl);
+  let logoLoaded: HTMLImageElement | null = null;
+
+  if (hasLogo) {
     try {
-      const img = await loadImage(t.logoUrl);
-      doc.addImage(img, 'PNG', leftMargin, y - 2, 18, 18);
+      logoLoaded = await loadImage(t!.logoUrl);
     } catch {}
   }
 
-  // School header
+  // School header block
   if (t?.schoolName) {
+    // Draw logo on the left
+    if (logoLoaded) {
+      doc.addImage(logoLoaded, 'PNG', leftMargin, y, 20, 20);
+    }
+
+    // School name and details centered in the remaining space
+    const textCenterX = logoLoaded ? leftMargin + 20 + ((rightMargin - leftMargin - 20) / 2) : centerX;
+
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(t.schoolName, centerX, y + 4, { align: 'center' });
-    y += 8;
+    doc.text(t.schoolName, textCenterX, y + 6, { align: 'center' });
+
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
+    let headerY = y + 12;
     if (t.schoolAddress) {
-      doc.text(t.schoolAddress, centerX, y + 4, { align: 'center' });
-      y += 5;
+      doc.text(t.schoolAddress, textCenterX, headerY, { align: 'center' });
+      headerY += 4;
     }
     if (t.schoolPhone) {
-      doc.text('Ph: ' + t.schoolPhone, centerX, y + 4, { align: 'center' });
-      y += 5;
+      doc.text('Ph: ' + t.schoolPhone, textCenterX, headerY, { align: 'center' });
+      headerY += 4;
     }
-    y += 6;
+
+    y = Math.max(y + 22, headerY + 2);
+  } else if (logoLoaded) {
+    doc.addImage(logoLoaded, 'PNG', leftMargin, y, 20, 20);
+    y += 24;
   }
 
   // Header title
