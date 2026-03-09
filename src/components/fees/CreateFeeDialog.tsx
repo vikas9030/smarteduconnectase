@@ -202,11 +202,17 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     }));
   };
 
-  const getDiscountForStudent = (studentId: string): number => {
+  const getDiscountForStudent = (studentId: string, feeAmount: number): number => {
     if (!enableDiscount) return 0;
-    if (discountMode === 'flat') return parseFloat(flatDiscount) || 0;
+    if (discountMode === 'flat') {
+      const pct = parseFloat(flatDiscount) || 0;
+      return Math.round((pct / 100) * feeAmount * 100) / 100;
+    }
     const sd = studentDiscounts[studentId];
-    if (sd?.enabled) return parseFloat(sd.amount) || 0;
+    if (sd?.enabled) {
+      const pct = parseFloat(sd.amount) || 0;
+      return Math.round((pct / 100) * feeAmount * 100) / 100;
+    }
     return 0;
   };
 
