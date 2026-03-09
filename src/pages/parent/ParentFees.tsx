@@ -12,6 +12,7 @@ import { parentSidebarItems } from '@/config/parentSidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BackButton } from '@/components/ui/back-button';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
+import { loadReceiptTemplate, type ReceiptTemplate } from '@/components/fees/ReceiptTemplateSettings';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,11 @@ interface Child {
 
 function PaymentHistorySection({ studentId, studentName }: { studentId: string; studentName: string }) {
   const [payments, setPayments] = useState<any[]>([]);
+  const [template, setTemplate] = useState<ReceiptTemplate | null>(null);
+
+  useEffect(() => {
+    loadReceiptTemplate().then(setTemplate);
+  }, []);
 
   useEffect(() => {
     if (!studentId) return;
@@ -85,6 +91,7 @@ function PaymentHistorySection({ studentId, studentName }: { studentId: string; 
                   amount: Number(p.amount),
                   paidAmount: Number(p.amount),
                   paidAt: p.paid_at,
+                  template: template || undefined,
                 });
               }}>
                 <Download className="h-3 w-3" />
@@ -107,6 +114,12 @@ export default function ParentFees() {
   const [payingFeeId, setPayingFeeId] = useState<string | null>(null);
   const [paymentDialogFee, setPaymentDialogFee] = useState<Fee | null>(null);
   const [customAmount, setCustomAmount] = useState<string>('');
+  const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate | null>(null);
+
+  useEffect(() => {
+    loadReceiptTemplate().then(setReceiptTemplate);
+  }, []);
+
   useEffect(() => {
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
@@ -256,6 +269,7 @@ export default function ParentFees() {
       amount: fee.amount,
       paidAmount: fee.paid_amount || 0,
       paidAt: fee.paid_at,
+      template: receiptTemplate || undefined,
     });
   };
 

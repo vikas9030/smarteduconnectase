@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { IndianRupee, Download, CheckCircle2, Clock, AlertCircle, History } from 'lucide-react';
 import { generateFeeReceipt } from './FeeReceiptGenerator';
+import { loadReceiptTemplate, type ReceiptTemplate } from './ReceiptTemplateSettings';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FeeRecord {
@@ -39,8 +40,15 @@ interface Props {
 export default function StudentFeeDetailDialog({ open, onOpenChange, studentName, admissionNumber, className, fees }: Props) {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(false);
+  const [template, setTemplate] = useState<ReceiptTemplate | null>(null);
 
   const feeIds = fees.map(f => f.id);
+
+  useEffect(() => {
+    if (open) {
+      loadReceiptTemplate().then(setTemplate);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open && feeIds.length > 0) {
@@ -78,6 +86,7 @@ export default function StudentFeeDetailDialog({ open, onOpenChange, studentName
       amount: amount || 0,
       paidAmount: paidAmount || 0,
       paidAt,
+      template: template || undefined,
     });
   };
 
