@@ -112,8 +112,8 @@ export default function FeesManagement() {
     if (!fee.receipt_number || !fee.paid_at) return;
     generateFeeReceipt({
       receiptNumber: fee.receipt_number,
-      studentName:login_id || fee.students?. fee.students?.full_name || 'N/A',
- login_id || fee.students?.     admissionNumber: fee.students?.admission_number,
+      studentName: fee.students?.full_name || 'N/A',
+      admissionNumber: fee.students?.login_id || fee.students?.admission_number,
       className: fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : undefined,
       feeType: fee.fee_type,
       amount: fee.amount,
