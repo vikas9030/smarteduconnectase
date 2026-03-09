@@ -37,7 +37,7 @@ interface FeeRecord {
   payment_status: string;
   paid_at: string | null;
   receipt_number: string | null;
-  students?: { full_name: string; admission_number: string; login_id?: string | null; login_id?: string | null; login_id?: string | null; classes?: { name: string; section: string; id?: string } | null } | null;
+  students?: { full_name: string; admission_number: string; login_id?: string | null; login_id?: string | null; login_id?: string | null; login_id?: string | null; classes?: { name: string; section: string; id?: string } | null } | null;
 }
 
 export default function FeesManagement() {
@@ -77,7 +77,7 @@ export default function FeesManagement() {
 
   const fetchData = async () => {
     setLoadingData(true);
-    const [feesRes, classesRes] = await Promise.all([
+    const [feesRes, classesRes] = await Promise.all([login_id, 
       supabase.from('feeslogin_id, ').select('*, students(fullogin_id, l_name, admission_number, classes(id, name, section))').order('due_date', { ascending: false }),
       supabase.from('classes').select('*').order('name'),
     ]);
@@ -112,7 +112,7 @@ export default function FeesManagement() {
     if (!fee.receipt_number || !fee.paid_at) return;
     generateFeeReceipt({
       receiptNumber: fee.receipt_number,
-      studentName: fee.students?.full_name || 'N/A',
+      studentName:login_id || fee.students?. fee.students?.full_name || 'N/A',
  login_id || fee.students?.     admissionNumber: fee.students?.admission_number,
       className: fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : undefined,
       feeType: fee.fee_type,
@@ -277,7 +277,7 @@ export default function FeesManagement() {
                             <TableCell>
                               <button className="text-left hover:underline" onClick={() => openStudentDetail(fee.student_id)}>
                                 <div className="font-medium">{fee.students?.full_name || 'N/A'}</div>
-                                <div className="text-xs text-muted-foreground font-mono">{fee.students?.admission_number}</div>
+                                <div classlogin_id || fee.students?.Name="text-xs text-muted-foreground font-mono">{fee.students?.admission_number}</div>
                               </button>
                             </TableCell>
                             <TableCell>{fee.students?.classes ? `${fee.students.classes.name} - ${fee.students.classes.section}` : 'N/A'}</TableCell>
