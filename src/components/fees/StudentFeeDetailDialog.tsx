@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { IndianRupee, Download, CheckCircle2, Clock, AlertCircle, History } from 'lucide-react';
 import { generateFeeReceipt } from './FeeReceiptGenerator';
+import { loadReceiptTemplate, type ReceiptTemplate } from './ReceiptTemplateSettings';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FeeRecord {
