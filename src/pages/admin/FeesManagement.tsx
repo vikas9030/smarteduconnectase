@@ -58,6 +58,12 @@ export default function FeesManagement() {
   const [selectedStudent, setSelectedStudent] = useState<{ name: string; admission: string; className: string; fees: FeeRecord[] } | null>(null);
   const [showCreateFee, setShowCreateFee] = useState(false);
   const [paymentFee, setPaymentFee] = useState<FeeRecord | null>(null);
+  const [showReceiptSettings, setShowReceiptSettings] = useState(false);
+  const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate | null>(null);
+
+  useEffect(() => {
+    loadReceiptTemplate().then(setReceiptTemplate);
+  }, [showReceiptSettings]);
 
   useEffect(() => {
     if (!loading && (!user || userRole !== 'admin')) {
