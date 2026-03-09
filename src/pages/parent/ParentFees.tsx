@@ -350,37 +350,8 @@ export default function ParentFees() {
           </CardContent>
         </Card>
 
-        {/* Payment History */}
-        {paidFees.length > 0 && (
-          <Card className="card-elevated">
-            <CardHeader>
-              <CardTitle className="font-display flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-                Payment History
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {paidFees.map(fee => (
-                  <div key={fee.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <p className="font-medium capitalize">{fee.fee_type}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Paid on {new Date(fee.paid_at!).toLocaleDateString()} · Receipt: {fee.receipt_number}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-success flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span>
-                      <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(fee)}>
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Payment History from fee_payments table */}
+        <PaymentHistorySection studentId={selectedChildId} studentName={selectedChild?.name || ''} />
 
         {unpaidFees.length > 0 && (
           <Card className="card-elevated bg-primary/5 border-primary/20">
