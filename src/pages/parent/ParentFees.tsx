@@ -114,7 +114,11 @@ export default function ParentFees() {
   const [payingFeeId, setPayingFeeId] = useState<string | null>(null);
   const [paymentDialogFee, setPaymentDialogFee] = useState<Fee | null>(null);
   const [customAmount, setCustomAmount] = useState<string>('');
+  const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate | null>(null);
+
   useEffect(() => {
+    loadReceiptTemplate().then(setReceiptTemplate);
+  }, []);
     if (!loading && (!user || userRole !== 'parent')) {
       navigate('/auth');
     }
