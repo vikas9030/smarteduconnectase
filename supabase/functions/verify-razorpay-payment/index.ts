@@ -72,14 +72,27 @@ serve(async (req) => {
       });
     }
 
-    // Update fee record
+    // Fetch current fee to accumulate paid_amount
+    const { data: feeRecord, error: feeError } = await adminClient
+      .from('fees')
+      .select('amount, discount, paid_amount')
+      .eq('id', fee_id)
+      .single();
+
+    if (feeError || !feeRecord) {
+      throw new Error('Failed to fetch fee record');
+    }
+
+    const netAmount = feeRecord.amount - (feeRecord.discount || 0);
+    const newTotalPaid = (feeRecord.paid_amount || 0) + amount;
+    const newStatus = newTotalPaid >= netAmount ? 'paid' : 'partial';
     const receiptNumber = `RZP${Date.now().toString().slice(-8)}`;
 
     const { error: updateError } = await adminClient
       .from('fees')
       .update({
-        payment_status: 'paid',
-        paid_amount: amount,
+        payment_status: newStatus,
+        paid_amount: newTotalPaid,
         paid_at: new Date().toISOString(),
         receipt_number: receiptNumber,
       })
