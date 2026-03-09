@@ -12,6 +12,7 @@ import { parentSidebarItems } from '@/config/parentSidebar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BackButton } from '@/components/ui/back-button';
 import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
+import { loadReceiptTemplate, type ReceiptTemplate } from '@/components/fees/ReceiptTemplateSettings';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
