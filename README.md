@@ -545,7 +545,7 @@ Behavioral/academic reports.
 ### Administrative Tables
 
 #### `fees`
-Fee records with payment tracking.
+Fee records with payment tracking, percentage-based discounts, and partial payment support.
 
 | Column | Type | Nullable | Default |
 |--------|------|----------|---------|
@@ -553,16 +553,41 @@ Fee records with payment tracking.
 | `student_id` | uuid (→ `students.id`) | No | — |
 | `fee_type` | text | No | — |
 | `amount` | numeric | No | — |
+| `discount` | numeric | Yes | `0` |
 | `due_date` | date | No | — |
 | `paid_amount` | numeric | Yes | `0` |
 | `payment_status` | text | Yes | `'unpaid'` |
 | `receipt_number` | text | Yes | — |
 | `paid_at` | timestamptz | Yes | — |
+| `reminder_sent` | boolean | Yes | `false` |
+| `reminder_days_before` | integer | Yes | `3` |
 | `created_at` | timestamptz | Yes | `now()` |
 
 **RLS Policies:**
 - Admins can manage fees (ALL)
 - Parents can view their children's fees (SELECT)
+
+---
+
+#### `fee_payments`
+Individual payment transaction log for partial/full payments with per-receipt tracking.
+
+| Column | Type | Nullable | Default |
+|--------|------|----------|---------|
+| `id` | uuid | No | `gen_random_uuid()` |
+| `fee_id` | uuid (→ `fees.id`) | No | — |
+| `student_id` | uuid (→ `students.id`) | No | — |
+| `amount` | numeric | No | — |
+| `payment_method` | text | No | `'cash'` |
+| `receipt_number` | text | No | — |
+| `razorpay_payment_id` | text | Yes | — |
+| `paid_at` | timestamptz | No | `now()` |
+| `recorded_by` | uuid | Yes | — |
+| `created_at` | timestamptz | No | `now()` |
+
+**RLS Policies:**
+- Admins can manage fee payments (ALL)
+- Parents can view their children's fee payments (SELECT)
 
 ---
 
