@@ -230,7 +230,7 @@ export default function ReceiptTemplateSettings({ open, onOpenChange }: Props) {
               <div className="border rounded-lg p-5 bg-white text-sm space-y-3 text-black">
                 {/* Logo centered on top */}
                 {template.showLogo && template.logoUrl && (
-                  <div className="flex justify-center">
+                  <div className="flex justify-center mb-2">
                     <img src={template.logoUrl} alt="Logo" className="h-14 w-14 rounded object-contain" />
                   </div>
                 )}
