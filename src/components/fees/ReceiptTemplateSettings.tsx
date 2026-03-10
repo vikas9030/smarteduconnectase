@@ -264,7 +264,7 @@ export default function ReceiptTemplateSettings({ open, onOpenChange }: Props) {
                 {/* Table matching PDF style */}
                 <table className="w-full text-xs border border-gray-300">
                   <thead>
-                    <tr className="bg-[#2980b3] text-white">
+                    <tr style={{ backgroundColor: template.tableHeaderColor || '#2980b3' }} className="text-white">
                       <th className="p-1.5 text-left border border-gray-300">Fee Type</th>
                       <th className="p-1.5 text-center border border-gray-300">Amount (Rs.)</th>
                       {template.showDiscount && <th className="p-1.5 text-center border border-gray-300">Discount (Rs.)</th>}
