@@ -208,6 +208,22 @@ export default function ReceiptTemplateSettings({ open, onOpenChange }: Props) {
 
             <Separator />
 
+            {/* Table Color */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Table Header Color</h3>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={template.tableHeaderColor || '#2980b3'}
+                  onChange={e => update('tableHeaderColor', e.target.value)}
+                  className="h-9 w-14 rounded border cursor-pointer"
+                />
+                <span className="text-sm text-muted-foreground font-mono">{template.tableHeaderColor || '#2980b3'}</span>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Preview */}
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Eye className="h-4 w-4" /> Preview</h3>
