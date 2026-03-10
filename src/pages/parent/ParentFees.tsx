@@ -295,45 +295,30 @@ export default function ParentFees() {
           )}
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          <Card className="card-elevated border-l-4 border-l-destructive">
-            <CardContent className="p-3 sm:pt-6 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Total Due</p>
-                  <p className="text-lg sm:text-2xl font-bold text-destructive flex items-center">
-                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{totalDue.toLocaleString()}
-                  </p>
-                </div>
-                <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-destructive/50 hidden sm:block" />
-              </div>
+        {/* Summary Cards - horizontal scroll on mobile */}
+        <div className="flex gap-3 overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-3 sm:gap-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+          <Card className="card-elevated border-l-4 border-l-destructive min-w-[160px] snap-start sm:min-w-0">
+            <CardContent className="p-4 sm:pt-6 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Due</p>
+              <p className="text-xl sm:text-2xl font-bold text-destructive flex items-center mt-1">
+                <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{totalDue.toLocaleString()}
+              </p>
             </CardContent>
           </Card>
-          <Card className="card-elevated border-l-4 border-l-success">
-            <CardContent className="p-3 sm:pt-6 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Total Paid</p>
-                  <p className="text-lg sm:text-2xl font-bold text-success flex items-center">
-                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{totalPaid.toLocaleString()}
-                  </p>
-                </div>
-                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-success/50 hidden sm:block" />
-              </div>
+          <Card className="card-elevated border-l-4 border-l-success min-w-[160px] snap-start sm:min-w-0">
+            <CardContent className="p-4 sm:pt-6 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Paid</p>
+              <p className="text-xl sm:text-2xl font-bold text-success flex items-center mt-1">
+                <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{totalPaid.toLocaleString()}
+              </p>
             </CardContent>
           </Card>
-          <Card className="card-elevated border-l-4 border-l-primary">
-            <CardContent className="p-3 sm:pt-6 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Total Fees</p>
-                  <p className="text-lg sm:text-2xl font-bold flex items-center">
-                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{fees.reduce((s, f) => s + f.amount, 0).toLocaleString()}
-                  </p>
-                </div>
-                <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-primary/50 hidden sm:block" />
-              </div>
+          <Card className="card-elevated border-l-4 border-l-primary min-w-[160px] snap-start sm:min-w-0">
+            <CardContent className="p-4 sm:pt-6 sm:p-6">
+              <p className="text-xs sm:text-sm text-muted-foreground">Total Fees</p>
+              <p className="text-xl sm:text-2xl font-bold flex items-center mt-1">
+                <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{fees.reduce((s, f) => s + f.amount, 0).toLocaleString()}
+              </p>
             </CardContent>
           </Card>
         </div>
