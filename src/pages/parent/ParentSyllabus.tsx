@@ -277,20 +277,20 @@ export default function ParentSyllabus() {
 
           {/* General / Competitive Tabs */}
           <Tabs value={typeTab} onValueChange={(v) => { setTypeTab(v); setSelectedSubject('all'); setSelectedExam('all'); }}>
-            <TabsList className="grid w-full grid-cols-2 h-8 sm:h-10">
-              <TabsTrigger value="general" className="flex items-center gap-1 text-[10px] sm:text-sm">
-                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4" /> General
+            <TabsList className="grid w-full grid-cols-2 h-10">
+              <TabsTrigger value="general" className="flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> General
               </TabsTrigger>
-              <TabsTrigger value="competitive" className="flex items-center gap-1 text-[10px] sm:text-sm">
-                <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" /> Competitive
+              <TabsTrigger value="competitive" className="flex items-center justify-center gap-1.5 text-xs sm:text-sm">
+                <FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" /> Competitive
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          {/* All Filters in one row on mobile */}
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {/* Filters - stacked on mobile */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+              <SelectTrigger className="w-full sm:w-[140px] text-xs sm:text-sm h-9 sm:h-10">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -300,8 +300,8 @@ export default function ParentSyllabus() {
               </SelectContent>
             </Select>
             <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
-                <Filter className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 mr-0.5" />
+              <SelectTrigger className="w-full sm:w-[140px] text-xs sm:text-sm h-9 sm:h-10">
+                <Filter className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 shrink-0" />
                 <SelectValue placeholder="Subject" />
               </SelectTrigger>
               <SelectContent>
@@ -311,7 +311,7 @@ export default function ParentSyllabus() {
             </Select>
             {examOptions.length > 0 && (
               <Select value={selectedExam} onValueChange={setSelectedExam}>
-                <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] text-[10px] sm:text-xs h-7 sm:h-9">
+                <SelectTrigger className="w-full sm:w-[140px] text-xs sm:text-sm h-9 sm:h-10 col-span-2 sm:col-span-1">
                   <SelectValue placeholder="Exam Type" />
                 </SelectTrigger>
                 <SelectContent>
