@@ -242,7 +242,7 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {[
                   { icon: <Users />, label: 'Add Teacher', path: '/admin/teachers' },
                   { icon: <GraduationCap />, label: 'View Students', path: '/admin/students' },
@@ -252,12 +252,12 @@ export default function AdminDashboard() {
                   <button
                     key={index}
                     onClick={() => navigate(action.path)}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
+                    className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                       {action.icon}
                     </div>
-                    <span className="font-medium text-sm">{action.label}</span>
+                    <span className="font-medium text-xs sm:text-sm">{action.label}</span>
                   </button>
                 ))}
               </div>
