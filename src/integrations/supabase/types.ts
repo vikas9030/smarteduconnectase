@@ -210,6 +210,7 @@ export type Database = {
           status: string | null
           subject: string
           submitted_by: string
+          visible_to: string[]
         }
         Insert: {
           created_at?: string | null
@@ -219,6 +220,7 @@ export type Database = {
           status?: string | null
           subject: string
           submitted_by: string
+          visible_to?: string[]
         }
         Update: {
           created_at?: string | null
@@ -228,6 +230,7 @@ export type Database = {
           status?: string | null
           subject?: string
           submitted_by?: string
+          visible_to?: string[]
         }
         Relationships: []
       }

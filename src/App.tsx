@@ -66,6 +66,7 @@ import ParentFees from "./pages/parent/ParentFees";
 import ParentGallery from "./pages/parent/ParentGallery";
 import ParentNotifications from "./pages/parent/ParentNotifications";
 import ParentSettings from "./pages/parent/ParentSettings";
+import ParentComplaints from "./pages/parent/ParentComplaints";
 
 const queryClient = new QueryClient();
 
@@ -138,6 +139,7 @@ const App = () => (
             <Route path="/parent/gallery" element={<ParentGallery />} />
             <Route path="/parent/notifications" element={<ParentNotifications />} />
             <Route path="/parent/fees" element={<ParentFees />} />
+            <Route path="/parent/complaints" element={<ParentComplaints />} />
             <Route path="/parent/settings" element={<ParentSettings />} />
             
             {/* Catch-all */}
