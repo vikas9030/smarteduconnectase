@@ -425,28 +425,28 @@ export default function FeesManagement() {
                                 </div>
                               </div>
 
-                              {/* Actions */}
-                              <div className="flex items-center justify-between gap-2 pt-1 border-t">
-                                <div className="flex items-center gap-1">
-                                  <Button size="sm" variant="ghost" onClick={() => setEditFee(fee)}>
+                              {/* Actions - stacked rows to prevent overflow */}
+                              <div className="pt-2 border-t space-y-2">
+                                <div className="grid grid-cols-3 gap-2">
+                                  <Button size="sm" variant="ghost" className="h-9 text-xs px-2" onClick={() => setEditFee(fee)}>
                                     <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
                                   </Button>
-                                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { setDeleteMode('single'); setDeleteFeeIds([fee.id]); }}>
+                                  <Button size="sm" variant="ghost" className="h-9 text-xs px-2 text-destructive hover:text-destructive" onClick={() => { setDeleteMode('single'); setDeleteFeeIds([fee.id]); }}>
                                     <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
                                   </Button>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  {fee.receipt_number && (
-                                    <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(fee)}>
-                                      <Download className="h-3.5 w-3.5 mr-1" /> Receipt
-                                    </Button>
-                                  )}
-                                  {fee.payment_status !== 'paid' && (
-                                    <Button size="sm" variant="default" onClick={() => setPaymentFee(fee)}>
+                                  {fee.payment_status !== 'paid' ? (
+                                    <Button size="sm" variant="default" className="h-9 text-xs px-2" onClick={() => setPaymentFee(fee)}>
                                       <DollarSign className="h-3.5 w-3.5 mr-1" /> Record
                                     </Button>
+                                  ) : (
+                                    <div />
                                   )}
                                 </div>
+                                {fee.receipt_number && (
+                                  <Button size="sm" variant="outline" className="w-full h-9 text-xs" onClick={() => handleDownloadReceipt(fee)}>
+                                    <Download className="h-3.5 w-3.5 mr-1" /> Download Receipt
+                                  </Button>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
