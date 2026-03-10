@@ -24,12 +24,12 @@ export default function StatCard({ title, value, icon, trend, variant = 'default
 
   return (
     <div className={cn("card-stat", variants[variant])}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className={cn("text-sm font-medium", isColored ? "text-white/80" : "text-muted-foreground")}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className={cn("text-xs sm:text-sm font-medium truncate", isColored ? "text-white/80" : "text-muted-foreground")}>
             {title}
           </p>
-          <p className={cn("text-3xl font-bold font-display mt-1", isColored ? "text-white" : "text-foreground")}>
+          <p className={cn("text-lg sm:text-2xl md:text-3xl font-bold font-display mt-1 truncate", isColored ? "text-white" : "text-foreground")}>
             {value}
           </p>
           {trend && (
@@ -47,7 +47,7 @@ export default function StatCard({ title, value, icon, trend, variant = 'default
           )}
         </div>
         <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center",
+          "w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0",
           isColored ? "bg-white/20" : "bg-primary/10"
         )}>
           <span className={cn("text-xl", isColored ? "text-white" : "text-primary")}>
