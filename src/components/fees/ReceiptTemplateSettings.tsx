@@ -210,16 +210,18 @@ export default function ReceiptTemplateSettings({ open, onOpenChange }: Props) {
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2"><Eye className="h-4 w-4" /> Preview</h3>
               <div className="border rounded-lg p-5 bg-white text-sm space-y-3 text-black">
-                {/* Header with logo left + school info */}
-                <div className="flex items-start gap-3">
-                  {template.showLogo && template.logoUrl && (
-                    <img src={template.logoUrl} alt="Logo" className="h-12 w-12 rounded object-contain flex-shrink-0" />
-                  )}
-                  <div className={`flex-1 ${template.showLogo && template.logoUrl ? 'text-center' : 'text-center'}`}>
-                    {template.schoolName && <p className="font-bold text-base">{template.schoolName}</p>}
-                    {template.schoolAddress && <p className="text-xs text-gray-500">{template.schoolAddress}</p>}
-                    {template.schoolPhone && <p className="text-xs text-gray-500">Ph: {template.schoolPhone}</p>}
+                {/* Logo centered on top */}
+                {template.showLogo && template.logoUrl && (
+                  <div className="flex justify-center">
+                    <img src={template.logoUrl} alt="Logo" className="h-14 w-14 rounded object-contain" />
                   </div>
+                )}
+
+                {/* School info centered below logo */}
+                <div className="text-center">
+                  {template.schoolName && <p className="font-bold text-base">{template.schoolName}</p>}
+                  {template.schoolAddress && <p className="text-xs text-gray-500">{template.schoolAddress}</p>}
+                  {template.schoolPhone && <p className="text-xs text-gray-500">Ph: {template.schoolPhone}</p>}
                 </div>
 
                 {/* Title */}
