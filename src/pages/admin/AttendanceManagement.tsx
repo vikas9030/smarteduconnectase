@@ -210,7 +210,7 @@ export default function AttendanceManagement() {
 
         {/* Class Filter */}
         <Select value={selectedClass} onValueChange={setSelectedClass}>
-          <SelectTrigger className="w-[220px]"><SelectValue placeholder="Select class" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-[220px]"><SelectValue placeholder="Select class" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Classes</SelectItem>
             {classes.map((c) => (
