@@ -36,6 +36,7 @@ interface Complaint {
   response: string | null;
   created_at: string;
   submitted_by: string;
+  visible_to: string[];
 }
 
 export default function ComplaintsManagement() {

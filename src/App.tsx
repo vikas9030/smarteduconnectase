@@ -139,6 +139,7 @@ const App = () => (
             <Route path="/parent/gallery" element={<ParentGallery />} />
             <Route path="/parent/notifications" element={<ParentNotifications />} />
             <Route path="/parent/fees" element={<ParentFees />} />
+            <Route path="/parent/complaints" element={<ParentComplaints />} />
             <Route path="/parent/settings" element={<ParentSettings />} />
             
             {/* Catch-all */}
