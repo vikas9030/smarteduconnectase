@@ -275,8 +275,24 @@ export default function FeesManagement() {
                     </SelectContent>
                   </Select>
                 </div>
+                {classFilter && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      const classFeeIds = fees
+                        .filter(f => (f.students?.classes as any)?.id === classFilter)
+                        .map(f => f.id);
+                      if (classFeeIds.length === 0) return;
+                      setDeleteMode('class');
+                      setDeleteFeeIds(classFeeIds);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete Class Fees ({fees.filter(f => (f.students?.classes as any)?.id === classFilter).length})
+                  </Button>
+                )}
               </CardContent>
-            </Card>
 
             <Card className="card-elevated">
               <CardHeader><CardTitle className="font-display">Fee Records ({filteredFees.length})</CardTitle></CardHeader>
