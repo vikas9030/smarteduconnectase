@@ -155,13 +155,77 @@
   }
 }
 
-/* Mobile-first responsive typography */
+/* Mobile-first responsive typography & compact UI */
 @media (max-width: 639px) {
   h1 { font-size: 1.25rem !important; }
   h2 { font-size: 1.1rem !important; }
   h3 { font-size: 1rem !important; }
   .card-stat { padding: 0.875rem !important; }
   .card-elevated { border-radius: 0.75rem; }
+
+  /* Compact mobile search bars */
+  input[class*="pl-10"],
+  input[class*="pl-9"] {
+    height: 2.25rem !important;
+    font-size: 0.8rem !important;
+    padding-left: 2.25rem !important;
+    border-radius: 0.625rem !important;
+  }
+
+  /* Adjust search icon positioning for compact input */
+  .relative > svg.absolute {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+
+  /* Compact mobile action buttons (Add/New/Create with Plus icon) */
+  .gradient-admin,
+  .gradient-teacher,
+  .gradient-parent {
+    height: 2.25rem !important;
+    font-size: 0.75rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    border-radius: 0.625rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .gradient-admin svg,
+  .gradient-teacher svg,
+  .gradient-parent svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+
+  /* Compact select triggers on mobile */
+  [data-radix-collection-item],
+  button[role="combobox"] {
+    height: 2.25rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 0.625rem !important;
+  }
+
+  /* Smaller card headers on mobile */
+  .card-elevated [class*="CardHeader"] {
+    padding: 0.75rem 1rem !important;
+  }
+  .card-elevated [class*="CardContent"] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Compact page description text */
+  p.text-muted-foreground {
+    font-size: 0.75rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  /* Compact badge sizes */
+  .status-badge,
+  [class*="Badge"] {
+    font-size: 0.625rem !important;
+    padding: 0.125rem 0.5rem !important;
+  }
 }
 
 @layer components {
