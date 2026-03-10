@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus, Settings } from 'lucide-react';
+import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus, Settings, Edit2, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/StatCard';
 import { BackButton } from '@/components/ui/back-button';
