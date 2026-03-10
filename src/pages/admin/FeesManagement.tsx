@@ -62,6 +62,9 @@ export default function FeesManagement() {
   const [paymentFee, setPaymentFee] = useState<FeeRecord | null>(null);
   const [showReceiptSettings, setShowReceiptSettings] = useState(false);
   const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate | null>(null);
+  const [editFee, setEditFee] = useState<FeeRecord | null>(null);
+  const [deleteFeeIds, setDeleteFeeIds] = useState<string[]>([]);
+  const [deleteMode, setDeleteMode] = useState<'single' | 'class'>('single');
 
   useEffect(() => {
     loadReceiptTemplate().then(setReceiptTemplate);
