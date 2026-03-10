@@ -187,30 +187,6 @@ export default function FeesManagement() {
         <BackButton to="/admin" />
 
         {/* Company Logo & School Info from Receipt Settings */}
-        {receiptTemplate && (receiptTemplate.showLogo && receiptTemplate.logoUrl || receiptTemplate.schoolName) && (
-          <div className="flex flex-col items-center gap-2 py-4">
-            <div className="flex items-center gap-4">
-              {receiptTemplate.showLogo && receiptTemplate.logoUrl && (
-                <img
-                  src={receiptTemplate.logoUrl}
-                  alt="School Logo"
-                  className="h-14 w-14 rounded-lg object-contain border border-border shadow-sm"
-                />
-              )}
-              <div className={`${receiptTemplate.showLogo && receiptTemplate.logoUrl ? 'text-left' : 'text-center'}`}>
-                {receiptTemplate.schoolName && (
-                  <h2 className="font-display text-lg font-bold text-foreground">{receiptTemplate.schoolName}</h2>
-                )}
-                {receiptTemplate.schoolAddress && (
-                  <p className="text-xs text-muted-foreground">{receiptTemplate.schoolAddress}</p>
-                )}
-                {receiptTemplate.schoolPhone && (
-                  <p className="text-xs text-muted-foreground">Ph: {receiptTemplate.schoolPhone}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
