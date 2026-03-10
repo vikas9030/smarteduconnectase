@@ -178,10 +178,13 @@
     height: 0.875rem !important;
   }
 
-  /* Compact mobile action buttons (Add/New/Create with Plus icon) */
-  .gradient-admin,
-  .gradient-teacher,
-  .gradient-parent {
+  /* Compact mobile action buttons (only buttons, not banner divs) */
+  button.gradient-admin,
+  button.gradient-teacher,
+  button.gradient-parent,
+  a.gradient-admin,
+  a.gradient-teacher,
+  a.gradient-parent {
     height: 2.25rem !important;
     font-size: 0.75rem !important;
     padding-left: 0.75rem !important;
@@ -190,9 +193,12 @@
     gap: 0.25rem !important;
   }
 
-  .gradient-admin svg,
-  .gradient-teacher svg,
-  .gradient-parent svg {
+  button.gradient-admin svg,
+  button.gradient-teacher svg,
+  button.gradient-parent svg,
+  a.gradient-admin svg,
+  a.gradient-teacher svg,
+  a.gradient-parent svg {
     width: 0.875rem !important;
     height: 0.875rem !important;
   }
