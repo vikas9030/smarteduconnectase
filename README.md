@@ -72,7 +72,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Exam Marks** | Enter and manage exam scores with grading |
 | **Syllabus** | View assigned syllabus topics, filter by type/status/class/subject/exam, and mark topics as completed |
 | **Weekly Exams** | View and manage weekly exam schedules |
-| **Reports** | Create behavioral and academic reports for students |
+| **Reports & Complaints** | Create behavioral and academic reports for students + view/respond to parent complaints (tabbed interface with open count badge) |
 | **Announcements** | View school-wide announcements |
 | **Leave Request** | Submit personal leave applications with optional document attachments |
 | **Leads** | Manage admission leads with inline status dropdown (when enabled by admin) |
