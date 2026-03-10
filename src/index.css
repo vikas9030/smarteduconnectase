@@ -155,6 +155,15 @@
   }
 }
 
+/* Mobile-first responsive typography */
+@media (max-width: 639px) {
+  h1 { font-size: 1.25rem !important; }
+  h2 { font-size: 1.1rem !important; }
+  h3 { font-size: 1rem !important; }
+  .card-stat { padding: 0.875rem !important; }
+  .card-elevated { border-radius: 0.75rem; }
+}
+
 @layer components {
   .sidebar-teacher {
     --sidebar-background: 152 35% 16%;

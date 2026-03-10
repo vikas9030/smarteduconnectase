@@ -234,43 +234,52 @@ export default function TeacherDashboard() {
 
   return (
     <DashboardLayout sidebarItems={teacherSidebarItems} roleColor="teacher">
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Welcome Section */}
-        <div className="rounded-2xl p-6 text-white" style={{ background: 'linear-gradient(135deg, #1a3628, #2a5040)' }}>
-          <h1 className="font-display text-2xl font-bold">
+        <div className="rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white" style={{ background: 'linear-gradient(135deg, #1a3628, #2a5040)' }}>
+          <h1 className="font-display text-lg sm:text-2xl font-bold">
             {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}, {profileName}!
           </h1>
-          <p className="text-white/80 mt-1">Ready for another day of inspiring young minds.</p>
+          <p className="text-white/80 mt-1 text-xs sm:text-base">Ready for another day of inspiring young minds.</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard
-            title="My Classes"
-            value={loadingStats ? '...' : stats.myClasses.toString()}
-            icon={<BookOpen className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Total Students"
-            value={loadingStats ? '...' : stats.totalStudents.toString()}
-            icon={<Users className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Today's Classes"
-            value={loadingStats ? '...' : todaySchedule.length.toString()}
-            icon={<Calendar className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Pending Homework"
-            value={loadingStats ? '...' : stats.pendingHomework.toString()}
-            icon={<FileText className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Attendance"
-            value={loadingStats ? '...' : (stats.pendingAttendance ? 'Pending' : 'Done')}
-            icon={<CheckSquare className="h-6 w-6" />}
-            variant={stats.pendingAttendance ? 'secondary' : 'primary'}
-          />
+        {/* Stats Grid - compact on mobile */}
+        <div className="sm:hidden">
+          <Card className="card-elevated">
+            <CardContent className="p-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.myClasses}</p>
+                  <p className="text-[10px] text-muted-foreground">Classes</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalStudents}</p>
+                  <p className="text-[10px] text-muted-foreground">Students</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{loadingStats ? '...' : todaySchedule.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Today</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.pendingHomework}</p>
+                  <p className="text-[10px] text-muted-foreground">Homework</p>
+                </div>
+                <div className={`text-center p-2 rounded-lg ${stats.pendingAttendance ? 'bg-warning/10' : 'bg-success/10'}`}>
+                  <p className="text-lg font-bold">{loadingStats ? '...' : (stats.pendingAttendance ? 'Pending' : 'Done')}</p>
+                  <p className="text-[10px] text-muted-foreground">Attendance</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <StatCard title="My Classes" value={loadingStats ? '...' : stats.myClasses.toString()} icon={<BookOpen className="h-6 w-6" />} />
+          <StatCard title="Total Students" value={loadingStats ? '...' : stats.totalStudents.toString()} icon={<Users className="h-6 w-6" />} />
+          <StatCard title="Today's Classes" value={loadingStats ? '...' : todaySchedule.length.toString()} icon={<Calendar className="h-6 w-6" />} />
+          <StatCard title="Pending Homework" value={loadingStats ? '...' : stats.pendingHomework.toString()} icon={<FileText className="h-6 w-6" />} />
+          <StatCard title="Attendance" value={loadingStats ? '...' : (stats.pendingAttendance ? 'Pending' : 'Done')} icon={<CheckSquare className="h-6 w-6" />} variant={stats.pendingAttendance ? 'secondary' : 'primary'} />
         </div>
 
         {/* Today's Schedule & Quick Actions */}

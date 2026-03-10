@@ -189,36 +189,47 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Welcome Section */}
-        <div className="gradient-admin rounded-2xl p-6 text-white">
-          <h1 className="font-display text-2xl font-bold">Welcome back, {profileName}!</h1>
-          <p className="text-white/80 mt-1">Here's what's happening at your school today.</p>
+        <div className="gradient-admin rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+          <h1 className="font-display text-lg sm:text-2xl font-bold">Welcome back, {profileName}!</h1>
+          <p className="text-white/80 mt-1 text-xs sm:text-base">Here's what's happening at your school today.</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Students"
-            value={loadingStats ? '...' : stats.totalStudents.toString()}
-            icon={<GraduationCap className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Total Teachers"
-            value={loadingStats ? '...' : stats.totalTeachers.toString()}
-            icon={<Users className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Classes"
-            value={loadingStats ? '...' : stats.totalClasses.toString()}
-            icon={<BookOpen className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Today's Attendance"
-            value={loadingStats ? '...' : `${stats.todayAttendanceRate}%`}
-            icon={<Clock className="h-6 w-6" />}
-            variant="primary"
-          />
+        {/* Stats Grid - compact on mobile */}
+        <div className="sm:hidden">
+          <Card className="card-elevated">
+            <CardContent className="p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <GraduationCap className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalStudents}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Students</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <Users className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalTeachers}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Teachers</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalClasses}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Classes</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-primary/10">
+                  <Clock className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold text-primary">{loadingStats ? '...' : `${stats.todayAttendanceRate}%`}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Attendance</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Total Students" value={loadingStats ? '...' : stats.totalStudents.toString()} icon={<GraduationCap className="h-6 w-6" />} />
+          <StatCard title="Total Teachers" value={loadingStats ? '...' : stats.totalTeachers.toString()} icon={<Users className="h-6 w-6" />} />
+          <StatCard title="Classes" value={loadingStats ? '...' : stats.totalClasses.toString()} icon={<BookOpen className="h-6 w-6" />} />
+          <StatCard title="Today's Attendance" value={loadingStats ? '...' : `${stats.todayAttendanceRate}%`} icon={<Clock className="h-6 w-6" />} variant="primary" />
         </div>
 
         {/* Quick Actions & Recent Activity */}
@@ -231,7 +242,7 @@ export default function AdminDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {[
                   { icon: <Users />, label: 'Add Teacher', path: '/admin/teachers' },
                   { icon: <GraduationCap />, label: 'View Students', path: '/admin/students' },
@@ -241,12 +252,12 @@ export default function AdminDashboard() {
                   <button
                     key={index}
                     onClick={() => navigate(action.path)}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
+                    className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
                       {action.icon}
                     </div>
-                    <span className="font-medium text-sm">{action.label}</span>
+                    <span className="font-medium text-xs sm:text-sm">{action.label}</span>
                   </button>
                 ))}
               </div>
@@ -293,27 +304,27 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border bg-warning/5 border-warning/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-warning">Leave Requests</span>
-                  <span className="text-2xl font-bold text-warning">{stats.pendingLeaves}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 rounded-xl border bg-warning/5 border-warning/20">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-warning">Leave Requests</span>
+                  <span className="text-xl sm:text-2xl font-bold text-warning">{stats.pendingLeaves}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Pending approval</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Pending approval</p>
               </div>
-              <div className="p-4 rounded-xl border bg-primary/5 border-primary/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-primary">Certificates</span>
-                  <span className="text-2xl font-bold text-primary">{stats.pendingCertificates}</span>
+              <div className="p-3 sm:p-4 rounded-xl border bg-primary/5 border-primary/20">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-primary">Certificates</span>
+                  <span className="text-xl sm:text-2xl font-bold text-primary">{stats.pendingCertificates}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Pending approval</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Pending approval</p>
               </div>
-              <div className="p-4 rounded-xl border bg-destructive/5 border-destructive/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-destructive">Complaints</span>
-                  <span className="text-2xl font-bold text-destructive">{stats.openComplaints}</span>
+              <div className="p-3 sm:p-4 rounded-xl border bg-destructive/5 border-destructive/20">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-destructive">Complaints</span>
+                  <span className="text-xl sm:text-2xl font-bold text-destructive">{stats.openComplaints}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Unresolved</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Unresolved</p>
               </div>
             </div>
           </CardContent>
