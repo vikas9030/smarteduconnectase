@@ -293,13 +293,13 @@ export default function LeadsManagement() {
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1 min-w-0">
-                    <Label className="text-xs text-muted-foreground">From</Label>
-                    <Input type="date" className="w-full" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                  <div className="space-y-1.5 min-w-0">
+                    <Label className="text-xs font-medium text-muted-foreground">From</Label>
+                    <Input type="date" className="w-full h-10" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
                   </div>
-                  <div className="space-y-1 min-w-0">
-                    <Label className="text-xs text-muted-foreground">To</Label>
-                    <Input type="date" className="w-full" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                  <div className="space-y-1.5 min-w-0">
+                    <Label className="text-xs font-medium text-muted-foreground">To</Label>
+                    <Input type="date" className="w-full h-10" value={dateTo} onChange={e => setDateTo(e.target.value)} />
                   </div>
                 </div>
               </CardContent>
