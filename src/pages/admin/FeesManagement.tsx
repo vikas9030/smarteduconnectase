@@ -213,11 +213,17 @@ export default function FeesManagement() {
           </div>
         </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          <StatCard title="Total Due" value={`₹${stats.totalDue.toLocaleString()}`} icon={<AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />} />
-          <StatCard title="Total Collected" value={`₹${stats.totalPaid.toLocaleString()}`} icon={<CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />} variant="primary" />
-          <StatCard title="Overdue" value={stats.overdue.toString()} icon={<CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />} />
+        {/* Stat Cards - horizontal scroll on mobile, grid on desktop */}
+        <div className="flex gap-3 overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-3 sm:gap-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
+          <div className="min-w-[160px] snap-start sm:min-w-0">
+            <StatCard title="Total Due" value={`₹${stats.totalDue.toLocaleString()}`} icon={<AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />} />
+          </div>
+          <div className="min-w-[160px] snap-start sm:min-w-0">
+            <StatCard title="Total Collected" value={`₹${stats.totalPaid.toLocaleString()}`} icon={<CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />} variant="primary" />
+          </div>
+          <div className="min-w-[160px] snap-start sm:min-w-0">
+            <StatCard title="Overdue" value={stats.overdue.toString()} icon={<CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />} />
+          </div>
         </div>
 
         <Tabs defaultValue="all-records">
