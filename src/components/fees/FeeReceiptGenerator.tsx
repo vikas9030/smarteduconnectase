@@ -40,7 +40,7 @@ export async function generateFeeReceipt(data: ReceiptData) {
     const logoH = 22;
     const logoX = centerX - logoW / 2;
     doc.addImage(logoLoaded, 'PNG', logoX, y, logoW, logoH);
-    y += logoH + 4;
+    y += logoH + 6;
   }
 
   if (t?.schoolName) {
@@ -124,7 +124,7 @@ export async function generateFeeReceipt(data: ReceiptData) {
       halign: 'center',
     },
     headStyles: {
-      fillColor: [41, 128, 185],
+      fillColor: hexToRgb(t?.tableHeaderColor || '#2980b3'),
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
@@ -142,6 +142,15 @@ export async function generateFeeReceipt(data: ReceiptData) {
   doc.text(t?.footerText || 'This is a computer-generated receipt.', centerX, finalY, { align: 'center' });
 
   doc.save('Receipt_' + data.receiptNumber + '.pdf');
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16),
+  ];
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {
