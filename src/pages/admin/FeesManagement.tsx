@@ -293,6 +293,7 @@ export default function FeesManagement() {
                   </Button>
                 )}
               </CardContent>
+            </Card>
 
             <Card className="card-elevated">
               <CardHeader><CardTitle className="font-display">Fee Records ({filteredFees.length})</CardTitle></CardHeader>
