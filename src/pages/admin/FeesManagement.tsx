@@ -340,6 +340,18 @@ export default function FeesManagement() {
                             <TableCell>{getStatusBadge(fee.payment_status, fee.due_date)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
+                                <Button size="sm" variant="ghost" onClick={() => setEditFee(fee)} title="Edit">
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => { setDeleteMode('single'); setDeleteFeeIds([fee.id]); }}
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                                 {fee.payment_status !== 'paid' && (
                                   <Button size="sm" variant="outline" onClick={() => setPaymentFee(fee)}>
                                     <DollarSign className="h-3 w-3 mr-1" />Record Payment
