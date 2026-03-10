@@ -190,26 +190,26 @@ export default function TeacherExams() {
           </Card>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 h-8 sm:h-10">
-              <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Schedule</span>
+            <TabsList className="grid w-full grid-cols-5 h-10 sm:h-10 p-1">
+              <TabsTrigger value="schedule" className="flex items-center justify-center gap-1.5 text-[11px] sm:text-sm px-1 sm:px-3 data-[state=active]:shadow-sm">
+                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Schedule</span>
               </TabsTrigger>
-              <TabsTrigger value="enter" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-                <ClipboardList className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Marks</span>
+              <TabsTrigger value="enter" className="flex items-center justify-center gap-1.5 text-[11px] sm:text-sm px-1 sm:px-3 data-[state=active]:shadow-sm">
+                <ClipboardList className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Marks</span>
               </TabsTrigger>
-              <TabsTrigger value="weekly-marks" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-                <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">W.Marks</span>
+              <TabsTrigger value="weekly-marks" className="flex items-center justify-center gap-1.5 text-[11px] sm:text-sm px-1 sm:px-3 data-[state=active]:shadow-sm">
+                <FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">W.Marks</span>
               </TabsTrigger>
-              <TabsTrigger value="results" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Results</span>
+              <TabsTrigger value="results" className="flex items-center justify-center gap-1.5 text-[11px] sm:text-sm px-1 sm:px-3 data-[state=active]:shadow-sm">
+                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Results</span>
               </TabsTrigger>
-              <TabsTrigger value="view" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="truncate">Student</span>
+              <TabsTrigger value="view" className="flex items-center justify-center gap-1.5 text-[11px] sm:text-sm px-1 sm:px-3 data-[state=active]:shadow-sm">
+                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                <span className="hidden sm:inline">Student</span>
               </TabsTrigger>
             </TabsList>
 
