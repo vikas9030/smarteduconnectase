@@ -213,17 +213,31 @@ export default function FeesManagement() {
           </div>
         </div>
 
-        {/* Stat Cards - horizontal scroll on mobile, grid on desktop */}
-        <div className="flex gap-3 overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-3 sm:gap-4 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory">
-          <div className="min-w-[160px] snap-start sm:min-w-0">
-            <StatCard title="Total Due" value={`₹${stats.totalDue.toLocaleString()}`} icon={<AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />} />
-          </div>
-          <div className="min-w-[160px] snap-start sm:min-w-0">
-            <StatCard title="Total Collected" value={`₹${stats.totalPaid.toLocaleString()}`} icon={<CheckCircle className="h-5 w-5 sm:h-6 sm:w-6" />} variant="primary" />
-          </div>
-          <div className="min-w-[160px] snap-start sm:min-w-0">
-            <StatCard title="Overdue" value={stats.overdue.toString()} icon={<CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />} />
-          </div>
+        {/* Stat Cards - compact row on mobile, grid on desktop */}
+        <div className="sm:hidden">
+          <Card className="card-elevated">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between divide-x divide-border">
+                <div className="flex-1 text-center px-2">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Due</p>
+                  <p className="text-base font-bold text-destructive">₹{stats.totalDue.toLocaleString()}</p>
+                </div>
+                <div className="flex-1 text-center px-2">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Collected</p>
+                  <p className="text-base font-bold text-primary">₹{stats.totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="flex-1 text-center px-2">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">Overdue</p>
+                  <p className="text-base font-bold text-foreground">{stats.overdue}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="hidden sm:grid sm:grid-cols-3 gap-4">
+          <StatCard title="Total Due" value={`₹${stats.totalDue.toLocaleString()}`} icon={<AlertCircle className="h-6 w-6" />} />
+          <StatCard title="Total Collected" value={`₹${stats.totalPaid.toLocaleString()}`} icon={<CheckCircle className="h-6 w-6" />} variant="primary" />
+          <StatCard title="Overdue" value={stats.overdue.toString()} icon={<CreditCard className="h-6 w-6" />} />
         </div>
 
         <Tabs defaultValue="all-records">
