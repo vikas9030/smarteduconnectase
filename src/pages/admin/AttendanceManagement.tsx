@@ -347,34 +347,55 @@ export default function AttendanceManagement() {
                     <p className="text-sm text-muted-foreground">No attendance data for this date</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="font-semibold">Student</TableHead>
-                          <TableHead className="font-semibold">Adm No</TableHead>
-                          <TableHead className="font-semibold">Class</TableHead>
-                          <TableHead className="font-semibold">Status</TableHead>
-                          <TableHead className="font-semibold">Reason</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {dayRecords.map((record) => (
-                          <TableRow key={record.id} className="hover:bg-muted/20 transition-colors">
-                            <TableCell className="font-medium">{record.students?.full_name || 'N/A'}</TableCell>
-                            <TableCell className="font-mono text-sm text-muted-foreground">{record.students?.admission_number || 'N/A'}</TableCell>
-                            <TableCell>
-                              {record.students?.classes ? (
-                                <Badge variant="outline" className="font-normal">{record.students.classes.name}-{record.students.classes.section}</Badge>
-                              ) : 'N/A'}
-                            </TableCell>
-                            <TableCell>{getStatusBadge(record.status)}</TableCell>
-                            <TableCell className="text-muted-foreground text-sm">{record.reason || '—'}</TableCell>
+                  <>
+                    {/* Mobile Cards */}
+                    <div className="space-y-2 sm:hidden">
+                      {dayRecords.map((record) => (
+                        <div key={record.id} className="p-3 rounded-lg border bg-muted/10 flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{record.students?.full_name || 'N/A'}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono">{record.students?.admission_number || 'N/A'}</p>
+                            {record.students?.classes && (
+                              <Badge variant="outline" className="text-[10px] mt-0.5">{record.students.classes.name}-{record.students.classes.section}</Badge>
+                            )}
+                          </div>
+                          <div className="shrink-0 flex flex-col items-end gap-1">
+                            {getStatusBadge(record.status)}
+                            {record.reason && <span className="text-[10px] text-muted-foreground">{record.reason}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Desktop Table */}
+                    <div className="overflow-x-auto rounded-lg border hidden sm:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/30">
+                            <TableHead className="font-semibold">Student</TableHead>
+                            <TableHead className="font-semibold">Adm No</TableHead>
+                            <TableHead className="font-semibold">Class</TableHead>
+                            <TableHead className="font-semibold">Status</TableHead>
+                            <TableHead className="font-semibold">Reason</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        </TableHeader>
+                        <TableBody>
+                          {dayRecords.map((record) => (
+                            <TableRow key={record.id} className="hover:bg-muted/20 transition-colors">
+                              <TableCell className="font-medium">{record.students?.full_name || 'N/A'}</TableCell>
+                              <TableCell className="font-mono text-sm text-muted-foreground">{record.students?.admission_number || 'N/A'}</TableCell>
+                              <TableCell>
+                                {record.students?.classes ? (
+                                  <Badge variant="outline" className="font-normal">{record.students.classes.name}-{record.students.classes.section}</Badge>
+                                ) : 'N/A'}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(record.status)}</TableCell>
+                              <TableCell className="text-muted-foreground text-sm">{record.reason || '—'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
