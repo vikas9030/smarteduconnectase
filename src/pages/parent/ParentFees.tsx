@@ -64,26 +64,26 @@ function PaymentHistorySection({ studentId, studentName }: { studentId: string; 
 
   return (
     <Card className="card-elevated">
-      <CardHeader>
-        <CardTitle className="font-display flex items-center gap-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="font-display flex items-center gap-2 text-base sm:text-lg">
           <History className="h-5 w-5 text-primary" />
-          Payment History ({payments.length} transactions)
+          Payment History ({payments.length})
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {payments.map((p: any) => (
-            <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <div>
-                <p className="font-medium flex items-center gap-1">
-                  <IndianRupee className="h-3 w-3" />{Number(p.amount).toLocaleString()}
-                  <Badge variant="outline" className="ml-2 text-xs capitalize">{p.payment_method}</Badge>
+            <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium flex items-center gap-1 flex-wrap">
+                  <IndianRupee className="h-3 w-3 shrink-0" />{Number(p.amount).toLocaleString()}
+                  <Badge variant="outline" className="text-xs capitalize">{p.payment_method}</Badge>
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(p.paid_at).toLocaleString()} · Receipt: {p.receipt_number}
+                <p className="text-xs text-muted-foreground truncate">
+                  {new Date(p.paid_at).toLocaleString()} · {p.receipt_number}
                 </p>
               </div>
-              <Button size="sm" variant="outline" onClick={() => {
+              <Button size="sm" variant="outline" className="shrink-0" onClick={() => {
                 generateFeeReceipt({
                   receiptNumber: p.receipt_number,
                   studentName,
@@ -278,16 +278,16 @@ export default function ParentFees() {
       {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <BackButton to="/parent" />
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold">Fee Payment</h1>
-            <p className="text-muted-foreground">{selectedChild?.name}'s fee details and payment history</p>
+            <h1 className="font-display text-xl sm:text-2xl font-bold">Fee Payment</h1>
+            <p className="text-sm text-muted-foreground">{selectedChild?.name}'s fee details</p>
           </div>
           {children.length > 1 && (
             <Select value={selectedChildId} onValueChange={setSelectedChildId}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Select child" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Select child" /></SelectTrigger>
               <SelectContent>
                 {children.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
@@ -296,108 +296,177 @@ export default function ParentFees() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <Card className="card-elevated border-l-4 border-l-destructive">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Due</p>
-                  <p className="text-2xl font-bold text-destructive flex items-center">
-                    <IndianRupee className="h-5 w-5" />{totalDue.toLocaleString()}
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Due</p>
+                  <p className="text-lg sm:text-2xl font-bold text-destructive flex items-center">
+                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{totalDue.toLocaleString()}
                   </p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-destructive/50" />
+                <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-destructive/50 hidden sm:block" />
               </div>
             </CardContent>
           </Card>
           <Card className="card-elevated border-l-4 border-l-success">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Paid</p>
-                  <p className="text-2xl font-bold text-success flex items-center">
-                    <IndianRupee className="h-5 w-5" />{totalPaid.toLocaleString()}
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Paid</p>
+                  <p className="text-lg sm:text-2xl font-bold text-success flex items-center">
+                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{totalPaid.toLocaleString()}
                   </p>
                 </div>
-                <CheckCircle2 className="h-8 w-8 text-success/50" />
+                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-success/50 hidden sm:block" />
               </div>
             </CardContent>
           </Card>
           <Card className="card-elevated border-l-4 border-l-primary">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-3 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Fees</p>
-                  <p className="text-2xl font-bold flex items-center">
-                    <IndianRupee className="h-5 w-5" />{fees.reduce((s, f) => s + f.amount, 0).toLocaleString()}
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total Fees</p>
+                  <p className="text-lg sm:text-2xl font-bold flex items-center">
+                    <IndianRupee className="h-4 w-4 sm:h-5 sm:w-5" />{fees.reduce((s, f) => s + f.amount, 0).toLocaleString()}
                   </p>
                 </div>
-                <CreditCard className="h-8 w-8 text-primary/50" />
+                <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-primary/50 hidden sm:block" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Fees Table */}
+        {/* Fee Details */}
         <Card className="card-elevated">
-          <CardHeader>
-            <CardTitle className="font-display flex items-center gap-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-display flex items-center gap-2 text-base sm:text-lg">
               <CreditCard className="h-5 w-5 text-primary" />
               Fee Details
             </CardTitle>
           </CardHeader>
           <CardContent>
             {fees.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No fee records found.</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">No fee records found.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                     <TableRow>
-                       <TableHead>Fee Type</TableHead>
-                       <TableHead>Amount</TableHead>
-                       <TableHead>Discount</TableHead>
-                       <TableHead>Net Amount</TableHead>
-                       <TableHead>Paid</TableHead>
-                       <TableHead>Due Date</TableHead>
-                       <TableHead>Status</TableHead>
-                       <TableHead>Action</TableHead>
-                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {fees.map((fee) => {
-                      const style = getStatusStyle(fee.payment_status);
-                      const isOverdue = fee.payment_status !== 'paid' && new Date(fee.due_date) < new Date();
-                      return (
-                        <TableRow key={fee.id}>
-                          <TableCell className="font-medium">{fee.fee_type}</TableCell>
-                          <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span></TableCell>
-                          <TableCell>
-                            {(fee.discount || 0) > 0 ? (
-                              <span className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</span>
-                            ) : '-'}
-                          </TableCell>
-                          <TableCell><span className="flex items-center font-medium"><IndianRupee className="h-3 w-3" />{(fee.amount - (fee.discount || 0)).toLocaleString()}</span></TableCell>
-                          <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span></TableCell>
-                          <TableCell>
-                            <div className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-destructive' : ''}`}>
-                              <Calendar className="h-3 w-3" />
-                              {new Date(fee.due_date).toLocaleDateString()}
-                              {isOverdue && <Badge variant="destructive" className="ml-1 text-xs">Overdue</Badge>}
-                            </div>
-                          </TableCell>
-                          <TableCell>{fee.paid_at ? new Date(fee.paid_at).toLocaleDateString() : '-'}</TableCell>
-                          <TableCell>
-                            <Badge className={`${style.class} flex items-center gap-1 w-fit`}>
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Fee Type</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Discount</TableHead>
+                        <TableHead>Net Amount</TableHead>
+                        <TableHead>Paid</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {fees.map((fee) => {
+                        const style = getStatusStyle(fee.payment_status);
+                        const isOverdue = fee.payment_status !== 'paid' && new Date(fee.due_date) < new Date();
+                        return (
+                          <TableRow key={fee.id}>
+                            <TableCell className="font-medium">{fee.fee_type}</TableCell>
+                            <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span></TableCell>
+                            <TableCell>
+                              {(fee.discount || 0) > 0 ? (
+                                <span className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</span>
+                              ) : '-'}
+                            </TableCell>
+                            <TableCell><span className="flex items-center font-medium"><IndianRupee className="h-3 w-3" />{(fee.amount - (fee.discount || 0)).toLocaleString()}</span></TableCell>
+                            <TableCell><span className="flex items-center"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span></TableCell>
+                            <TableCell>
+                              <div className={`flex items-center gap-1 text-sm ${isOverdue ? 'text-destructive' : ''}`}>
+                                <Calendar className="h-3 w-3" />
+                                {new Date(fee.due_date).toLocaleDateString()}
+                                {isOverdue && <Badge variant="destructive" className="ml-1 text-xs">Overdue</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`${style.class} flex items-center gap-1 w-fit`}>
+                                {style.icon}
+                                {fee.payment_status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {fee.payment_status !== 'paid' ? (
+                                <Button
+                                  size="sm"
+                                  className="gradient-parent"
+                                  onClick={() => openPaymentDialog(fee)}
+                                  disabled={payingFeeId === fee.id}
+                                >
+                                  {payingFeeId === fee.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
+                                  Pay Now
+                                </Button>
+                              ) : fee.receipt_number ? (
+                                <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
+                                  <Download className="h-3 w-3 mr-1" />Receipt
+                                </Button>
+                              ) : '-'}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-3">
+                  {fees.map((fee) => {
+                    const style = getStatusStyle(fee.payment_status);
+                    const isOverdue = fee.payment_status !== 'paid' && new Date(fee.due_date) < new Date();
+                    const net = fee.amount - (fee.discount || 0);
+                    return (
+                      <Card key={fee.id} className="border">
+                        <CardContent className="p-4 space-y-3">
+                          {/* Header */}
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium capitalize">{fee.fee_type}</span>
+                            <Badge className={`${style.class} flex items-center gap-1`}>
                               {style.icon}
                               {fee.payment_status}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
+                          </div>
+
+                          {/* Details grid */}
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                            <span className="text-muted-foreground">Amount</span>
+                            <span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span>
+
+                            {(fee.discount || 0) > 0 && (
+                              <>
+                                <span className="text-muted-foreground">Discount</span>
+                                <span className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</span>
+                              </>
+                            )}
+
+                            <span className="text-muted-foreground">Net</span>
+                            <span className="flex items-center font-medium"><IndianRupee className="h-3 w-3" />{net.toLocaleString()}</span>
+
+                            <span className="text-muted-foreground">Paid</span>
+                            <span className="flex items-center"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span>
+
+                            <span className="text-muted-foreground">Due Date</span>
+                            <span className={`flex items-center gap-1 ${isOverdue ? 'text-destructive' : ''}`}>
+                              <Calendar className="h-3 w-3" />
+                              {new Date(fee.due_date).toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          {/* Action */}
+                          <div className="pt-2 border-t flex justify-end">
                             {fee.payment_status !== 'paid' ? (
                               <Button
                                 size="sm"
-                                className="gradient-parent"
+                                className="gradient-parent w-full"
                                 onClick={() => openPaymentDialog(fee)}
                                 disabled={payingFeeId === fee.id}
                               >
@@ -405,33 +474,33 @@ export default function ParentFees() {
                                 Pay Now
                               </Button>
                             ) : fee.receipt_number ? (
-                              <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
-                                <Download className="h-3 w-3 mr-1" />Receipt
+                              <Button size="sm" variant="outline" className="w-full" onClick={() => handleDownloadReceipt(fee)}>
+                                <Download className="h-3 w-3 mr-1" />Download Receipt
                               </Button>
-                            ) : '-'}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                            ) : null}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
 
-        {/* Payment History from fee_payments table */}
+        {/* Payment History */}
         <PaymentHistorySection studentId={selectedChildId} studentName={selectedChild?.name || ''} />
 
         {unpaidFees.length > 0 && (
           <Card className="card-elevated bg-primary/5 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="p-4 sm:pt-6 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold">Pay all dues at once</p>
-                  <p className="text-sm text-muted-foreground">Total due: ₹{totalDue.toLocaleString()}</p>
+                  <p className="font-semibold text-sm sm:text-base">Pay all dues at once</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Total due: ₹{totalDue.toLocaleString()}</p>
                 </div>
-                <Button className="gradient-parent" onClick={() => unpaidFees[0] && openPaymentDialog(unpaidFees[0])}>
+                <Button className="gradient-parent w-full sm:w-auto" onClick={() => unpaidFees[0] && openPaymentDialog(unpaidFees[0])}>
                   <CreditCard className="h-4 w-4 mr-2" />
                   Pay ₹{totalDue.toLocaleString()}
                 </Button>
@@ -444,7 +513,7 @@ export default function ParentFees() {
 
       {/* Custom Payment Amount Dialog */}
       <Dialog open={!!paymentDialogFee} onOpenChange={(open) => { if (!open) setPaymentDialogFee(null); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
@@ -472,7 +541,7 @@ export default function ParentFees() {
                   </>}
                   <div className="text-muted-foreground">Already Paid</div>
                   <div className="flex items-center"><IndianRupee className="h-3 w-3" />{alreadyPaid.toLocaleString()}</div>
-                  <div className="text-muted-foreground font-semibold">Remaining Balance</div>
+                  <div className="text-muted-foreground font-semibold">Remaining</div>
                   <div className="flex items-center font-bold text-destructive"><IndianRupee className="h-3 w-3" />{remaining.toLocaleString()}</div>
                 </div>
 
@@ -488,19 +557,19 @@ export default function ParentFees() {
                     placeholder={`Max ₹${remaining.toLocaleString()}`}
                   />
                   {enteredAmount > remaining && (
-                    <p className="text-xs text-destructive">Amount cannot exceed remaining balance of ₹{remaining.toLocaleString()}</p>
+                    <p className="text-xs text-destructive">Amount cannot exceed ₹{remaining.toLocaleString()}</p>
                   )}
                 </div>
 
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setPaymentDialogFee(null)}>Cancel</Button>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button variant="outline" onClick={() => setPaymentDialogFee(null)} className="w-full sm:w-auto">Cancel</Button>
                   <Button
-                    className="gradient-parent"
+                    className="gradient-parent w-full sm:w-auto"
                     disabled={!isValid}
                     onClick={() => handlePayNow(fee, enteredAmount)}
                   >
                     <CreditCard className="h-4 w-4 mr-1" />
-                    Proceed to Pay ₹{isValid ? enteredAmount.toLocaleString() : '0'}
+                    Pay ₹{isValid ? enteredAmount.toLocaleString() : '0'}
                   </Button>
                 </DialogFooter>
               </div>
