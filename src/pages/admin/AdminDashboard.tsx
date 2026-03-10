@@ -304,27 +304,27 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl border bg-warning/5 border-warning/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-warning">Leave Requests</span>
-                  <span className="text-2xl font-bold text-warning">{stats.pendingLeaves}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 rounded-xl border bg-warning/5 border-warning/20">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-warning">Leave Requests</span>
+                  <span className="text-xl sm:text-2xl font-bold text-warning">{stats.pendingLeaves}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Pending approval</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Pending approval</p>
               </div>
-              <div className="p-4 rounded-xl border bg-primary/5 border-primary/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-primary">Certificates</span>
-                  <span className="text-2xl font-bold text-primary">{stats.pendingCertificates}</span>
+              <div className="p-3 sm:p-4 rounded-xl border bg-primary/5 border-primary/20">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-primary">Certificates</span>
+                  <span className="text-xl sm:text-2xl font-bold text-primary">{stats.pendingCertificates}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Pending approval</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Pending approval</p>
               </div>
-              <div className="p-4 rounded-xl border bg-destructive/5 border-destructive/20">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-destructive">Complaints</span>
-                  <span className="text-2xl font-bold text-destructive">{stats.openComplaints}</span>
+              <div className="p-3 sm:p-4 rounded-xl border bg-destructive/5 border-destructive/20">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
+                  <span className="text-xs sm:text-sm font-medium text-destructive">Complaints</span>
+                  <span className="text-xl sm:text-2xl font-bold text-destructive">{stats.openComplaints}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Unresolved</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Unresolved</p>
               </div>
             </div>
           </CardContent>
