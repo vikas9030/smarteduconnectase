@@ -316,8 +316,8 @@ export default function FeesManagement() {
               <span className="hidden sm:inline">Receipt Settings</span>
               <span className="sm:hidden">Receipt</span>
             </Button>
-            <Button size="sm" variant="outline">
-              <Download className="h-4 w-4 mr-1" />
+            <Button size="sm" variant="outline" onClick={handleExportReport}>
+              <FileText className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Export Report</span>
               <span className="sm:hidden">Export</span>
             </Button>
