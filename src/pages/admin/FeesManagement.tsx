@@ -181,11 +181,115 @@ export default function FeesManagement() {
 
   const classFeeCount = classFilter ? fees.filter(f => (f.students?.classes as any)?.id === classFilter).length : 0;
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
+  const handleExportReport = () => {
+    const dataToExport = filteredFees.length > 0 ? filteredFees : fees;
+    if (dataToExport.length === 0) {
+      toast({ variant: 'destructive', title: 'No Data', description: 'No fee records to export.' });
+      return;
+    }
 
-  return (
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const now = format(new Date(), 'PPP');
+
+    // Title
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fee Collection Report', 14, 18);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${now}`, 14, 24);
+
+    // Summary stats
+    const totalAmount = dataToExport.reduce((s, f) => s + f.amount, 0);
+    const totalDiscount = dataToExport.reduce((s, f) => s + (f.discount || 0), 0);
+    const totalPaidAmt = dataToExport.reduce((s, f) => s + (f.paid_amount || 0), 0);
+    const totalBalance = totalAmount - totalDiscount - totalPaidAmt;
+    const paidCount = dataToExport.filter(f => f.payment_status === 'paid').length;
+    const unpaidCount = dataToExport.filter(f => f.payment_status === 'unpaid').length;
+    const partialCount = dataToExport.filter(f => f.payment_status === 'partial').length;
+    const overdueCount = dataToExport.filter(f => f.payment_status !== 'paid' && new Date(f.due_date) < new Date()).length;
+
+    // Summary box
+    doc.setFillColor(245, 247, 250);
+    doc.setDrawColor(200);
+    doc.roundedRect(14, 28, pageWidth - 28, 20, 2, 2, 'FD');
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total Records: ${dataToExport.length}`, 20, 36);
+    doc.text(`Total Amount: Rs.${totalAmount.toLocaleString()}`, 70, 36);
+    doc.text(`Discount: Rs.${totalDiscount.toLocaleString()}`, 130, 36);
+    doc.text(`Collected: Rs.${totalPaidAmt.toLocaleString()}`, 180, 36);
+    doc.text(`Balance: Rs.${totalBalance.toLocaleString()}`, 230, 36);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Paid: ${paidCount}  |  Unpaid: ${unpaidCount}  |  Partial: ${partialCount}  |  Overdue: ${overdueCount}`, 20, 44);
+
+    // Table
+    autoTable(doc, {
+      startY: 54,
+      head: [['#', 'Student Name', 'ID', 'Class', 'Fee Type', 'Amount (Rs.)', 'Discount (Rs.)', 'Net (Rs.)', 'Paid (Rs.)', 'Balance (Rs.)', 'Due Date', 'Status']],
+      body: dataToExport.map((f, i) => {
+        const net = f.amount - (f.discount || 0);
+        const balance = net - (f.paid_amount || 0);
+        const status = f.payment_status === 'paid' ? 'Paid'
+          : f.payment_status === 'partial' ? 'Partial'
+          : new Date(f.due_date) < new Date() ? 'Overdue' : 'Unpaid';
+        return [
+          i + 1,
+          f.students?.full_name || 'N/A',
+          f.students?.login_id || f.students?.admission_number || '-',
+          f.students?.classes ? `${f.students.classes.name}-${f.students.classes.section}` : '-',
+          f.fee_type,
+          f.amount.toLocaleString(),
+          (f.discount || 0).toLocaleString(),
+          net.toLocaleString(),
+          (f.paid_amount || 0).toLocaleString(),
+          balance.toLocaleString(),
+          new Date(f.due_date).toLocaleDateString(),
+          status,
+        ];
+      }),
+      styles: { fontSize: 7, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 8 },
+        5: { halign: 'right' },
+        6: { halign: 'right' },
+        7: { halign: 'right' },
+        8: { halign: 'right' },
+        9: { halign: 'right' },
+        11: { halign: 'center' },
+      },
+      didParseCell: (data: any) => {
+        if (data.section === 'body' && data.column.index === 11) {
+          const val = data.cell.raw;
+          if (val === 'Paid') data.cell.styles.textColor = [39, 174, 96];
+          else if (val === 'Overdue') data.cell.styles.textColor = [231, 76, 60];
+          else if (val === 'Partial') data.cell.styles.textColor = [243, 156, 18];
+        }
+      },
+    });
+
+    // Footer totals
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Grand Total: Rs.${totalAmount.toLocaleString()}  |  Total Collected: Rs.${totalPaidAmt.toLocaleString()}  |  Outstanding Balance: Rs.${totalBalance.toLocaleString()}`, 14, finalY);
+
+    const pdfBlob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `Fee-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+    toast({ title: 'Report Downloaded', description: `Exported ${dataToExport.length} records` });
+  };
+
+  if (loading) {
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <BackButton to="/admin" />
