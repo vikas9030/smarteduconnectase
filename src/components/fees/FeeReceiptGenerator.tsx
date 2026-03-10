@@ -40,7 +40,7 @@ export async function generateFeeReceipt(data: ReceiptData) {
     const logoH = 22;
     const logoX = centerX - logoW / 2;
     doc.addImage(logoLoaded, 'PNG', logoX, y, logoW, logoH);
-    y += logoH + 4;
+    y += logoH + 6;
   }
 
   if (t?.schoolName) {
