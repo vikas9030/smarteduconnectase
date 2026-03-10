@@ -66,6 +66,7 @@ import ParentFees from "./pages/parent/ParentFees";
 import ParentGallery from "./pages/parent/ParentGallery";
 import ParentNotifications from "./pages/parent/ParentNotifications";
 import ParentSettings from "./pages/parent/ParentSettings";
+import ParentComplaints from "./pages/parent/ParentComplaints";
 
 const queryClient = new QueryClient();
 
