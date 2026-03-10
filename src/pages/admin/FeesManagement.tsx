@@ -25,6 +25,8 @@ import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
 import CreateFeeDialog from '@/components/fees/CreateFeeDialog';
 import RecordPaymentDialog from '@/components/fees/RecordPaymentDialog';
 import ReceiptTemplateSettings, { loadReceiptTemplate, type ReceiptTemplate } from '@/components/fees/ReceiptTemplateSettings';
+import EditFeeDialog from '@/components/fees/EditFeeDialog';
+import DeleteFeeDialog from '@/components/fees/DeleteFeeDialog';
 
 interface FeeRecord {
   id: string;
