@@ -188,20 +188,20 @@ export default function ParentDashboard() {
       {isLoadingContent ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Welcome Section */}
-        <div className="gradient-parent rounded-2xl p-6 text-white">
-          <h1 className="font-display text-2xl font-bold">Welcome, Parent!</h1>
-          <p className="text-white/80 mt-1">Stay connected with your child's educational journey.</p>
+        <div className="gradient-parent rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+          <h1 className="font-display text-lg sm:text-2xl font-bold">Welcome, Parent!</h1>
+          <p className="text-white/80 mt-1 text-xs sm:text-base">Stay connected with your child's educational journey.</p>
         </div>
 
         {/* Children Profiles */}
         {children.length === 0 ? (
           <Card className="card-elevated">
-            <CardContent className="py-12 text-center">
-              <User className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No children linked to your account yet.</p>
-              <p className="text-sm text-muted-foreground mt-1">Please contact the school administration.</p>
+            <CardContent className="py-8 sm:py-12 text-center">
+              <User className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+              <p className="text-muted-foreground text-sm">No children linked to your account yet.</p>
+              <p className="text-xs text-muted-foreground mt-1">Please contact the school administration.</p>
             </CardContent>
           </Card>
         ) : (
@@ -209,24 +209,24 @@ export default function ParentDashboard() {
             <div key={child.id} className="space-y-4">
               {/* Child Profile Card */}
               <Card className="card-elevated">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row items-center gap-6">
-                    <Avatar className="h-24 w-24 ring-4 ring-accent/20 ring-offset-2">
+                <CardContent className="p-4 sm:pt-6 sm:p-6">
+                  <div className="flex items-center gap-4 sm:flex-row sm:gap-6">
+                    <Avatar className="h-16 w-16 sm:h-24 sm:w-24 ring-4 ring-accent/20 ring-offset-2 shrink-0">
                       <AvatarImage src={child.photo_url || ''} />
-                      <AvatarFallback className="gradient-parent text-white text-2xl">
+                      <AvatarFallback className="gradient-parent text-white text-lg sm:text-2xl">
                         {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="text-center sm:text-left flex-1">
-                      <h2 className="font-display text-xl font-bold">{child.full_name}</h2>
-                      <p className="text-muted-foreground">
+                    <div className="min-w-0">
+                      <h2 className="font-display text-base sm:text-xl font-bold truncate">{child.full_name}</h2>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         {child.classes ? `Class ${child.classes.name} - ${child.classes.section}` : 'No class assigned'}
                       </p>
-                      <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
-                        <Badge className={child.status === 'active' ? 'status-active' : 'status-inactive'}>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        <Badge className={`text-[10px] sm:text-xs ${child.status === 'active' ? 'status-active' : 'status-inactive'}`}>
                           {child.status || 'Active'}
                         </Badge>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs">
                           <GraduationCap className="h-3 w-3 mr-1" />
                           {child.admission_number}
                         </Badge>
@@ -235,36 +235,41 @@ export default function ParentDashboard() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Attendance Summary for this child */}
               <AttendanceSummary studentId={child.id} />
             </div>
           ))
         )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Children"
-            value={children.length.toString()}
-            icon={<User className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Pending Homework"
-            value={pendingHomework.toString()}
-            icon={<BookOpen className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Upcoming Exams"
-            value={upcomingExamCount.toString()}
-            icon={<FileText className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Unpaid Fees"
-            value={pendingFees.toString()}
-            icon={<CreditCard className="h-6 w-6" />}
-            variant={pendingFees > 0 ? 'accent' : 'default'}
-          />
+        {/* Stats Grid - compact on mobile */}
+        <div className="sm:hidden">
+          <Card className="card-elevated">
+            <CardContent className="p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{children.length}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Children</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{pendingHomework}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Homework</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <p className="text-lg font-bold">{upcomingExamCount}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Exams</p>
+                </div>
+                <div className={`text-center p-2 rounded-lg ${pendingFees > 0 ? 'bg-destructive/10' : 'bg-muted/50'}`}>
+                  <p className={`text-lg font-bold ${pendingFees > 0 ? 'text-destructive' : ''}`}>{pendingFees}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Unpaid Fees</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Children" value={children.length.toString()} icon={<User className="h-6 w-6" />} />
+          <StatCard title="Pending Homework" value={pendingHomework.toString()} icon={<BookOpen className="h-6 w-6" />} />
+          <StatCard title="Upcoming Exams" value={upcomingExamCount.toString()} icon={<FileText className="h-6 w-6" />} />
+          <StatCard title="Unpaid Fees" value={pendingFees.toString()} icon={<CreditCard className="h-6 w-6" />} variant={pendingFees > 0 ? 'accent' : 'default'} />
         </div>
 
         {/* Today's Exam Schedule & Upcoming Competitive Exams */}
