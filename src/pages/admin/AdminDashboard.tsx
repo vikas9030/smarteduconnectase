@@ -189,36 +189,47 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Welcome Section */}
-        <div className="gradient-admin rounded-2xl p-6 text-white">
-          <h1 className="font-display text-2xl font-bold">Welcome back, {profileName}!</h1>
-          <p className="text-white/80 mt-1">Here's what's happening at your school today.</p>
+        <div className="gradient-admin rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white">
+          <h1 className="font-display text-lg sm:text-2xl font-bold">Welcome back, {profileName}!</h1>
+          <p className="text-white/80 mt-1 text-xs sm:text-base">Here's what's happening at your school today.</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Students"
-            value={loadingStats ? '...' : stats.totalStudents.toString()}
-            icon={<GraduationCap className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Total Teachers"
-            value={loadingStats ? '...' : stats.totalTeachers.toString()}
-            icon={<Users className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Classes"
-            value={loadingStats ? '...' : stats.totalClasses.toString()}
-            icon={<BookOpen className="h-6 w-6" />}
-          />
-          <StatCard
-            title="Today's Attendance"
-            value={loadingStats ? '...' : `${stats.todayAttendanceRate}%`}
-            icon={<Clock className="h-6 w-6" />}
-            variant="primary"
-          />
+        {/* Stats Grid - compact on mobile */}
+        <div className="sm:hidden">
+          <Card className="card-elevated">
+            <CardContent className="p-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <GraduationCap className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalStudents}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Students</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <Users className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalTeachers}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Teachers</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-muted/50">
+                  <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold">{loadingStats ? '...' : stats.totalClasses}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Classes</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-primary/10">
+                  <Clock className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold text-primary">{loadingStats ? '...' : `${stats.todayAttendanceRate}%`}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">Attendance</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Total Students" value={loadingStats ? '...' : stats.totalStudents.toString()} icon={<GraduationCap className="h-6 w-6" />} />
+          <StatCard title="Total Teachers" value={loadingStats ? '...' : stats.totalTeachers.toString()} icon={<Users className="h-6 w-6" />} />
+          <StatCard title="Classes" value={loadingStats ? '...' : stats.totalClasses.toString()} icon={<BookOpen className="h-6 w-6" />} />
+          <StatCard title="Today's Attendance" value={loadingStats ? '...' : `${stats.todayAttendanceRate}%`} icon={<Clock className="h-6 w-6" />} variant="primary" />
         </div>
 
         {/* Quick Actions & Recent Activity */}
