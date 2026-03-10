@@ -21,6 +21,7 @@ export interface ReceiptTemplate {
   showDiscount: boolean;
   showLogo: boolean;
   logoUrl: string;
+  tableHeaderColor: string;
 }
 
 export const defaultTemplate: ReceiptTemplate = {
@@ -34,6 +35,7 @@ export const defaultTemplate: ReceiptTemplate = {
   showDiscount: true,
   showLogo: false,
   logoUrl: '',
+  tableHeaderColor: '#2980b3',
 };
 
 interface Props {
