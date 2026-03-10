@@ -205,13 +205,12 @@
     border-radius: 0.625rem !important;
   }
 
-  /* Smaller card headers on mobile */
-  .card-elevated [class*="CardHeader"] {
-    padding: 0.75rem 1rem !important;
-  }
-  .card-elevated [class*="CardContent"] {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
+  /* Date inputs - proper alignment and sizing */
+  input[type="date"] {
+    height: 2.25rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 0.625rem !important;
+    padding: 0.25rem 0.5rem !important;
   }
 
   /* Compact page description text */
