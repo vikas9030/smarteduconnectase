@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus, Settings } from 'lucide-react';
+import { Loader2, Search, CreditCard, DollarSign, AlertCircle, CheckCircle, Download, Plus, Settings, Edit2, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import StatCard from '@/components/StatCard';
 import { BackButton } from '@/components/ui/back-button';
@@ -25,6 +25,8 @@ import { generateFeeReceipt } from '@/components/fees/FeeReceiptGenerator';
 import CreateFeeDialog from '@/components/fees/CreateFeeDialog';
 import RecordPaymentDialog from '@/components/fees/RecordPaymentDialog';
 import ReceiptTemplateSettings, { loadReceiptTemplate, type ReceiptTemplate } from '@/components/fees/ReceiptTemplateSettings';
+import EditFeeDialog from '@/components/fees/EditFeeDialog';
+import DeleteFeeDialog from '@/components/fees/DeleteFeeDialog';
 
 interface FeeRecord {
   id: string;
@@ -60,6 +62,9 @@ export default function FeesManagement() {
   const [paymentFee, setPaymentFee] = useState<FeeRecord | null>(null);
   const [showReceiptSettings, setShowReceiptSettings] = useState(false);
   const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate | null>(null);
+  const [editFee, setEditFee] = useState<FeeRecord | null>(null);
+  const [deleteFeeIds, setDeleteFeeIds] = useState<string[]>([]);
+  const [deleteMode, setDeleteMode] = useState<'single' | 'class'>('single');
 
   useEffect(() => {
     loadReceiptTemplate().then(setReceiptTemplate);
@@ -270,6 +275,23 @@ export default function FeesManagement() {
                     </SelectContent>
                   </Select>
                 </div>
+                {classFilter && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      const classFeeIds = fees
+                        .filter(f => (f.students?.classes as any)?.id === classFilter)
+                        .map(f => f.id);
+                      if (classFeeIds.length === 0) return;
+                      setDeleteMode('class');
+                      setDeleteFeeIds(classFeeIds);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete Class Fees ({fees.filter(f => (f.students?.classes as any)?.id === classFilter).length})
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -319,6 +341,18 @@ export default function FeesManagement() {
                             <TableCell>{getStatusBadge(fee.payment_status, fee.due_date)}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
+                                <Button size="sm" variant="ghost" onClick={() => setEditFee(fee)} title="Edit">
+                                  <Edit2 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-destructive hover:text-destructive"
+                                  onClick={() => { setDeleteMode('single'); setDeleteFeeIds([fee.id]); }}
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
                                 {fee.payment_status !== 'paid' && (
                                   <Button size="sm" variant="outline" onClick={() => setPaymentFee(fee)}>
                                     <DollarSign className="h-3 w-3 mr-1" />Record Payment
@@ -381,6 +415,22 @@ export default function FeesManagement() {
       <ReceiptTemplateSettings
         open={showReceiptSettings}
         onOpenChange={setShowReceiptSettings}
+      />
+
+      <EditFeeDialog
+        open={!!editFee}
+        onOpenChange={(open) => !open && setEditFee(null)}
+        fee={editFee}
+        onSuccess={fetchData}
+      />
+
+      <DeleteFeeDialog
+        open={deleteFeeIds.length > 0}
+        onOpenChange={(open) => !open && setDeleteFeeIds([])}
+        mode={deleteMode}
+        feeIds={deleteFeeIds}
+        recordCount={deleteFeeIds.length}
+        onSuccess={fetchData}
       />
     </DashboardLayout>
   );
