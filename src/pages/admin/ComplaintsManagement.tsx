@@ -69,6 +69,7 @@ export default function ComplaintsManagement() {
     const { data } = await supabase
       .from('complaints')
       .select('*')
+      .contains('visible_to', ['admin'])
       .order('created_at', { ascending: false });
 
     if (data) {
