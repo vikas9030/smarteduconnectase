@@ -33,7 +33,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 - **Real-time data sync** — Live updates across all connected users
 - **Responsive design** — Works seamlessly on desktop, tablet, and mobile
 - **Dark mode support** — Full light/dark theme with semantic design tokens
-- **Export & reporting** — CSV and PDF export for attendance, marks, and more
+- **Export & reporting** — PDF export for attendance, fees (landscape report with summary stats, color-coded statuses, grand totals), and more
 
 ### 📊 Admin Panel
 | Module | Description |
@@ -55,7 +55,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Leave Requests** | Approve or reject leave applications from teachers and students; view/download attachments |
 | **Certificates** | Process certificate requests with document attachment download |
 | **Complaints** | Handle and respond to parent complaints with visibility-based filtering (admin/teacher) |
-| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation (blob download), Razorpay online payments, automated reminders |
+| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation (blob download), **PDF fee collection report export** (landscape, summary box, color-coded statuses, grand totals), Razorpay online payments, automated reminders |
 | **Messages** | Direct messaging system with file/image sharing |
 | **Gallery** | Manage photo gallery with folders |
 | **Notifications** | View and manage admin notifications |
@@ -1051,6 +1051,7 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 - **Per-transaction receipts** — Each partial payment generates a unique receipt downloadable as PDF
 - **Balance display** — Balance column (`Net - Paid`) shown across admin fee table, student detail dialog, and parent view
 - **Class Summary view** — Collection analytics per class with discount-adjusted totals
+- **PDF fee report export** — Landscape PDF with summary stats (total records, amount, discount, collected, balance, paid/unpaid/partial/overdue counts), detailed table with color-coded status column, and grand totals footer; exports filtered data when filters applied, otherwise all records
 - **Automated reminders** — Edge function sends fee reminders to parents based on configurable due-date windows
 - **Razorpay integration** — Order creation and HMAC SHA256 signature verification via Edge Functions; API keys stored in `app_settings`
 
@@ -1124,7 +1125,5 @@ This project is proprietary. All rights reserved.
 ---
 
 <p align="center">
-Built with <a href="https://lovable.dev">Lovable</a>
-</p>
-  Built with ❤️ using <strong>Lovable</strong>
+  Built with ❤️ using <a href="https://lovable.dev">Lovable</a>
 </p>
