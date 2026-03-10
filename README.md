@@ -1084,6 +1084,39 @@ Per-user, per-device push subscription endpoints.
 
 ---
 
+## 🔔 Notification Triggers
+
+Automated database triggers fire notifications on key events:
+
+| Trigger Function | Event | Recipients |
+|---|---|---|
+| `notify_parent_attendance()` | Attendance marked | Parents of the student |
+| `notify_parent_homework()` | New homework assigned | Parents of students in the class |
+| `notify_parent_exam_result()` | Exam result published | Parents of the student |
+| `notify_announcement()` | New announcement | Target audience (all/admin/teacher/parent) |
+| `notify_admin_leave_request()` | Leave request submitted | All admin users |
+| `notify_admin_certificate_request()` | Certificate requested | All admin users |
+| `notify_complaint()` | Complaint created or updated | Admin/Teachers on INSERT (per visibility), Parent on UPDATE (response/resolve) |
+| `send_push_on_notification()` | Any notification inserted | Triggers Web Push delivery via Edge Function |
+
+---
+
+## 🛠️ Edge Functions
+
+| Function | Purpose |
+|---|---|
+| `create-razorpay-order` | Creates Razorpay payment orders for online fee collection |
+| `verify-razorpay-payment` | Verifies Razorpay signatures, records transactions, generates receipt numbers |
+| `create-student` | Creates student records with linked parent auth accounts |
+| `create-user` | Creates auth users with role assignments |
+| `send-push-notification` | Delivers Web Push notifications via VAPID (web-push library) |
+| `send-fee-reminders` | Sends automated fee due date reminders to parents |
+| `notify-competitive-exams` | Scheduled cron (daily 7 AM) for competitive exam reminders |
+| `seed-demo-users` | Seeds demo admin/teacher/parent accounts for testing |
+| `full-reset` | Resets database to clean state |
+
+---
+
 ## 📄 License
 
 This project is proprietary. All rights reserved.
@@ -1091,5 +1124,7 @@ This project is proprietary. All rights reserved.
 ---
 
 <p align="center">
+Built with <a href="https://lovable.dev">Lovable</a>
+</p>
   Built with ❤️ using <strong>Lovable</strong>
 </p>
