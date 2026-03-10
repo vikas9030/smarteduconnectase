@@ -429,6 +429,7 @@ export default function ParentFees() {
                     const style = getStatusStyle(fee.payment_status);
                     const isOverdue = fee.payment_status !== 'paid' && new Date(fee.due_date) < new Date();
                     const net = fee.amount - (fee.discount || 0);
+                    const balance = net - (fee.paid_amount || 0);
                     return (
                       <Card key={fee.id} className="border">
                         <CardContent className="p-4 space-y-3">
@@ -441,33 +442,41 @@ export default function ParentFees() {
                             </Badge>
                           </div>
 
-                          {/* Details grid */}
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                            <span className="text-muted-foreground">Amount</span>
-                            <span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span>
-
+                          {/* Details - aligned row layout */}
+                          <div className="text-sm">
+                            <div className="flex justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Amount</span>
+                              <span className="flex items-center"><IndianRupee className="h-3 w-3" />{fee.amount.toLocaleString()}</span>
+                            </div>
                             {(fee.discount || 0) > 0 && (
-                              <>
+                              <div className="flex justify-between py-1.5 border-b border-border/50">
                                 <span className="text-muted-foreground">Discount</span>
                                 <span className="flex items-center text-success">-<IndianRupee className="h-3 w-3" />{(fee.discount || 0).toLocaleString()}</span>
-                              </>
+                              </div>
                             )}
-
-                            <span className="text-muted-foreground">Net</span>
-                            <span className="flex items-center font-medium"><IndianRupee className="h-3 w-3" />{net.toLocaleString()}</span>
-
-                            <span className="text-muted-foreground">Paid</span>
-                            <span className="flex items-center"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span>
-
-                            <span className="text-muted-foreground">Due Date</span>
-                            <span className={`flex items-center gap-1 ${isOverdue ? 'text-destructive' : ''}`}>
-                              <Calendar className="h-3 w-3" />
-                              {new Date(fee.due_date).toLocaleDateString()}
-                            </span>
+                            <div className="flex justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Net</span>
+                              <span className="flex items-center font-semibold"><IndianRupee className="h-3 w-3" />{net.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Paid</span>
+                              <span className="flex items-center text-success"><IndianRupee className="h-3 w-3" />{(fee.paid_amount || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between py-1.5 border-b border-border/50">
+                              <span className="text-muted-foreground">Balance</span>
+                              <span className="flex items-center font-semibold text-destructive"><IndianRupee className="h-3 w-3" />{balance.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between py-1.5">
+                              <span className={`text-muted-foreground ${isOverdue ? 'text-destructive' : ''}`}>Due Date</span>
+                              <span className={`flex items-center gap-1 ${isOverdue ? 'text-destructive' : ''}`}>
+                                <Calendar className="h-3 w-3" />
+                                {new Date(fee.due_date).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
 
-                          {/* Action */}
-                          <div className="pt-2 border-t flex justify-end">
+                          {/* Actions */}
+                          <div className="pt-2 border-t space-y-2">
                             {fee.payment_status !== 'paid' ? (
                               <Button
                                 size="sm"
@@ -478,11 +487,12 @@ export default function ParentFees() {
                                 {payingFeeId === fee.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CreditCard className="h-3 w-3 mr-1" />}
                                 Pay Now
                               </Button>
-                            ) : fee.receipt_number ? (
+                            ) : null}
+                            {fee.receipt_number && (
                               <Button size="sm" variant="outline" className="w-full" onClick={() => handleDownloadReceipt(fee)}>
                                 <Download className="h-3 w-3 mr-1" />Download Receipt
                               </Button>
-                            ) : null}
+                            )}
                           </div>
                         </CardContent>
                       </Card>

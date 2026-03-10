@@ -391,52 +391,62 @@ export default function FeesManagement() {
                                 {getStatusBadge(fee.payment_status, fee.due_date)}
                               </div>
 
-                              {/* Fee details grid */}
-                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                                <span className="text-muted-foreground">Fee Type</span>
-                                <span className="capitalize font-medium">{fee.fee_type}</span>
-
-                                <span className="text-muted-foreground">Amount</span>
-                                <span className="font-medium">₹{fee.amount.toLocaleString()}</span>
-
+                              {/* Fee details - aligned table layout */}
+                              <div className="text-sm">
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                  <span className="text-muted-foreground">Fee Type</span>
+                                  <span className="capitalize font-medium text-right">{fee.fee_type}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                  <span className="text-muted-foreground">Amount</span>
+                                  <span className="font-medium text-right">₹{fee.amount.toLocaleString()}</span>
+                                </div>
                                 {(fee.discount || 0) > 0 && (
-                                  <>
+                                  <div className="flex justify-between py-1.5 border-b border-border/50">
                                     <span className="text-muted-foreground">Discount</span>
-                                    <span className="text-success">₹{(fee.discount || 0).toLocaleString()}</span>
-                                  </>
+                                    <span className="text-success text-right">₹{(fee.discount || 0).toLocaleString()}</span>
+                                  </div>
                                 )}
-
-                                <span className="text-muted-foreground">Net</span>
-                                <span className="font-medium">₹{net.toLocaleString()}</span>
-
-                                <span className="text-muted-foreground">Paid</span>
-                                <span className="text-success">₹{(fee.paid_amount || 0).toLocaleString()}</span>
-
-                                <span className="text-muted-foreground">Balance</span>
-                                <span className="font-medium text-destructive">₹{balance.toLocaleString()}</span>
-
-                                <span className="text-muted-foreground">Due Date</span>
-                                <span>{new Date(fee.due_date).toLocaleDateString()}</span>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                  <span className="text-muted-foreground">Net</span>
+                                  <span className="font-semibold text-right">₹{net.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                  <span className="text-muted-foreground">Paid</span>
+                                  <span className="text-success text-right">₹{(fee.paid_amount || 0).toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                  <span className="text-muted-foreground">Balance</span>
+                                  <span className="font-semibold text-destructive text-right">₹{balance.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5">
+                                  <span className="text-muted-foreground">Due Date</span>
+                                  <span className="text-right">{new Date(fee.due_date).toLocaleDateString()}</span>
+                                </div>
                               </div>
 
                               {/* Actions */}
-                              <div className="flex items-center gap-2 pt-1 border-t">
-                                <Button size="sm" variant="ghost" onClick={() => setEditFee(fee)}>
-                                  <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
-                                </Button>
-                                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { setDeleteMode('single'); setDeleteFeeIds([fee.id]); }}>
-                                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
-                                </Button>
-                                {fee.payment_status !== 'paid' && (
-                                  <Button size="sm" variant="outline" className="ml-auto" onClick={() => setPaymentFee(fee)}>
-                                    <DollarSign className="h-3.5 w-3.5 mr-1" /> Record
+                              <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                                <div className="flex items-center gap-1">
+                                  <Button size="sm" variant="ghost" onClick={() => setEditFee(fee)}>
+                                    <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
                                   </Button>
-                                )}
-                                {fee.receipt_number && (
-                                  <Button size="sm" variant="ghost" onClick={() => handleDownloadReceipt(fee)}>
-                                    <Download className="h-3.5 w-3.5" />
+                                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => { setDeleteMode('single'); setDeleteFeeIds([fee.id]); }}>
+                                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
                                   </Button>
-                                )}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {fee.receipt_number && (
+                                    <Button size="sm" variant="outline" onClick={() => handleDownloadReceipt(fee)}>
+                                      <Download className="h-3.5 w-3.5 mr-1" /> Receipt
+                                    </Button>
+                                  )}
+                                  {fee.payment_status !== 'paid' && (
+                                    <Button size="sm" variant="default" onClick={() => setPaymentFee(fee)}>
+                                      <DollarSign className="h-3.5 w-3.5 mr-1" /> Record
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
