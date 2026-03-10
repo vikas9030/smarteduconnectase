@@ -1051,6 +1051,7 @@ Smart EduConnect is fully mobile-responsive with optimized layouts:
 - **Per-transaction receipts** — Each partial payment generates a unique receipt downloadable as PDF
 - **Balance display** — Balance column (`Net - Paid`) shown across admin fee table, student detail dialog, and parent view
 - **Class Summary view** — Collection analytics per class with discount-adjusted totals
+- **PDF fee report export** — Landscape PDF with summary stats (total records, amount, discount, collected, balance, paid/unpaid/partial/overdue counts), detailed table with color-coded status column, and grand totals footer; exports filtered data when filters applied, otherwise all records
 - **Automated reminders** — Edge function sends fee reminders to parents based on configurable due-date windows
 - **Razorpay integration** — Order creation and HMAC SHA256 signature verification via Edge Functions; API keys stored in `app_settings`
 
