@@ -1125,7 +1125,5 @@ This project is proprietary. All rights reserved.
 ---
 
 <p align="center">
-Built with <a href="https://lovable.dev">Lovable</a>
-</p>
-  Built with ❤️ using <strong>Lovable</strong>
+  Built with ❤️ using <a href="https://lovable.dev">Lovable</a>
 </p>
