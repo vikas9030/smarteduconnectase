@@ -124,7 +124,7 @@ export async function generateFeeReceipt(data: ReceiptData) {
       halign: 'center',
     },
     headStyles: {
-      fillColor: [41, 128, 185],
+      fillColor: hexToRgb(t?.tableHeaderColor || '#2980b3'),
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center',
