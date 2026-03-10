@@ -198,10 +198,10 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-wrap gap-1.5 sm:gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
             {/* Step 1: Exam Name */}
             <Select value={selectedExamName || 'all'} onValueChange={(v) => { setSelectedExamName(v === 'all' ? '' : v); setSelectedClassFilter('all'); setSelectedSubjectFilter('all'); }}>
-              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9">
+              <SelectTrigger className="w-full text-xs sm:text-sm h-9 sm:h-10">
                 <SelectValue placeholder="All Exams" />
               </SelectTrigger>
               <SelectContent>
@@ -214,20 +214,20 @@ export default function ExamMarksEntry({ exams, onMarksUpdated }: Props) {
 
             {/* Step 2: Class (filtered by exam) */}
             <Select value={selectedClassFilter} onValueChange={v => { setSelectedClassFilter(v); setSelectedSubjectFilter('all'); }}>
-                <SelectTrigger className="w-[calc(33%-4px)] sm:w-[150px] text-[10px] sm:text-xs h-7 sm:h-9">
-                  <SelectValue placeholder="All Classes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classes</SelectItem>
-                  {classOptions.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectTrigger className="w-full text-xs sm:text-sm h-9 sm:h-10">
+                <SelectValue placeholder="All Classes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {classOptions.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}-{c.section.toUpperCase()}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Step 3: Subject (filtered by exam + class) */}
             <Select value={selectedSubjectFilter} onValueChange={setSelectedSubjectFilter}>
-              <SelectTrigger className="w-[calc(33%-4px)] sm:w-[150px] text-[10px] sm:text-xs h-7 sm:h-9">
+              <SelectTrigger className="w-full text-xs sm:text-sm h-9 sm:h-10">
                 <SelectValue placeholder="All Subjects" />
               </SelectTrigger>
               <SelectContent>
