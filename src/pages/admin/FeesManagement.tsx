@@ -290,6 +290,10 @@ export default function FeesManagement() {
   };
 
   if (loading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <BackButton to="/admin" />
