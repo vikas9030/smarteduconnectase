@@ -186,7 +186,12 @@ export default function ComplaintsManagement() {
                         </div>
                         {getStatusBadge(complaint.status)}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">{new Date(complaint.created_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-2">
+                        {new Date(complaint.created_at).toLocaleDateString()}
+                        {complaint.visible_to && complaint.visible_to.map(v => (
+                          <Badge key={v} variant="outline" className="text-[9px] capitalize">{v}</Badge>
+                        ))}
+                      </p>
                     </div>
                   ))}
                 </div>
