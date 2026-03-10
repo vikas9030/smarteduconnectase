@@ -415,6 +415,22 @@ export default function FeesManagement() {
         open={showReceiptSettings}
         onOpenChange={setShowReceiptSettings}
       />
+
+      <EditFeeDialog
+        open={!!editFee}
+        onOpenChange={(open) => !open && setEditFee(null)}
+        fee={editFee}
+        onSuccess={fetchData}
+      />
+
+      <DeleteFeeDialog
+        open={deleteFeeIds.length > 0}
+        onOpenChange={(open) => !open && setDeleteFeeIds([])}
+        mode={deleteMode}
+        feeIds={deleteFeeIds}
+        recordCount={deleteFeeIds.length}
+        onSuccess={fetchData}
+      />
     </DashboardLayout>
   );
 }
