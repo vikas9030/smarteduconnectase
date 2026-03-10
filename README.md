@@ -55,7 +55,7 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Leave Requests** | Approve or reject leave applications from teachers and students; view/download attachments |
 | **Certificates** | Process certificate requests with document attachment download |
 | **Complaints** | Handle and respond to parent complaints with visibility-based filtering (admin/teacher) |
-| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation (blob download), Razorpay online payments, automated reminders |
+| **Fees** | Batch-assign fees by class/student, percentage-based discounts (flat or per-student), custom partial payments with Record Payment dialog, auto balance tracking, payment history log, PDF receipt generation (blob download), **PDF fee collection report export** (landscape, summary box, color-coded statuses, grand totals), Razorpay online payments, automated reminders |
 | **Messages** | Direct messaging system with file/image sharing |
 | **Gallery** | Manage photo gallery with folders |
 | **Notifications** | View and manage admin notifications |
