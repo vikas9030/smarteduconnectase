@@ -15,6 +15,7 @@ import {
   Award,
   UserPlus,
   Image,
+  ArrowUpCircle,
 } from 'lucide-react';
 
 interface SidebarItem {
