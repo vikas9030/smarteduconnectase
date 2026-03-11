@@ -18,6 +18,7 @@ interface MobileBottomNavProps {
 
 // Primary tab paths per role (order matters for display)
 const PRIMARY_PATHS: Record<string, string[]> = {
+  super_admin: ['/super-admin', '/super-admin/modules', '/super-admin/admins', '/super-admin/settings'],
   admin: ['/admin', '/admin/students', '/admin/messages', '/admin/attendance'],
   teacher: ['/teacher', '/teacher/attendance', '/teacher/homework', '/teacher/messages'],
   parent: ['/parent', '/parent/attendance', '/parent/exams', '/parent/messages'],
