@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useLeadPermissions } from '@/hooks/useLeadPermissions';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { getTeacherSidebarItems } from '@/config/teacherSidebar';
+import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
 import LeadEntryForm from '@/components/leads/LeadEntryForm';
 import LeadCallLogDialog from '@/components/leads/LeadCallLogDialog';
 import LeadExcelImport from '@/components/leads/LeadExcelImport';

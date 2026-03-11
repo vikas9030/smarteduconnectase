@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle } from 'lucide-react';
 import AttendanceSummary from '@/components/AttendanceSummary';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 
 interface ChildData {
   id: string;
@@ -27,6 +27,7 @@ interface ChildData {
 }
 
 export default function ParentChild() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [children, setChildren] = useState<ChildData[]>([]);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import LeadEntryForm from '@/components/leads/LeadEntryForm';
 import LeadCallLogDialog from '@/components/leads/LeadCallLogDialog';
 import LeadExcelImport from '@/components/leads/LeadExcelImport';
@@ -30,6 +30,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const CHART_COLORS = ['#3b82f6', '#22c55e', '#eab308', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
 
 export default function LeadsManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user } = useAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);

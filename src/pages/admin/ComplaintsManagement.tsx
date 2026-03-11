@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -40,6 +40,7 @@ interface Complaint {
 }
 
 export default function ComplaintsManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -55,7 +56,7 @@ export default function ComplaintsManagement() {
   const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0 });
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

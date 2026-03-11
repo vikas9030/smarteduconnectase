@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Calendar, Plus, Clock, CheckCircle2, XCircle, Paperclip, Download } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { useToast } from '@/hooks/use-toast';
 
 interface LeaveRequest {
@@ -25,6 +25,7 @@ interface LeaveRequest {
 }
 
 export default function ParentLeave() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

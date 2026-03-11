@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Loader2, Award, Plus, Clock, CheckCircle2, XCircle, FileText, Paperclip } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { useToast } from '@/hooks/use-toast';
 
 interface CertificateRequest {
@@ -35,6 +35,7 @@ const CERTIFICATE_TYPES = [
 ];
 
 export default function ParentCertificates() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

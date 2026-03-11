@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { BackButton } from '@/components/ui/back-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ interface GalleryImage {
 }
 
 export default function GalleryManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [folders, setFolders] = useState<GalleryFolder[]>([]);
@@ -42,7 +43,7 @@ export default function GalleryManagement() {
   const [editCaption, setEditCaption] = useState('');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
   useEffect(() => { fetchFolders(); }, []);

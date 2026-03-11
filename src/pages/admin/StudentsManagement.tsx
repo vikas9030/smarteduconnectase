@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,6 +58,7 @@ interface ClassItem {
 }
 
 export default function StudentsManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -70,7 +71,7 @@ export default function StudentsManagement() {
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

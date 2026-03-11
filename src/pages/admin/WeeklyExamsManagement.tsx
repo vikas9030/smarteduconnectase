@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { BackButton } from '@/components/ui/back-button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -58,6 +58,7 @@ interface ClassOption { id: string; name: string; section: string; }
 interface CycleOption { id: string; exam_type: string; cycle_number: number; is_active: boolean; }
 
 export default function WeeklyExamsManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [exams, setExams] = useState<WeeklyExam[]>([]);
@@ -89,7 +90,7 @@ export default function WeeklyExamsManagement() {
   });
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
   useEffect(() => { fetchData(); }, []);

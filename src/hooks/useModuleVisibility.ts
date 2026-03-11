@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ModuleVisibility {
@@ -21,11 +21,19 @@ async function fetchModules(): Promise<ModuleVisibility[]> {
   return (data as any[]) || [];
 }
 
+// Clear cache on auth state change
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT' || event === 'SIGNED_IN') {
+    cachedModules = null;
+    fetchPromise = null;
+  }
+});
+
 export function useModuleVisibility() {
   const [modules, setModules] = useState<ModuleVisibility[]>(cachedModules || []);
   const [loading, setLoading] = useState(!cachedModules);
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     setLoading(true);
     cachedModules = null;
     fetchPromise = null;
@@ -33,10 +41,10 @@ export function useModuleVisibility() {
     cachedModules = data;
     setModules(data);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
-    if (cachedModules) {
+    if (cachedModules && cachedModules.length > 0) {
       setModules(cachedModules);
       setLoading(false);
       return;
@@ -51,10 +59,10 @@ export function useModuleVisibility() {
     });
   }, []);
 
-  const isModuleEnabled = (key: string): boolean => {
+  const isModuleEnabled = useCallback((key: string): boolean => {
     const mod = modules.find((m) => m.module_key === key);
     return mod ? mod.is_enabled : true; // default enabled if not found
-  };
+  }, [modules]);
 
   return { modules, loading, isModuleEnabled, refetch };
 }

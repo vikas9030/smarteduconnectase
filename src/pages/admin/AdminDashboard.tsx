@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import StatCard from '@/components/StatCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +56,7 @@ interface TodayExam {
 }
 
 export default function AdminDashboard() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
@@ -74,7 +75,7 @@ export default function AdminDashboard() {
   const [profileName, setProfileName] = useState('Principal');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

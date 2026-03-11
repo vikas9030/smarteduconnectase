@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Award, CheckCircle2, XCircle, Clock, FileText, Download } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -31,6 +31,7 @@ interface CertificateRequest {
 }
 
 export default function CertificatesManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,7 +41,7 @@ export default function CertificatesManagement() {
   const [remarks, setRemarks] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

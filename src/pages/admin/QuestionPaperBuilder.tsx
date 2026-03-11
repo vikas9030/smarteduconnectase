@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { BackButton } from '@/components/ui/back-button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -66,6 +66,7 @@ const emptyQForm = {
 };
 
 export default function QuestionPaperBuilder() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -98,7 +99,7 @@ export default function QuestionPaperBuilder() {
   const [showCount, setShowCount] = useState(20);
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
   useEffect(() => { fetchData(); }, []);

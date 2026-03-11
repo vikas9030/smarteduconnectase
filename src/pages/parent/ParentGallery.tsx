@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { BackButton } from '@/components/ui/back-button';
 import { Loader2 } from 'lucide-react';
 import GalleryView from '@/components/gallery/GalleryView';
 
 export default function ParentGallery() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 

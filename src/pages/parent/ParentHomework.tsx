@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, BookOpen, Calendar, FileText, ExternalLink } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
 
@@ -21,6 +21,7 @@ interface Homework {
 }
 
 export default function ParentHomework() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [homework, setHomework] = useState<Homework[]>([]);

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function SettingsPage() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

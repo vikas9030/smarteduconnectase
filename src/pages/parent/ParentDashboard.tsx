@@ -21,7 +21,7 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 
 interface ChildData {
   id: string;
@@ -55,6 +55,7 @@ interface TodayScheduleExam {
 }
 
 export default function ParentDashboard() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [children, setChildren] = useState<ChildData[]>([]);
