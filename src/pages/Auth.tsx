@@ -306,7 +306,7 @@ export default function Auth() {
                   <ShieldCheck className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="font-display text-xl">Welcome to SmartEduConnect</CardTitle>
-                <CardDescription>Create the first admin account to get started</CardDescription>
+                <CardDescription>Create the Super Admin account to get started</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAdminSignup} className="space-y-4">
