@@ -41,7 +41,7 @@ serve(async (req) => {
 
     // Check if calling user is admin
     const { data: roleData } = await userClient.from("user_roles").select("role").eq("user_id", callingUser.id).single();
-    if (roleData?.role !== "admin") {
+    if (roleData?.role !== "admin" && roleData?.role !== "super_admin") {
       return new Response(JSON.stringify({ error: "Only admins can create users" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
