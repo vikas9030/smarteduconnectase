@@ -158,20 +158,7 @@ export default function ParentChild() {
           </Card>
         ) : (
           <>
-            {/* Active children */}
-            {activeChildren.map(child => renderChildCard(child))}
-
-            {/* Historical (promoted) children */}
-            {historicalChildren.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 pt-4">
-                  <History className="h-5 w-5 text-muted-foreground" />
-                  <h2 className="font-display text-lg font-semibold text-muted-foreground">Previous Academic Years</h2>
-                </div>
-                <p className="text-xs text-muted-foreground -mt-2">Historical records from past classes. Attendance, marks & fees data is preserved.</p>
-                {historicalChildren.map(child => renderChildCard(child, true))}
-              </div>
-            )}
+            {children.map(child => renderChildCard(child))}
           </>
         )}
       </div>
