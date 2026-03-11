@@ -87,6 +87,12 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             
+            {/* Super Admin Routes */}
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
+            <Route path="/super-admin/modules" element={<ModuleControl />} />
+            <Route path="/super-admin/admins" element={<ManageAdmins />} />
+            <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
+            
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/teachers" element={<TeachersManagement />} />
