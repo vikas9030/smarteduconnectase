@@ -94,7 +94,14 @@ export default function AttendanceManagement() {
     const { data } = await query;
 
     let filtered = data || [];
-    if (selectedClass !== 'all') {
+    if (globalSearch.trim()) {
+      // When global search is active, bypass class filter — show all matching students
+      const q = globalSearch.trim().toLowerCase();
+      filtered = filtered.filter(a =>
+        a.students?.full_name?.toLowerCase().includes(q) ||
+        a.students?.admission_number?.toLowerCase().includes(q)
+      );
+    } else if (selectedClass !== 'all') {
       filtered = filtered.filter(a => a.students?.class_id === selectedClass);
     }
 
