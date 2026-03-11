@@ -72,6 +72,11 @@ export default function ParentAttendance() {
     fetchChild();
   }, [user]);
 
+  // Fetch attendance when student is set
+  useEffect(() => {
+    if (selectedStudentId) fetchAttendance(new Date());
+  }, [selectedStudentId]);
+
   // Realtime subscription
   useEffect(() => {
     if (!selectedStudentId) return;
