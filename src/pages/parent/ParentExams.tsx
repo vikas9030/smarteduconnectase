@@ -106,10 +106,6 @@ export default function ParentExams() {
       if (!selectedStudentId) return;
       setLoadingData(true);
 
-      const child = allChildren.find(c => c.id === selectedStudentId);
-      setChildName(child?.full_name || '');
-      setChildClassIds(child?.class_id ? [child.class_id] : []);
-
       const [marksRes, weeklyRes] = await Promise.all([
         supabase.from('exam_marks')
           .select('*, exams(name, exam_date, max_marks, subjects(name))')
