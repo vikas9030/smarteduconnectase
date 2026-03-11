@@ -871,6 +871,33 @@ export type Database = {
           },
         ]
       }
+      module_visibility: {
+        Row: {
+          id: string
+          is_enabled: boolean
+          module_key: string
+          module_label: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          is_enabled?: boolean
+          module_key: string
+          module_label: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          is_enabled?: boolean
+          module_key?: string
+          module_label?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1927,6 +1954,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_or_super: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "teacher" | "parent" | "super_admin"
