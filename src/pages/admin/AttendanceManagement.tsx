@@ -217,16 +217,30 @@ export default function AttendanceManagement() {
           <p className="text-muted-foreground text-xs sm:text-sm">Click any date on the calendar to view attendance</p>
         </div>
 
-        {/* Class Filter */}
-        <Select value={selectedClass} onValueChange={setSelectedClass}>
-          <SelectTrigger className="w-full sm:w-[220px]"><SelectValue placeholder="Select class" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Classes</SelectItem>
-            {classes.map((c) => (
-              <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1 sm:max-w-[280px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search student (all classes)..."
+              className="pl-9"
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+            />
+          </div>
+          <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setGlobalSearch(''); }}>
+            <SelectTrigger className="w-full sm:w-[220px]"><SelectValue placeholder="Select class" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {classes.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name} - {c.section}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {globalSearch && (
+            <Badge variant="secondary" className="self-center text-xs">Showing all classes for "{globalSearch}"</Badge>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Calendar */}
