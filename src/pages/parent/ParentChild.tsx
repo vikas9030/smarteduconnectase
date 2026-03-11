@@ -74,10 +74,7 @@ export default function ParentChild() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const activeChildren = children.filter(c => c.status === 'active');
-  const historicalChildren = children.filter(c => c.status === 'promoted');
-
-  const renderChildCard = (child: ChildData, isHistorical = false) => (
+  const renderChildCard = (child: ChildData) => (
     <div key={child.id} className="space-y-4">
       <Card className={`card-elevated ${isHistorical ? 'opacity-80 border-dashed' : ''}`}>
         <CardContent className="pt-6">
