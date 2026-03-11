@@ -60,6 +60,7 @@ export default function AttendanceManagement() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [loadingData, setLoadingData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [globalSearch, setGlobalSearch] = useState('');
 
   useEffect(() => {
     if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
