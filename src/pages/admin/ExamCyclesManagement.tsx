@@ -11,12 +11,13 @@ import ExamCyclesTab from '@/components/exam-cycles/ExamCyclesTab';
 import WeeklyExamsTab from '@/components/exam-cycles/WeeklyExamsTab';
 
 export default function ExamCyclesManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('cycles');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
   if (loading) {

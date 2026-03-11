@@ -55,6 +55,7 @@ const ROLE_TYPES = [
 ];
 
 export default function SyllabusManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('general');
@@ -94,7 +95,7 @@ export default function SyllabusManagement() {
   const [bulkTopics, setBulkTopics] = useState('');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
   useEffect(() => { fetchData(); }, []);

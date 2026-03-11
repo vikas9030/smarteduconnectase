@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export default function SettingsPage() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
