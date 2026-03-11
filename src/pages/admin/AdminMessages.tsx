@@ -7,11 +7,12 @@ import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import MessagingInterface from '@/components/messaging/MessagingInterface';
 
 export default function AdminMessages() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

@@ -62,7 +62,7 @@ export default function AttendanceManagement() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

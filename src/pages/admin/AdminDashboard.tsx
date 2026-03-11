@@ -75,7 +75,7 @@ export default function AdminDashboard() {
   const [profileName, setProfileName] = useState('Principal');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);

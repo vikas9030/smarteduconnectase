@@ -43,7 +43,7 @@ export default function GalleryManagement() {
   const [editCaption, setEditCaption] = useState('');
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) navigate('/auth');
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) navigate('/auth');
   }, [user, userRole, loading, navigate]);
 
   useEffect(() => { fetchFolders(); }, []);

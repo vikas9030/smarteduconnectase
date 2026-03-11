@@ -56,7 +56,7 @@ export default function ComplaintsManagement() {
   const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0 });
 
   useEffect(() => {
-    if (!loading && (!user || userRole !== 'admin')) {
+    if (!loading && (!user || (userRole !== 'admin' && userRole !== 'super_admin'))) {
       navigate('/auth');
     }
   }, [user, userRole, loading, navigate]);
