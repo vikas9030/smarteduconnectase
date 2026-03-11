@@ -13,7 +13,7 @@ interface SidebarItem {
 
 interface MobileBottomNavProps {
   sidebarItems: SidebarItem[];
-  roleColor: 'admin' | 'teacher' | 'parent';
+  roleColor: 'super_admin' | 'admin' | 'teacher' | 'parent';
 }
 
 // Primary tab paths per role (order matters for display)
