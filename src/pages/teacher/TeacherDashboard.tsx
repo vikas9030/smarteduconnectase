@@ -23,8 +23,8 @@ import {
   FlaskConical,
 } from 'lucide-react';
 
-// Sidebar items from shared config with permission check
 import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
+import { useModuleVisibility } from '@/hooks/useModuleVisibility';
 
 interface DashboardStats {
   myClasses: number;
