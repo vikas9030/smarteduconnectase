@@ -15,7 +15,7 @@ import WeeklyExamCalendarView from '@/components/exams/WeeklyExamCalendarView';
 import { BackButton } from '@/components/ui/back-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ChildSelector from '@/components/parent/ChildSelector';
+
 
 interface ExamMark {
   id: string;
