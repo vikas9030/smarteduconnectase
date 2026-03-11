@@ -122,7 +122,7 @@ export default function ParentExams() {
       setLoadingData(false);
     }
     fetchMarks();
-  }, [selectedStudentId, allChildren]);
+  }, [selectedStudentId]);
 
   const examNames = useMemo(() => 
     [...new Set(marks.map(m => m.exams?.name).filter(Boolean))] as string[], [marks]);
