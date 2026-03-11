@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle } from 'lucide-react';
+import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle, History } from 'lucide-react';
 import AttendanceSummary from '@/components/AttendanceSummary';
 import { useParentSidebar } from '@/hooks/useParentSidebar';
 
@@ -74,11 +74,76 @@ export default function ParentChild() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const isLoadingContent = loadingData;
+  const activeChildren = children.filter(c => c.status === 'active');
+  const historicalChildren = children.filter(c => c.status === 'promoted');
+
+  const renderChildCard = (child: ChildData, isHistorical = false) => (
+    <div key={child.id} className="space-y-4">
+      <Card className={`card-elevated ${isHistorical ? 'opacity-80 border-dashed' : ''}`}>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col items-center">
+              <Avatar className="h-32 w-32 ring-4 ring-accent/20">
+                <AvatarImage src={child.photo_url || ''} />
+                <AvatarFallback className="gradient-parent text-white text-3xl">
+                  {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <Badge className="mt-3" variant={child.status === 'active' ? 'default' : 'secondary'}>
+                {child.status === 'promoted' ? '📁 Promoted' : child.status || 'Active'}
+              </Badge>
+            </div>
+
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Full Name</p>
+                  <p className="font-semibold">{child.full_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Admission Number</p>
+                  <Badge variant="outline"><GraduationCap className="h-3 w-3 mr-1" />{child.admission_number}</Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Class</p>
+                  <p className="font-medium">{child.classes ? `${child.classes.name} - ${child.classes.section}` : 'Not assigned'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" />Date of Birth</p>
+                  <p className="font-medium">{child.date_of_birth ? new Date(child.date_of_birth).toLocaleDateString() : '-'}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Droplet className="h-3 w-3" />Blood Group</p>
+                  <p className="font-medium">{child.blood_group || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />Address</p>
+                  <p className="font-medium text-sm">{child.address || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />Parent Contact</p>
+                  <p className="font-medium">{child.parent_phone || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3 w-3" />Emergency Contact</p>
+                  <p className="font-medium">{child.emergency_contact_name} - {child.emergency_contact || '-'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AttendanceSummary studentId={child.id} />
+    </div>
+  );
 
   return (
     <DashboardLayout sidebarItems={parentSidebarItems} roleColor="parent">
-      {isLoadingContent ? (
+      {loadingData ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : (
       <div className="space-y-6 animate-fade-in">
@@ -95,69 +160,22 @@ export default function ParentChild() {
             </CardContent>
           </Card>
         ) : (
-          children.map((child) => (
-            <div key={child.id} className="space-y-4">
-              <Card className="card-elevated">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex flex-col items-center">
-                      <Avatar className="h-32 w-32 ring-4 ring-accent/20">
-                        <AvatarImage src={child.photo_url || ''} />
-                        <AvatarFallback className="gradient-parent text-white text-3xl">
-                          {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <Badge className="mt-3" variant={child.status === 'active' ? 'default' : 'secondary'}>
-                        {child.status || 'Active'}
-                      </Badge>
-                    </div>
+          <>
+            {/* Active children */}
+            {activeChildren.map(child => renderChildCard(child))}
 
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Full Name</p>
-                          <p className="font-semibold">{child.full_name}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Admission Number</p>
-                          <Badge variant="outline"><GraduationCap className="h-3 w-3 mr-1" />{child.admission_number}</Badge>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Class</p>
-                          <p className="font-medium">{child.classes ? `${child.classes.name} - ${child.classes.section}` : 'Not assigned'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" />Date of Birth</p>
-                          <p className="font-medium">{child.date_of_birth ? new Date(child.date_of_birth).toLocaleDateString() : '-'}</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Droplet className="h-3 w-3" />Blood Group</p>
-                          <p className="font-medium">{child.blood_group || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />Address</p>
-                          <p className="font-medium text-sm">{child.address || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />Parent Contact</p>
-                          <p className="font-medium">{child.parent_phone || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1"><AlertCircle className="h-3 w-3" />Emergency Contact</p>
-                          <p className="font-medium">{child.emergency_contact_name} - {child.emergency_contact || '-'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <AttendanceSummary studentId={child.id} />
-            </div>
-          ))
+            {/* Historical (promoted) children */}
+            {historicalChildren.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pt-4">
+                  <History className="h-5 w-5 text-muted-foreground" />
+                  <h2 className="font-display text-lg font-semibold text-muted-foreground">Previous Academic Years</h2>
+                </div>
+                <p className="text-xs text-muted-foreground -mt-2">Historical records from past classes. Attendance, marks & fees data is preserved.</p>
+                {historicalChildren.map(child => renderChildCard(child, true))}
+              </div>
+            )}
+          </>
         )}
       </div>
       )}

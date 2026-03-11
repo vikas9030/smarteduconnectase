@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Calendar, FileText, RotateCcw, FlaskConical, Award, BookOpen } from 'lucide-react';
+import { Loader2, Calendar, FileText, RotateCcw, FlaskConical, BookOpen } from 'lucide-react';
 import { useParentSidebar } from '@/hooks/useParentSidebar';
 import StudentProgressView from '@/components/exams/StudentProgressView';
 import ExamScheduleView from '@/components/exams/ExamScheduleView';
@@ -15,6 +15,7 @@ import WeeklyExamCalendarView from '@/components/exams/WeeklyExamCalendarView';
 import { BackButton } from '@/components/ui/back-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ChildSelector from '@/components/parent/ChildSelector';
 
 interface ExamMark {
   id: string;
@@ -47,10 +48,21 @@ interface WeeklyResult {
   } | null;
 }
 
+interface ChildOption {
+  id: string;
+  full_name: string;
+  admission_number: string;
+  status: string | null;
+  class_id: string | null;
+  classes: { name: string; section: string } | null;
+}
+
 export default function ParentExams() {
   const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
+  const [allChildren, setAllChildren] = useState<ChildOption[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
   const [marks, setMarks] = useState<ExamMark[]>([]);
   const [weeklyResults, setWeeklyResults] = useState<WeeklyResult[]>([]);
   const [childName, setChildName] = useState('');
@@ -67,80 +79,79 @@ export default function ParentExams() {
     }
   }, [user, userRole, loading, navigate]);
 
+  // Fetch all children
   useEffect(() => {
-    async function fetchMarks() {
+    async function fetchChildren() {
       if (!user) return;
-      setLoadingData(true);
-
       const { data: parentData } = await supabase
-        .from('parents')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .from('parents').select('id').eq('user_id', user.id).maybeSingle();
 
       if (parentData) {
         const { data: links } = await supabase
-          .from('student_parents')
-          .select('student_id, students(full_name, class_id)')
-          .eq('parent_id', parentData.id);
+          .from('student_parents').select('student_id').eq('parent_id', parentData.id);
 
         if (links && links.length > 0) {
-          const studentId = links[0].student_id;
-          const student = (links[0] as any).students;
-          setChildName(student?.full_name || '');
-          
-          const classIds = links
-            .map((l: any) => l.students?.class_id)
-            .filter(Boolean) as string[];
-          setChildClassIds(classIds);
+          const { data: studentsData } = await supabase
+            .from('students')
+            .select('id, full_name, admission_number, status, class_id, classes(name, section)')
+            .in('id', links.map(l => l.student_id))
+            .order('status', { ascending: true });
 
-          // Fetch regular exam marks
-          const { data: marksData } = await supabase
-            .from('exam_marks')
-            .select('*, exams(name, exam_date, max_marks, subjects(name))')
-            .eq('student_id', studentId)
-            .order('created_at', { ascending: false });
-
-          if (marksData) setMarks(marksData as ExamMark[]);
-
-          // Fetch weekly/competitive exam results
-          const { data: weeklyData } = await supabase
-            .from('student_exam_results')
-            .select('*, weekly_exams(exam_title, exam_date, total_marks, syllabus_type, exam_type_label, subjects(name), classes(name, section))')
-            .eq('student_id', studentId)
-            .order('created_at', { ascending: false });
-
-          if (weeklyData) setWeeklyResults(weeklyData as unknown as WeeklyResult[]);
+          if (studentsData) {
+            const children = studentsData as ChildOption[];
+            setAllChildren(children);
+            const active = children.find(c => c.status === 'active') || children[0];
+            if (active) setSelectedStudentId(active.id);
+          }
         }
       }
+    }
+    fetchChildren();
+  }, [user]);
+
+  // Fetch marks when selected student changes
+  useEffect(() => {
+    async function fetchMarks() {
+      if (!selectedStudentId) return;
+      setLoadingData(true);
+
+      const child = allChildren.find(c => c.id === selectedStudentId);
+      setChildName(child?.full_name || '');
+      setChildClassIds(child?.class_id ? [child.class_id] : []);
+
+      const [marksRes, weeklyRes] = await Promise.all([
+        supabase.from('exam_marks')
+          .select('*, exams(name, exam_date, max_marks, subjects(name))')
+          .eq('student_id', selectedStudentId)
+          .order('created_at', { ascending: false }),
+        supabase.from('student_exam_results')
+          .select('*, weekly_exams(exam_title, exam_date, total_marks, syllabus_type, exam_type_label, subjects(name), classes(name, section))')
+          .eq('student_id', selectedStudentId)
+          .order('created_at', { ascending: false }),
+      ]);
+
+      if (marksRes.data) setMarks(marksRes.data as ExamMark[]);
+      if (weeklyRes.data) setWeeklyResults(weeklyRes.data as unknown as WeeklyResult[]);
       setLoadingData(false);
     }
     fetchMarks();
-  }, [user]);
+  }, [selectedStudentId, allChildren]);
 
   const examNames = useMemo(() => 
-    [...new Set(marks.map(m => m.exams?.name).filter(Boolean))] as string[],
-    [marks]
-  );
+    [...new Set(marks.map(m => m.exams?.name).filter(Boolean))] as string[], [marks]);
 
   const filteredMarks = useMemo(() => {
     if (selectedExam === 'all') return marks;
     return marks.filter(m => m.exams?.name === selectedExam);
   }, [marks, selectedExam]);
 
-  // Group weekly results by type
   const competitiveResults = useMemo(() => weeklyResults.filter(r => r.weekly_exams?.syllabus_type === 'competitive'), [weeklyResults]);
   const generalWeeklyResults = useMemo(() => weeklyResults.filter(r => r.weekly_exams?.syllabus_type === 'general'), [weeklyResults]);
 
-  // Competitive filter options
   const competitiveExamNames = useMemo(() =>
-    [...new Set(competitiveResults.map(r => r.weekly_exams?.exam_title).filter(Boolean))] as string[],
-    [competitiveResults]
-  );
+    [...new Set(competitiveResults.map(r => r.weekly_exams?.exam_title).filter(Boolean))] as string[], [competitiveResults]);
   const competitiveLabels = useMemo(() =>
-    [...new Set(competitiveResults.map(r => r.weekly_exams?.exam_type_label).filter(Boolean))] as string[],
-    [competitiveResults]
-  );
+    [...new Set(competitiveResults.map(r => r.weekly_exams?.exam_type_label).filter(Boolean))] as string[], [competitiveResults]);
   const filteredCompetitiveResults = useMemo(() => {
     return competitiveResults.filter(r => {
       if (competitiveExamFilter !== 'all' && r.weekly_exams?.exam_title !== competitiveExamFilter) return false;
@@ -163,28 +174,19 @@ export default function ParentExams() {
   const WeeklyResultsSection = ({ results, title, icon }: { results: WeeklyResult[]; title: string; icon: React.ReactNode }) => {
     if (results.length === 0) {
       return (
-        <Card>
-          <CardContent className="py-6 sm:py-8 text-center text-muted-foreground text-xs sm:text-sm">
-            <p>No {title.toLowerCase()} results yet.</p>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="py-6 sm:py-8 text-center text-muted-foreground text-xs sm:text-sm"><p>No {title.toLowerCase()} results yet.</p></CardContent></Card>
       );
     }
-
     const totalObtained = results.reduce((s, r) => s + r.obtained_marks, 0);
     const totalMax = results.reduce((s, r) => s + r.total_marks, 0);
     const overallPct = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0;
 
     return (
       <div className="space-y-3 sm:space-y-4">
-        {/* Summary card */}
         <Card className="border-primary/20">
           <CardHeader className="pb-2 sm:pb-3 bg-primary/5 px-3 sm:px-6 py-2.5 sm:py-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs sm:text-base flex items-center gap-1.5 sm:gap-2">
-                {icon}
-                {title}
-              </CardTitle>
+              <CardTitle className="text-xs sm:text-base flex items-center gap-1.5 sm:gap-2">{icon}{title}</CardTitle>
               <div className="text-right">
                 <p className={`text-lg sm:text-2xl font-bold ${getPctColor(overallPct)}`}>{overallPct.toFixed(1)}%</p>
                 <p className="text-[10px] sm:text-xs text-muted-foreground">Overall</p>
@@ -197,80 +199,49 @@ export default function ParentExams() {
           </CardContent>
         </Card>
 
-        {/* Mobile: Card list, Desktop: Table */}
         <div className="hidden sm:block">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Exam</TableHead>
-                    <TableHead className="text-xs">Subject</TableHead>
-                    <TableHead className="text-xs text-center">Marks</TableHead>
-                    <TableHead className="text-xs text-center">%</TableHead>
-                    {results.some(r => r.rank) && <TableHead className="text-xs text-center">Rank</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {results.map(r => {
-                    const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
-                    return (
-                      <TableRow key={r.id}>
-                        <TableCell className="py-2">
-                          <div>
-                            <p className="font-medium text-xs">{r.weekly_exams?.exam_title}</p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                              {r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="capitalize text-xs">{r.weekly_exams?.subjects?.name || '-'}</TableCell>
-                        <TableCell className="text-center text-xs">
-                          <span className="font-semibold">{r.obtained_marks}</span>
-                          <span className="text-muted-foreground">/{r.total_marks}</span>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className={`font-semibold text-xs ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
-                        </TableCell>
-                        {results.some(r2 => r2.rank) && (
-                          <TableCell className="text-center text-xs font-medium">{r.rank || '-'}</TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <Card><CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead className="text-xs">Exam</TableHead>
+                <TableHead className="text-xs">Subject</TableHead>
+                <TableHead className="text-xs text-center">Marks</TableHead>
+                <TableHead className="text-xs text-center">%</TableHead>
+                {results.some(r => r.rank) && <TableHead className="text-xs text-center">Rank</TableHead>}
+              </TableRow></TableHeader>
+              <TableBody>
+                {results.map(r => {
+                  const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="py-2"><div><p className="font-medium text-xs">{r.weekly_exams?.exam_title}</p><p className="text-[10px] text-muted-foreground">{new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}{r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}</p></div></TableCell>
+                      <TableCell className="capitalize text-xs">{r.weekly_exams?.subjects?.name || '-'}</TableCell>
+                      <TableCell className="text-center text-xs"><span className="font-semibold">{r.obtained_marks}</span><span className="text-muted-foreground">/{r.total_marks}</span></TableCell>
+                      <TableCell className="text-center"><span className={`font-semibold text-xs ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span></TableCell>
+                      {results.some(r2 => r2.rank) && <TableCell className="text-center text-xs font-medium">{r.rank || '-'}</TableCell>}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
         </div>
 
-        {/* Mobile card list */}
         <div className="sm:hidden space-y-2">
           {results.map(r => {
             const pct = r.percentage ?? (r.total_marks > 0 ? (r.obtained_marks / r.total_marks) * 100 : 0);
             return (
-              <Card key={r.id}>
-                <CardContent className="p-2.5 space-y-1.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-xs truncate">{r.weekly_exams?.exam_title}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        {r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}
-                      </p>
-                    </div>
-                    <span className={`font-bold text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 capitalize">{r.weekly_exams?.subjects?.name || '-'}</Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      <span className="font-semibold text-foreground">{r.obtained_marks}</span>/{r.total_marks}
-                    </span>
-                    {r.rank && <Badge variant="outline" className="text-[9px] px-1.5 py-0">Rank: {r.rank}</Badge>}
-                  </div>
-                </CardContent>
-              </Card>
+              <Card key={r.id}><CardContent className="p-2.5 space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1"><p className="font-medium text-xs truncate">{r.weekly_exams?.exam_title}</p><p className="text-[10px] text-muted-foreground">{new Date(r.weekly_exams?.exam_date || '').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}{r.weekly_exams?.exam_type_label && ` • ${r.weekly_exams.exam_type_label}`}</p></div>
+                  <span className={`font-bold text-sm ${getPctColor(pct)}`}>{pct.toFixed(0)}%</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 capitalize">{r.weekly_exams?.subjects?.name || '-'}</Badge>
+                  <span className="text-[10px] text-muted-foreground"><span className="font-semibold text-foreground">{r.obtained_marks}</span>/{r.total_marks}</span>
+                  {r.rank && <Badge variant="outline" className="text-[9px] px-1.5 py-0">Rank: {r.rank}</Badge>}
+                </div>
+              </CardContent></Card>
             );
           })}
         </div>
@@ -290,24 +261,14 @@ export default function ParentExams() {
           <p className="text-xs sm:text-sm text-muted-foreground">{childName}'s exam schedule & results</p>
         </div>
 
+        <ChildSelector children={allChildren} selectedId={selectedStudentId} onSelect={(id) => { setSelectedStudentId(id); setSelectedExam('all'); }} />
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 h-8 sm:h-10">
-            <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="truncate">Schedule</span>
-            </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-              <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="truncate">Weekly</span>
-            </TabsTrigger>
-            <TabsTrigger value="results" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="truncate">Results</span>
-            </TabsTrigger>
-            <TabsTrigger value="competitive" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3">
-              <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="truncate">Comp.</span>
-            </TabsTrigger>
+            <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3"><Calendar className="h-3 w-3 sm:h-4 sm:w-4" /><span className="truncate">Schedule</span></TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3"><RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" /><span className="truncate">Weekly</span></TabsTrigger>
+            <TabsTrigger value="results" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3"><FileText className="h-3 w-3 sm:h-4 sm:w-4" /><span className="truncate">Results</span></TabsTrigger>
+            <TabsTrigger value="competitive" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3"><FlaskConical className="h-3 w-3 sm:h-4 sm:w-4" /><span className="truncate">Comp.</span></TabsTrigger>
           </TabsList>
 
           <TabsContent value="schedule" className="mt-3 sm:mt-4">
@@ -319,28 +280,18 @@ export default function ParentExams() {
           </TabsContent>
 
           <TabsContent value="results" className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
-              <div className="flex justify-end">
-                <Select value={selectedExam} onValueChange={setSelectedExam}>
-                  <SelectTrigger className="w-[150px] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9">
-                    <SelectValue placeholder="Filter by Exam" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Exams</SelectItem>
-                    {examNames.map(name => (
-                      <SelectItem key={name} value={name}>{name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex justify-end">
+              <Select value={selectedExam} onValueChange={setSelectedExam}>
+                <SelectTrigger className="w-[150px] sm:w-[180px] text-[10px] sm:text-xs h-7 sm:h-9"><SelectValue placeholder="Filter by Exam" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {examNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <StudentProgressView marks={filteredMarks} studentName={childName} showAnalytics={true} />
-
-            {/* General Weekly Results */}
             {generalWeeklyResults.length > 0 && (
-              <WeeklyResultsSection 
-                results={generalWeeklyResults} 
-                title="Weekly Exam Results" 
-                icon={<BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />} 
-              />
+              <WeeklyResultsSection results={generalWeeklyResults} title="Weekly Exam Results" icon={<BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />} />
             )}
           </TabsContent>
 
@@ -348,36 +299,24 @@ export default function ParentExams() {
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {competitiveExamNames.length > 0 && (
                 <Select value={competitiveExamFilter} onValueChange={setCompetitiveExamFilter}>
-                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[170px] text-[10px] sm:text-xs h-7 sm:h-9">
-                    <SelectValue placeholder="Filter by Exam" />
-                  </SelectTrigger>
+                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[170px] text-[10px] sm:text-xs h-7 sm:h-9"><SelectValue placeholder="Filter by Exam" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Exams</SelectItem>
-                    {competitiveExamNames.map(name => (
-                      <SelectItem key={name} value={name}>{name}</SelectItem>
-                    ))}
+                    {competitiveExamNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
               {competitiveLabels.length > 0 && (
                 <Select value={competitiveLabelFilter} onValueChange={setCompetitiveLabelFilter}>
-                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[170px] text-[10px] sm:text-xs h-7 sm:h-9">
-                    <SelectValue placeholder="Exam Type" />
-                  </SelectTrigger>
+                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[170px] text-[10px] sm:text-xs h-7 sm:h-9"><SelectValue placeholder="Exam Type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    {competitiveLabels.map(label => (
-                      <SelectItem key={label} value={label}>{label}</SelectItem>
-                    ))}
+                    {competitiveLabels.map(label => <SelectItem key={label} value={label}>{label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
             </div>
-            <WeeklyResultsSection 
-              results={filteredCompetitiveResults} 
-              title="Competitive Exam Results" 
-              icon={<FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />} 
-            />
+            <WeeklyResultsSection results={filteredCompetitiveResults} title="Competitive Exam Results" icon={<FlaskConical className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />} />
           </TabsContent>
         </Tabs>
       </div>
