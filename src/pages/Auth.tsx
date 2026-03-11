@@ -66,7 +66,8 @@ export default function Auth() {
     }
     
     if (!loading && user && userRole) {
-      navigate(`/${userRole}`);
+      const path = userRole === 'super_admin' ? '/super-admin' : `/${userRole}`;
+      navigate(path);
     }
   }, [user, userRole, loading, navigate]);
 
@@ -306,7 +307,7 @@ export default function Auth() {
                   <ShieldCheck className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="font-display text-xl">Welcome to SmartEduConnect</CardTitle>
-                <CardDescription>Create the first admin account to get started</CardDescription>
+                <CardDescription>Create the Super Admin account to get started</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAdminSignup} className="space-y-4">
@@ -359,7 +360,7 @@ export default function Auth() {
 
                   <Button type="submit" className="w-full gradient-primary" disabled={isLoading}>
                     {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Create Admin Account
+                    Create Super Admin Account
                   </Button>
                 </form>
               </CardContent>

@@ -10,7 +10,8 @@ export default function Index() {
 
   useEffect(() => {
     if (!loading && user && userRole) {
-      navigate(`/${userRole}`);
+      const path = userRole === 'super_admin' ? '/super-admin' : `/${userRole}`;
+      navigate(path);
     }
   }, [user, userRole, loading, navigate]);
 

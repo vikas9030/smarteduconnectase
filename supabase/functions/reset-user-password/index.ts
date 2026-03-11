@@ -7,13 +7,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify the requesting user is an admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "No authorization header" }), {
@@ -22,7 +20,6 @@ serve(async (req) => {
       });
     }
 
-    // Create client with user's token to verify they're admin
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -39,85 +36,47 @@ serve(async (req) => {
       });
     }
 
-    // Check if calling user is admin
+    // Check if calling user is super_admin
     const { data: roleData } = await userClient.from("user_roles").select("role").eq("user_id", callingUser.id).single();
-    if (roleData?.role !== "admin" && roleData?.role !== "super_admin") {
-      return new Response(JSON.stringify({ error: "Only admins can create users" }), {
+    if (roleData?.role !== "super_admin") {
+      return new Response(JSON.stringify({ error: "Only super admins can reset passwords" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Parse request body
-    const { email, password, fullName, role, phone } = await req.json();
+    const { targetUserId, newPassword } = await req.json();
 
-    if (!email || !password || !fullName || !role) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+    if (!targetUserId || !newPassword) {
+      return new Response(JSON.stringify({ error: "Missing targetUserId or newPassword" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Super admin can create admins; both can create teacher/parent
-    const allowedRoles = roleData?.role === "super_admin" 
-      ? ["admin", "teacher", "parent"] 
-      : ["teacher", "parent"];
-    if (!allowedRoles.includes(role)) {
-      return new Response(JSON.stringify({ error: "Invalid role for your permission level" }), {
+    if (newPassword.length < 6) {
+      return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Use service role client to create user (won't affect admin's session)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Create user with admin API
-    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        role,
-        phone,
-      },
+    const { error: updateError } = await adminClient.auth.admin.updateUserById(targetUserId, {
+      password: newPassword,
     });
 
-    if (createError) {
-      return new Response(JSON.stringify({ error: createError.message }), {
+    if (updateError) {
+      return new Response(JSON.stringify({ error: updateError.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = newUser.user.id;
-
-    // Create profile for the new user
-    const { error: profileError } = await adminClient.from("profiles").insert({
-      user_id: userId,
-      full_name: fullName,
-      email: email,
-      phone: phone || null,
-    });
-
-    if (profileError) {
-      console.error("Error creating profile:", profileError);
-    }
-
-    // Create user role
-    const { error: roleError } = await adminClient.from("user_roles").insert({
-      user_id: userId,
-      role: role,
-    });
-
-    if (roleError) {
-      console.error("Error creating role:", roleError);
-    }
-
-    return new Response(JSON.stringify({ user: newUser.user }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

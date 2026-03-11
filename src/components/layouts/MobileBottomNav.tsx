@@ -13,11 +13,12 @@ interface SidebarItem {
 
 interface MobileBottomNavProps {
   sidebarItems: SidebarItem[];
-  roleColor: 'admin' | 'teacher' | 'parent';
+  roleColor: 'super_admin' | 'admin' | 'teacher' | 'parent';
 }
 
 // Primary tab paths per role (order matters for display)
 const PRIMARY_PATHS: Record<string, string[]> = {
+  super_admin: ['/super-admin', '/super-admin/modules', '/super-admin/admins', '/super-admin/settings'],
   admin: ['/admin', '/admin/students', '/admin/messages', '/admin/attendance'],
   teacher: ['/teacher', '/teacher/attendance', '/teacher/homework', '/teacher/messages'],
   parent: ['/parent', '/parent/attendance', '/parent/exams', '/parent/messages'],
@@ -25,6 +26,7 @@ const PRIMARY_PATHS: Record<string, string[]> = {
 
 // Index where "More" button should be inserted (0-indexed among primary items)
 const MORE_BUTTON_INDEX: Record<string, number> = {
+  super_admin: 4,
   admin: 2,
   teacher: 2,
   parent: 2,
@@ -46,12 +48,14 @@ export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBotto
   const moreItems = sidebarItems.filter(item => !primaryPaths.includes(item.path));
 
   const activeColor = {
+    super_admin: 'text-[hsl(270,60%,50%)]',
     admin: 'text-primary',
     teacher: 'text-[hsl(152,35%,16%)]',
     parent: 'text-[hsl(210,8%,45%)]',
   }[roleColor];
 
   const moreBg = {
+    super_admin: 'bg-[hsl(270,60%,50%)]',
     admin: 'bg-primary',
     teacher: 'bg-[hsl(152,35%,16%)]',
     parent: 'bg-[hsl(210,8%,45%)]',

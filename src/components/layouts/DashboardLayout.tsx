@@ -53,7 +53,7 @@ interface SidebarItem {
 interface DashboardLayoutProps {
   children: ReactNode;
   sidebarItems: SidebarItem[];
-  roleColor: 'admin' | 'teacher' | 'parent';
+  roleColor: 'super_admin' | 'admin' | 'teacher' | 'parent';
 }
 
 interface ProfileDetails {
@@ -186,12 +186,14 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
   };
 
   const roleGradient = {
+    super_admin: 'gradient-admin',
     admin: 'gradient-admin',
     teacher: 'gradient-teacher',
     parent: 'gradient-parent',
   }[roleColor];
 
   const roleLabel = {
+    super_admin: 'Super Admin',
     admin: 'Administrator',
     teacher: 'Teacher',
     parent: 'Parent',
@@ -211,6 +213,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         className={cn(
           "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative h-screen flex-shrink-0",
           sidebarOpen ? "w-64" : "w-20",
+          roleColor === 'super_admin' && "sidebar-super-admin",
           roleColor === 'teacher' && "sidebar-teacher",
           roleColor === 'parent' && "sidebar-parent"
         )}
@@ -340,7 +343,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         {/* Page Content */}
         <main
           className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 overflow-y-auto"
-          style={roleColor === 'teacher' ? {
+          style={roleColor === 'super_admin' ? {
+            '--primary': '270 60% 50%',
+            '--primary-foreground': '0 0% 100%',
+            '--ring': '270 60% 50%',
+          } as React.CSSProperties : roleColor === 'teacher' ? {
             '--primary': '152 35% 16%',
             '--primary-foreground': '0 0% 100%',
             '--ring': '152 35% 16%',

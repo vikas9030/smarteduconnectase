@@ -30,6 +30,12 @@ import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
 
+// Super Admin Pages
+import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
+import ModuleControl from "./pages/super-admin/ModuleControl";
+import ManageAdmins from "./pages/super-admin/ManageAdmins";
+import SuperAdminSettings from "./pages/super-admin/SuperAdminSettings";
+
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -80,6 +86,12 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Super Admin Routes */}
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
+            <Route path="/super-admin/modules" element={<ModuleControl />} />
+            <Route path="/super-admin/admins" element={<ManageAdmins />} />
+            <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
