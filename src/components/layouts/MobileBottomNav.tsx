@@ -26,6 +26,7 @@ const PRIMARY_PATHS: Record<string, string[]> = {
 
 // Index where "More" button should be inserted (0-indexed among primary items)
 const MORE_BUTTON_INDEX: Record<string, number> = {
+  super_admin: 4,
   admin: 2,
   teacher: 2,
   parent: 2,
