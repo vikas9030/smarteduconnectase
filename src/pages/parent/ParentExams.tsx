@@ -48,20 +48,10 @@ interface WeeklyResult {
   } | null;
 }
 
-interface ChildOption {
-  id: string;
-  full_name: string;
-  admission_number: string;
-  status: string | null;
-  class_id: string | null;
-  classes: { name: string; section: string } | null;
-}
-
 export default function ParentExams() {
   const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
-  const [allChildren, setAllChildren] = useState<ChildOption[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [marks, setMarks] = useState<ExamMark[]>([]);
   const [weeklyResults, setWeeklyResults] = useState<WeeklyResult[]>([]);
