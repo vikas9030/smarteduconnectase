@@ -60,6 +60,8 @@ Smart EduConnect is a full-stack school ERP that digitizes day-to-day school ope
 | **Gallery** | Manage photo gallery with folders |
 | **Notifications** | View and manage admin notifications |
 | **Settings** | App configuration, module toggles, and lead permissions |
+| **Student Promotion** | Promote students to next class with in-place record update — admission number & login ID auto-regenerated as `{Name}-{Class}-{Section}`, bulk or individual selection, retained students marked separately, all historical data (attendance, marks, fees) stays linked to same student ID |
+| **Historical Data Search** | Cross-class student search in Attendance & Fees modules — type a student name or admission number to bypass class filters and view their complete historical records across all academic years |
 
 ### 👩‍🏫 Teacher Panel
 | Module | Description |
