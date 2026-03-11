@@ -66,6 +66,7 @@ interface CompExam {
 export default function TeacherDashboard() {
   const teacherSidebarItems = useTeacherSidebar();
   const { isModuleEnabled } = useModuleVisibility();
+  const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     myClasses: 0,
