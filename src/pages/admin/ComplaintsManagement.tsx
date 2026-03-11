@@ -40,6 +40,7 @@ interface Complaint {
 }
 
 export default function ComplaintsManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
