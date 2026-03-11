@@ -247,11 +247,11 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {[
-                  { icon: <Users />, label: 'Add Teacher', path: '/admin/teachers' },
-                  { icon: <GraduationCap />, label: 'View Students', path: '/admin/students' },
-                  { icon: <Bell />, label: 'Announcement', path: '/admin/announcements' },
-                  { icon: <FileText />, label: 'View Reports', path: '/admin/attendance' },
-                ].map((action, index) => (
+                  { icon: <Users />, label: 'Add Teacher', path: '/admin/teachers', moduleKey: 'teachers' },
+                  { icon: <GraduationCap />, label: 'View Students', path: '/admin/students', moduleKey: 'students' },
+                  { icon: <Bell />, label: 'Announcement', path: '/admin/announcements', moduleKey: 'announcements' },
+                  { icon: <FileText />, label: 'View Reports', path: '/admin/attendance', moduleKey: 'attendance' },
+                ].filter(a => !a.moduleKey || isModuleEnabled(a.moduleKey)).map((action, index) => (
                   <button
                     key={index}
                     onClick={() => navigate(action.path)}
