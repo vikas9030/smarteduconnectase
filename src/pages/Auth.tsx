@@ -359,7 +359,7 @@ export default function Auth() {
 
                   <Button type="submit" className="w-full gradient-primary" disabled={isLoading}>
                     {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                    Create Admin Account
+                    Create Super Admin Account
                   </Button>
                 </form>
               </CardContent>
