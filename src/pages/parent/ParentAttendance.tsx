@@ -8,7 +8,6 @@ import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { BackButton } from '@/components/ui/back-button';
 import AttendanceCalendar from '@/components/attendance/AttendanceCalendar';
-import ChildSelector from '@/components/parent/ChildSelector';
 
 interface AttendanceRecord {
   id: string;
@@ -18,20 +17,11 @@ interface AttendanceRecord {
   reason: string | null;
 }
 
-interface ChildOption {
-  id: string;
-  full_name: string;
-  admission_number: string;
-  status: string | null;
-  classes: { name: string; section: string } | null;
-}
-
 export default function ParentAttendance() {
   const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [allChildren, setAllChildren] = useState<ChildOption[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [childName, setChildName] = useState('');
   const [childClass, setChildClass] = useState('');
@@ -44,9 +34,9 @@ export default function ParentAttendance() {
     }
   }, [user, userRole, loading, navigate]);
 
-  // Fetch all linked children (active + promoted)
+  // Fetch linked child
   useEffect(() => {
-    async function fetchChildren() {
+    async function fetchChild() {
       if (!user) return;
       const { data: parentData } = await supabase
         .from('parents')
@@ -65,32 +55,22 @@ export default function ParentAttendance() {
             .from('students')
             .select('id, full_name, admission_number, status, classes(name, section)')
             .in('id', links.map(l => l.student_id))
-            .order('status', { ascending: true }); // active first
+            .eq('status', 'active')
+            .limit(1)
+            .maybeSingle();
 
           if (studentsData) {
-            const children = studentsData as ChildOption[];
-            setAllChildren(children);
-            // Default to first active child
-            const active = children.find(c => c.status === 'active') || children[0];
-            if (active) setSelectedStudentId(active.id);
+            const child = studentsData as any;
+            setSelectedStudentId(child.id);
+            setChildName(child.full_name);
+            setAdmissionNo(child.admission_number);
+            setChildClass(child.classes ? `${child.classes.name}-${child.classes.section}` : '');
           }
         }
       }
     }
-    fetchChildren();
+    fetchChild();
   }, [user]);
-
-  // When selected student changes, update display info
-  useEffect(() => {
-    if (!selectedStudentId) return;
-    const child = allChildren.find(c => c.id === selectedStudentId);
-    if (child) {
-      setChildName(child.full_name);
-      setAdmissionNo(child.admission_number);
-      setChildClass(child.classes ? `${child.classes.name}-${child.classes.section}` : '');
-      fetchAttendance(new Date());
-    }
-  }, [selectedStudentId, allChildren]);
 
   // Realtime subscription
   useEffect(() => {
