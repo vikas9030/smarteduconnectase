@@ -125,8 +125,12 @@ export default function StudentPromotion() {
 
       for (const student of selectedStudents) {
         // 1. Create new student record for the new class
-        const baseAdmission = student.admission_number.replace(/-\d{4}$/, ''); // strip old year suffix if present
-        const newAdmissionNumber = `${baseAdmission}-${yearSuffix}`;
+        // Extract serial number: strip class/section prefix and year suffix
+        const serial = student.admission_number
+          .replace(/^[A-Za-z0-9]+[A-Za-z]\//, '') // strip leading class prefix like "5A/"
+          .replace(/\/\d{4}$/, '')                 // strip trailing year suffix like "/2526"
+          .replace(/-\d{4}$/, '');                 // strip old dash-year suffix like "-2526"
+        const newAdmissionNumber = `${targetClass?.name || ''}${targetClass?.section || ''}/${serial}/${yearSuffix}`;
 
         const { data: newStudent, error: insertError } = await supabase
           .from('students')
