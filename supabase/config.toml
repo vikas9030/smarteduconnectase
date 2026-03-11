@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.verify-razorpay-payment]
 verify_jwt = false
+
+[functions.reset-user-password]
+verify_jwt = false

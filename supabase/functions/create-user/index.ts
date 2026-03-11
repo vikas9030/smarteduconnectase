@@ -58,8 +58,12 @@ serve(async (req) => {
       });
     }
 
-    if (!["teacher", "parent"].includes(role)) {
-      return new Response(JSON.stringify({ error: "Invalid role" }), {
+    // Super admin can create admins; both can create teacher/parent
+    const allowedRoles = roleData?.role === "super_admin" 
+      ? ["admin", "teacher", "parent"] 
+      : ["teacher", "parent"];
+    if (!allowedRoles.includes(role)) {
+      return new Response(JSON.stringify({ error: "Invalid role for your permission level" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

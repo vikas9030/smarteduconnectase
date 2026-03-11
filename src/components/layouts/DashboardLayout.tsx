@@ -342,7 +342,11 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         {/* Page Content */}
         <main
           className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6 overflow-y-auto"
-          style={roleColor === 'teacher' ? {
+          style={roleColor === 'super_admin' ? {
+            '--primary': '270 60% 50%',
+            '--primary-foreground': '0 0% 100%',
+            '--ring': '270 60% 50%',
+          } as React.CSSProperties : roleColor === 'teacher' ? {
             '--primary': '152 35% 16%',
             '--primary-foreground': '0 0% 100%',
             '--ring': '152 35% 16%',

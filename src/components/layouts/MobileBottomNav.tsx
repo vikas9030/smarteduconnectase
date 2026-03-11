@@ -48,12 +48,14 @@ export default function MobileBottomNav({ sidebarItems, roleColor }: MobileBotto
   const moreItems = sidebarItems.filter(item => !primaryPaths.includes(item.path));
 
   const activeColor = {
+    super_admin: 'text-[hsl(270,60%,50%)]',
     admin: 'text-primary',
     teacher: 'text-[hsl(152,35%,16%)]',
     parent: 'text-[hsl(210,8%,45%)]',
   }[roleColor];
 
   const moreBg = {
+    super_admin: 'bg-[hsl(270,60%,50%)]',
     admin: 'bg-primary',
     teacher: 'bg-[hsl(152,35%,16%)]',
     parent: 'bg-[hsl(210,8%,45%)]',
