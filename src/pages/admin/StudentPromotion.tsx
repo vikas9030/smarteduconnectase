@@ -172,10 +172,10 @@ export default function StudentPromotion() {
           }
         }
 
-        // 3. Mark old student record as promoted
+        // 3. Mark old student record as promoted and clear login_id to avoid unique constraint conflicts
         await supabase
           .from('students')
-          .update({ status: 'promoted' })
+          .update({ status: 'promoted', login_id: null })
           .eq('id', student.id);
 
         promotedCount++;
