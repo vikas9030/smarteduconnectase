@@ -72,7 +72,7 @@ export default function AttendanceManagement() {
 
   useEffect(() => {
     fetchMonthAttendance();
-  }, [selectedClass, currentMonth]);
+  }, [selectedClass, currentMonth, globalSearch]);
 
   const fetchClasses = async () => {
     const { data } = await supabase.from('classes').select('*').order('name');
