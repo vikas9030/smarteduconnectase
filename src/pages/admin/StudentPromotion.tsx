@@ -114,70 +114,36 @@ export default function StudentPromotion() {
     try {
       const selectedStudents = students.filter(s => selectedIds.has(s.id));
       const retainedStudents = students.filter(s => !selectedIds.has(s.id));
-
-      // Generate academic year suffix for new admission numbers
       const targetClass = classes.find(c => c.id === toClass);
-      const yearSuffix = targetClass?.academic_year
-        ? targetClass.academic_year.replace('-', '').slice(-4)
-        : new Date().getFullYear().toString().slice(-2) + (new Date().getFullYear() + 1).toString().slice(-2);
 
       let promotedCount = 0;
 
       for (const student of selectedStudents) {
-        // 1. Create new student record for the new class
-        // Extract serial number: strip class/section prefix and year suffix
-        const serial = student.admission_number
-          .replace(/^[A-Za-z0-9]+[A-Za-z]\//, '') // strip leading class prefix like "5A/"
-          .replace(/\/\d{4}$/, '')                 // strip trailing year suffix like "/2526"
-          .replace(/-\d{4}$/, '');                 // strip old dash-year suffix like "-2526"
-        const newAdmissionNumber = `${targetClass?.name || ''}${targetClass?.section || ''}/${serial}/${yearSuffix}`;
+        // Extract base name from admission number (e.g., "KALYAN-2-A" → "KALYAN")
+        // Supports formats: NAME-CLASS-SECTION, or CLASS/NAME/YEAR, or plain text
+        let baseName = student.admission_number;
+        // Strip class-section suffix like "-2-A"
+        baseName = baseName.replace(/-[^-]+-[^-]+$/, '');
+        // Strip class prefix like "5A/"
+        baseName = baseName.replace(/^[A-Za-z0-9]+[A-Za-z]\//, '');
+        // Strip year suffix like "/2526"
+        baseName = baseName.replace(/\/\d{4}$/, '');
+        // If nothing useful remains, use full_name
+        if (!baseName.trim()) baseName = student.full_name.toUpperCase().replace(/\s+/g, '');
 
-        const { data: newStudent, error: insertError } = await supabase
+        const newAdmissionNumber = `${baseName}-${targetClass?.name || ''}-${targetClass?.section || ''}`;
+
+        // UPDATE existing student record in-place
+        const { error: updateError } = await supabase
           .from('students')
-          .insert({
-            full_name: student.full_name,
-            admission_number: newAdmissionNumber,
+          .update({
             class_id: toClass,
-            photo_url: student.photo_url,
-            date_of_birth: student.date_of_birth,
-            blood_group: student.blood_group,
-            address: student.address,
-            parent_name: student.parent_name,
-            parent_phone: student.parent_phone,
-            emergency_contact: student.emergency_contact,
-            emergency_contact_name: student.emergency_contact_name,
+            admission_number: newAdmissionNumber,
             login_id: newAdmissionNumber,
-            user_id: student.user_id,
-            status: 'active',
           })
-          .select('id')
-          .single();
-
-        if (insertError) throw insertError;
-
-        // 2. Link same parent(s) to the new student record
-        if (newStudent) {
-          const { data: parentLinks } = await supabase
-            .from('student_parents')
-            .select('parent_id, relationship')
-            .eq('student_id', student.id);
-
-          if (parentLinks && parentLinks.length > 0) {
-            const newLinks = parentLinks.map(pl => ({
-              student_id: newStudent.id,
-              parent_id: pl.parent_id,
-              relationship: pl.relationship,
-            }));
-            await supabase.from('student_parents').insert(newLinks);
-          }
-        }
-
-        // 3. Mark old student record as promoted and clear login_id to avoid unique constraint conflicts
-        await supabase
-          .from('students')
-          .update({ status: 'promoted', login_id: null })
           .eq('id', student.id);
 
+        if (updateError) throw updateError;
         promotedCount++;
       }
 
@@ -190,7 +156,7 @@ export default function StudentPromotion() {
       }
 
       setResult({ promoted: promotedCount, retained: retainedStudents.length });
-      toast.success(`${promotedCount} students promoted successfully with new records`);
+      toast.success(`${promotedCount} students promoted successfully`);
       
       setStudents([]);
       setSelectedIds(new Set());
