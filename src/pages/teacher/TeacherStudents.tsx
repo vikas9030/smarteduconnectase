@@ -557,6 +557,9 @@ export default function TeacherStudents() {
                       <Button variant="ghost" size="icon" onClick={() => openEditStudent(student)}>
                         <Edit className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => { setDeleteStudent(student); setDeleteConfirmOpen(true); }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
