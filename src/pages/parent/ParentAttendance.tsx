@@ -8,6 +8,7 @@ import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { BackButton } from '@/components/ui/back-button';
 import AttendanceCalendar from '@/components/attendance/AttendanceCalendar';
+import ChildSelector from '@/components/parent/ChildSelector';
 
 interface AttendanceRecord {
   id: string;
@@ -17,15 +18,24 @@ interface AttendanceRecord {
   reason: string | null;
 }
 
+interface ChildOption {
+  id: string;
+  full_name: string;
+  admission_number: string;
+  status: string | null;
+  classes: { name: string; section: string } | null;
+}
+
 export default function ParentAttendance() {
   const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [allChildren, setAllChildren] = useState<ChildOption[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>('');
   const [childName, setChildName] = useState('');
   const [childClass, setChildClass] = useState('');
   const [admissionNo, setAdmissionNo] = useState('');
-  const [studentId, setStudentId] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -34,8 +44,9 @@ export default function ParentAttendance() {
     }
   }, [user, userRole, loading, navigate]);
 
+  // Fetch all linked children (active + promoted)
   useEffect(() => {
-    async function fetchChild() {
+    async function fetchChildren() {
       if (!user) return;
       const { data: parentData } = await supabase
         .from('parents')
@@ -46,52 +57,55 @@ export default function ParentAttendance() {
       if (parentData) {
         const { data: links } = await supabase
           .from('student_parents')
-          .select('student_id, students(full_name, admission_number, classes(name, section))')
+          .select('student_id')
           .eq('parent_id', parentData.id);
 
         if (links && links.length > 0) {
-          const student = (links[0] as any).students;
-          setStudentId(links[0].student_id);
-          setChildName(student?.full_name || '');
-          setAdmissionNo(student?.admission_number || '');
-          setChildClass(student?.classes ? `${student.classes.name}-${student.classes.section}` : '');
+          const { data: studentsData } = await supabase
+            .from('students')
+            .select('id, full_name, admission_number, status, classes(name, section)')
+            .in('id', links.map(l => l.student_id))
+            .order('status', { ascending: true }); // active first
+
+          if (studentsData) {
+            const children = studentsData as ChildOption[];
+            setAllChildren(children);
+            // Default to first active child
+            const active = children.find(c => c.status === 'active') || children[0];
+            if (active) setSelectedStudentId(active.id);
+          }
         }
       }
     }
-    fetchChild();
+    fetchChildren();
   }, [user]);
 
+  // When selected student changes, update display info
   useEffect(() => {
-    if (studentId) fetchAttendance(new Date());
-  }, [studentId]);
+    if (!selectedStudentId) return;
+    const child = allChildren.find(c => c.id === selectedStudentId);
+    if (child) {
+      setChildName(child.full_name);
+      setAdmissionNo(child.admission_number);
+      setChildClass(child.classes ? `${child.classes.name}-${child.classes.section}` : '');
+      fetchAttendance(new Date());
+    }
+  }, [selectedStudentId, allChildren]);
 
-  // Realtime subscription — parent sees updates instantly when teacher marks attendance
+  // Realtime subscription
   useEffect(() => {
-    if (!studentId) return;
-
+    if (!selectedStudentId) return;
     const channel = supabase
       .channel('parent-attendance-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'attendance',
-          filter: `student_id=eq.${studentId}`,
-        },
-        (payload) => {
-          fetchAttendance(new Date(), true);
-        }
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance', filter: `student_id=eq.${selectedStudentId}` },
+        () => fetchAttendance(new Date(), true)
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [studentId]);
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedStudentId]);
 
   const fetchAttendance = async (month: Date, isBackground = false) => {
-    if (!studentId) return;
+    if (!selectedStudentId) return;
     if (!isBackground) setLoadingData(true);
     const sixMonthsAgo = format(subMonths(startOfMonth(month), 5), 'yyyy-MM-dd');
     const monthEnd = format(endOfMonth(month), 'yyyy-MM-dd');
@@ -99,7 +113,7 @@ export default function ParentAttendance() {
     const { data } = await supabase
       .from('attendance')
       .select('id, date, status, session, reason')
-      .eq('student_id', studentId)
+      .eq('student_id', selectedStudentId)
       .gte('date', sixMonthsAgo)
       .lte('date', monthEnd)
       .order('date', { ascending: false });
@@ -125,6 +139,8 @@ export default function ParentAttendance() {
           <h1 className="font-display text-2xl font-bold">Attendance</h1>
           <p className="text-muted-foreground text-sm">{childName}'s attendance calendar — Click any day for details</p>
         </div>
+
+        <ChildSelector children={allChildren} selectedId={selectedStudentId} onSelect={setSelectedStudentId} />
 
         <AttendanceCalendar
           attendance={attendance}

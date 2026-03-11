@@ -21,12 +21,22 @@ interface Student {
   admission_number: string;
   photo_url: string | null;
   status: string | null;
+  date_of_birth: string | null;
+  blood_group: string | null;
+  address: string | null;
+  parent_name: string | null;
+  parent_phone: string | null;
+  emergency_contact: string | null;
+  emergency_contact_name: string | null;
+  login_id: string | null;
+  user_id: string | null;
 }
 
 interface ClassItem {
   id: string;
   name: string;
   section: string;
+  academic_year: string;
 }
 
 export default function StudentPromotion() {
@@ -51,7 +61,7 @@ export default function StudentPromotion() {
   }, [user, userRole, loading, navigate]);
 
   useEffect(() => {
-    supabase.from('classes').select('id, name, section').order('name').then(({ data }) => {
+    supabase.from('classes').select('id, name, section, academic_year').order('name').then(({ data }) => {
       if (data) setClasses(data);
     });
   }, []);
@@ -65,7 +75,7 @@ export default function StudentPromotion() {
     setLoadingStudents(true);
     supabase
       .from('students')
-      .select('id, full_name, admission_number, photo_url, status')
+      .select('id, full_name, admission_number, photo_url, status, date_of_birth, blood_group, address, parent_name, parent_phone, emergency_contact, emergency_contact_name, login_id, user_id')
       .eq('class_id', fromClass)
       .eq('status', 'active')
       .order('full_name')
@@ -102,29 +112,82 @@ export default function StudentPromotion() {
     setConfirmOpen(false);
 
     try {
-      const selectedArray = Array.from(selectedIds);
-      const retainedIds = students.filter(s => !selectedIds.has(s.id)).map(s => s.id);
+      const selectedStudents = students.filter(s => selectedIds.has(s.id));
+      const retainedStudents = students.filter(s => !selectedIds.has(s.id));
 
-      // Promote selected students
-      const { error: promoteError } = await supabase
-        .from('students')
-        .update({ class_id: toClass })
-        .in('id', selectedArray);
+      // Generate academic year suffix for new admission numbers
+      const targetClass = classes.find(c => c.id === toClass);
+      const yearSuffix = targetClass?.academic_year
+        ? targetClass.academic_year.replace('-', '').slice(-4)
+        : new Date().getFullYear().toString().slice(-2) + (new Date().getFullYear() + 1).toString().slice(-2);
 
-      if (promoteError) throw promoteError;
+      let promotedCount = 0;
+
+      for (const student of selectedStudents) {
+        // 1. Create new student record for the new class
+        const baseAdmission = student.admission_number.replace(/-\d{4}$/, ''); // strip old year suffix if present
+        const newAdmissionNumber = `${baseAdmission}-${yearSuffix}`;
+
+        const { data: newStudent, error: insertError } = await supabase
+          .from('students')
+          .insert({
+            full_name: student.full_name,
+            admission_number: newAdmissionNumber,
+            class_id: toClass,
+            photo_url: student.photo_url,
+            date_of_birth: student.date_of_birth,
+            blood_group: student.blood_group,
+            address: student.address,
+            parent_name: student.parent_name,
+            parent_phone: student.parent_phone,
+            emergency_contact: student.emergency_contact,
+            emergency_contact_name: student.emergency_contact_name,
+            login_id: student.login_id,
+            user_id: student.user_id,
+            status: 'active',
+          })
+          .select('id')
+          .single();
+
+        if (insertError) throw insertError;
+
+        // 2. Link same parent(s) to the new student record
+        if (newStudent) {
+          const { data: parentLinks } = await supabase
+            .from('student_parents')
+            .select('parent_id, relationship')
+            .eq('student_id', student.id);
+
+          if (parentLinks && parentLinks.length > 0) {
+            const newLinks = parentLinks.map(pl => ({
+              student_id: newStudent.id,
+              parent_id: pl.parent_id,
+              relationship: pl.relationship,
+            }));
+            await supabase.from('student_parents').insert(newLinks);
+          }
+        }
+
+        // 3. Mark old student record as promoted
+        await supabase
+          .from('students')
+          .update({ status: 'promoted' })
+          .eq('id', student.id);
+
+        promotedCount++;
+      }
 
       // Mark unselected students as retained
-      if (retainedIds.length > 0) {
+      if (retainedStudents.length > 0) {
         await supabase
           .from('students')
           .update({ status: 'retained' })
-          .in('id', retainedIds);
+          .in('id', retainedStudents.map(s => s.id));
       }
 
-      setResult({ promoted: selectedArray.length, retained: retainedIds.length });
-      toast.success(`${selectedArray.length} students promoted successfully`);
+      setResult({ promoted: promotedCount, retained: retainedStudents.length });
+      toast.success(`${promotedCount} students promoted successfully with new records`);
       
-      // Refresh student list
       setStudents([]);
       setSelectedIds(new Set());
       setFromClass('');
@@ -148,10 +211,9 @@ export default function StudentPromotion() {
             <ArrowUpCircle className="h-6 w-6 text-primary" />
             Student Promotion
           </h1>
-          <p className="text-muted-foreground mt-1">Promote students to the next class. All historical data (attendance, marks, fees) is preserved.</p>
+          <p className="text-muted-foreground mt-1">Promote students to the next class. A new student record is created per class — all old data (attendance, marks, fees) stays preserved on the previous record.</p>
         </div>
 
-        {/* Success Result */}
         {result && (
           <Card className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
             <CardContent className="pt-6">
@@ -160,9 +222,10 @@ export default function StudentPromotion() {
                 <div>
                   <p className="font-semibold text-green-800 dark:text-green-300">Promotion Complete!</p>
                   <p className="text-sm text-green-700 dark:text-green-400">
-                    {result.promoted} student{result.promoted !== 1 ? 's' : ''} promoted
+                    {result.promoted} student{result.promoted !== 1 ? 's' : ''} promoted with new records
                     {result.retained > 0 && `, ${result.retained} retained`}
                   </p>
+                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Parents can now see both current and previous year data.</p>
                 </div>
               </div>
               <Button variant="outline" className="mt-4" onClick={() => setResult(null)}>
@@ -174,7 +237,6 @@ export default function StudentPromotion() {
 
         {!result && (
           <>
-            {/* Class Selection */}
             <Card className="card-elevated">
               <CardHeader>
                 <CardTitle className="text-lg">Select Classes</CardTitle>
@@ -195,9 +257,7 @@ export default function StudentPromotion() {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <ArrowRight className="h-5 w-5 text-muted-foreground shrink-0 mt-6 sm:mt-0" />
-
                   <div className="w-full sm:flex-1">
                     <p className="text-sm font-medium mb-2">To Class</p>
                     <Select value={toClass} onValueChange={setToClass} disabled={!fromClass}>
@@ -215,7 +275,6 @@ export default function StudentPromotion() {
               </CardContent>
             </Card>
 
-            {/* Student List */}
             {fromClass && (
               <Card className="card-elevated">
                 <CardHeader>
@@ -284,7 +343,6 @@ export default function StudentPromotion() {
               </Card>
             )}
 
-            {/* Promote Button */}
             {fromClass && toClass && selectedIds.size > 0 && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="pt-6">
@@ -295,6 +353,9 @@ export default function StudentPromotion() {
                       </p>
                       <p className="text-sm text-muted-foreground">
                         From <strong>{fromClassData?.name} - {fromClassData?.section}</strong> → <strong>{toClassData?.name} - {toClassData?.section}</strong>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        New student records will be created. Old records with attendance, marks & fees will be preserved.
                       </p>
                       {students.length - selectedIds.size > 0 && (
                         <p className="text-sm text-amber-600 mt-1">
@@ -319,7 +380,6 @@ export default function StudentPromotion() {
           </>
         )}
 
-        {/* Confirmation Dialog */}
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -328,10 +388,11 @@ export default function StudentPromotion() {
                 You are about to promote <strong>{selectedIds.size}</strong> student{selectedIds.size !== 1 ? 's' : ''} from{' '}
                 <strong>{fromClassData?.name} - {fromClassData?.section}</strong> to{' '}
                 <strong>{toClassData?.name} - {toClassData?.section}</strong>.
+                <br /><br />
+                New student records will be created in the target class. The old records (with all attendance, marks, and fees) will be preserved with status "promoted". Parents will be able to see both current and historical data.
                 {students.length - selectedIds.size > 0 && (
                   <> {students.length - selectedIds.size} student{students.length - selectedIds.size !== 1 ? 's' : ''} will be marked as retained.</>
                 )}
-                {' '}All historical data will be preserved. This action cannot be easily undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

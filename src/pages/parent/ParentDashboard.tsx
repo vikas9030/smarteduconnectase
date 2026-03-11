@@ -105,8 +105,12 @@ export default function ParentDashboard() {
               .in('id', studentIds);
 
             if (studentsData) {
-              setChildren(studentsData as ChildData[]);
-              classIds = studentsData.map((s: any) => s.class_id).filter(Boolean);
+              // Show only active children on dashboard; historical data accessible in sub-pages
+              const activeStudents = studentsData.filter((s: any) => s.status === 'active' || !s.status);
+              setChildren((activeStudents.length > 0 ? activeStudents : studentsData) as ChildData[]);
+              classIds = activeStudents.map((s: any) => s.class_id).filter(Boolean);
+              // Use all student IDs for fee counts (including historical)
+              studentIds = studentsData.map((s: any) => s.id);
             }
           }
         }
