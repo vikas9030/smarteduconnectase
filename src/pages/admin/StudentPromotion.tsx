@@ -324,9 +324,9 @@ export default function StudentPromotion() {
                       <p className="text-sm text-muted-foreground">
                         From <strong>{fromClassData?.name} - {fromClassData?.section}</strong> → <strong>{toClassData?.name} - {toClassData?.section}</strong>
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        New student records will be created. Old records with attendance, marks & fees will be preserved.
-                      </p>
+                       <p className="text-xs text-muted-foreground mt-1">
+                        Student records will be updated in-place with new class, admission number & login ID.
+                       </p>
                       {students.length - selectedIds.size > 0 && (
                         <p className="text-sm text-amber-600 mt-1">
                           <AlertTriangle className="h-3 w-3 inline mr-1" />
