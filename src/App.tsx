@@ -30,6 +30,12 @@ import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
 
+// Super Admin Pages
+import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
+import ModuleControl from "./pages/super-admin/ModuleControl";
+import ManageAdmins from "./pages/super-admin/ManageAdmins";
+import SuperAdminSettings from "./pages/super-admin/SuperAdminSettings";
+
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
