@@ -186,12 +186,14 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
   };
 
   const roleGradient = {
+    super_admin: 'gradient-admin',
     admin: 'gradient-admin',
     teacher: 'gradient-teacher',
     parent: 'gradient-parent',
   }[roleColor];
 
   const roleLabel = {
+    super_admin: 'Super Admin',
     admin: 'Administrator',
     teacher: 'Teacher',
     parent: 'Parent',
