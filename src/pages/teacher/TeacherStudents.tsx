@@ -435,8 +435,32 @@ export default function TeacherStudents() {
       setIsSubmitting(false);
     }
   };
+  const handleDeleteStudent = async () => {
+    if (!deleteStudent) return;
+    setIsDeleting(true);
+    try {
+      // Clean up related records first
+      await supabase.from('student_parents').delete().eq('student_id', deleteStudent.id);
+      const { error } = await supabase.from('students').delete().eq('id', deleteStudent.id);
+      if (error) throw error;
+      toast.success(`${deleteStudent.full_name} deleted successfully`);
+      setDeleteConfirmOpen(false);
+      setDeleteStudent(null);
+      // Refresh
+      const { data } = await supabase
+        .from('students')
+        .select('*, classes(name, section)')
+        .eq('class_id', selectedClass)
+        .order('full_name');
+      if (data) setStudents(data);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete student');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
-  if (loading) {
+
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
