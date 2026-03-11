@@ -76,7 +76,7 @@ export default function ParentChild() {
 
   const renderChildCard = (child: ChildData) => (
     <div key={child.id} className="space-y-4">
-      <Card className={`card-elevated ${isHistorical ? 'opacity-80 border-dashed' : ''}`}>
+      <Card className="card-elevated">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center">
