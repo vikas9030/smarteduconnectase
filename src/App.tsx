@@ -29,6 +29,7 @@ import GalleryManagement from "./pages/admin/GalleryManagement";
 import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
+import StudentPromotion from "./pages/admin/StudentPromotion";
 
 // Super Admin Pages
 import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="/admin/gallery" element={<GalleryManagement />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/weekly-exams" element={<WeeklyExamsManagement />} />
+            <Route path="/admin/promotion" element={<StudentPromotion />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
             
             {/* Teacher Routes */}

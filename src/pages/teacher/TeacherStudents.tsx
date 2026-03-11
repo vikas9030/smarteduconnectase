@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,6 +39,7 @@ import {
   Upload,
   Copy,
   Check,
+  Trash2,
 } from 'lucide-react';
 import { BackButton } from '@/components/ui/back-button';
 
@@ -89,7 +91,9 @@ export default function TeacherStudents() {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string>('');
-
+  const [deleteStudent, setDeleteStudent] = useState<Student | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -431,6 +435,30 @@ export default function TeacherStudents() {
       setIsSubmitting(false);
     }
   };
+  const handleDeleteStudent = async () => {
+    if (!deleteStudent) return;
+    setIsDeleting(true);
+    try {
+      // Clean up related records first
+      await supabase.from('student_parents').delete().eq('student_id', deleteStudent.id);
+      const { error } = await supabase.from('students').delete().eq('id', deleteStudent.id);
+      if (error) throw error;
+      toast.success(`${deleteStudent.full_name} deleted successfully`);
+      setDeleteConfirmOpen(false);
+      setDeleteStudent(null);
+      // Refresh
+      const { data } = await supabase
+        .from('students')
+        .select('*, classes(name, section)')
+        .eq('class_id', selectedClass)
+        .order('full_name');
+      if (data) setStudents(data);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete student');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -528,6 +556,9 @@ export default function TeacherStudents() {
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => openEditStudent(student)}>
                         <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => { setDeleteStudent(student); setDeleteConfirmOpen(true); }}>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -1024,6 +1055,25 @@ export default function TeacherStudents() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{deleteStudent?.full_name}</strong>? This will remove the student record and parent link. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteStudent} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={isDeleting}>
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
