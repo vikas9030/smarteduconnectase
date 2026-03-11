@@ -195,7 +195,7 @@ export default function StudentPromotion() {
                     {result.promoted} student{result.promoted !== 1 ? 's' : ''} promoted with new records
                     {result.retained > 0 && `, ${result.retained} retained`}
                   </p>
-                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Parents can now see both current and previous year data.</p>
+                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Student records updated with new class, admission number & login ID.</p>
                 </div>
               </div>
               <Button variant="outline" className="mt-4" onClick={() => setResult(null)}>

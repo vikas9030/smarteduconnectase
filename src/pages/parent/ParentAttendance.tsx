@@ -120,8 +120,6 @@ export default function ParentAttendance() {
           <p className="text-muted-foreground text-sm">{childName}'s attendance calendar — Click any day for details</p>
         </div>
 
-        <ChildSelector children={allChildren} selectedId={selectedStudentId} onSelect={setSelectedStudentId} />
-
         <AttendanceCalendar
           attendance={attendance}
           childName={childName}

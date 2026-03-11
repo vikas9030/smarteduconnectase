@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle, History } from 'lucide-react';
+import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle } from 'lucide-react';
 import AttendanceSummary from '@/components/AttendanceSummary';
 import { useParentSidebar } from '@/hooks/useParentSidebar';
 

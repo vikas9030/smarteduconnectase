@@ -248,8 +248,6 @@ export default function ParentExams() {
           <p className="text-xs sm:text-sm text-muted-foreground">{childName}'s exam schedule & results</p>
         </div>
 
-        <ChildSelector children={allChildren} selectedId={selectedStudentId} onSelect={(id) => { setSelectedStudentId(id); setSelectedExam('all'); }} />
-
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 h-8 sm:h-10">
             <TabsTrigger value="schedule" className="flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-sm px-1 sm:px-3"><Calendar className="h-3 w-3 sm:h-4 sm:w-4" /><span className="truncate">Schedule</span></TabsTrigger>
