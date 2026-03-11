@@ -181,7 +181,7 @@ export default function StudentPromotion() {
             <ArrowUpCircle className="h-6 w-6 text-primary" />
             Student Promotion
           </h1>
-          <p className="text-muted-foreground mt-1">Promote students to the next class. A new student record is created per class — all old data (attendance, marks, fees) stays preserved on the previous record.</p>
+          <p className="text-muted-foreground mt-1">Promote students to the next class. The student record is updated in-place — all data (attendance, marks, fees) stays linked.</p>
         </div>
 
         {result && (
