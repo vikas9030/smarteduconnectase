@@ -1,8 +1,9 @@
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import NotificationsPage from '@/components/notifications/NotificationsPage';
 
 export default function AdminNotifications() {
+  const adminSidebarItems = useAdminSidebar();
   return (
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
       <NotificationsPage />

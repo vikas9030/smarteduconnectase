@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { adminSidebarItems } from '@/config/adminSidebar';
+import { useAdminSidebar } from '@/hooks/useAdminSidebar';
 import LeadEntryForm from '@/components/leads/LeadEntryForm';
 import LeadCallLogDialog from '@/components/leads/LeadCallLogDialog';
 import LeadExcelImport from '@/components/leads/LeadExcelImport';
