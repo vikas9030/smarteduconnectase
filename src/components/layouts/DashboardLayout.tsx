@@ -213,6 +213,7 @@ export default function DashboardLayout({ children, sidebarItems, roleColor }: D
         className={cn(
           "hidden lg:flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-in-out overflow-hidden relative h-screen flex-shrink-0",
           sidebarOpen ? "w-64" : "w-20",
+          roleColor === 'super_admin' && "sidebar-super-admin",
           roleColor === 'teacher' && "sidebar-teacher",
           roleColor === 'parent' && "sidebar-parent"
         )}
