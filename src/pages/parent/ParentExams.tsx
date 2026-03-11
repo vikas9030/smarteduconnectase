@@ -15,7 +15,7 @@ import WeeklyExamCalendarView from '@/components/exams/WeeklyExamCalendarView';
 import { BackButton } from '@/components/ui/back-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ChildSelector from '@/components/parent/ChildSelector';
+
 
 interface ExamMark {
   id: string;
@@ -48,20 +48,10 @@ interface WeeklyResult {
   } | null;
 }
 
-interface ChildOption {
-  id: string;
-  full_name: string;
-  admission_number: string;
-  status: string | null;
-  class_id: string | null;
-  classes: { name: string; section: string } | null;
-}
-
 export default function ParentExams() {
   const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
-  const [allChildren, setAllChildren] = useState<ChildOption[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [marks, setMarks] = useState<ExamMark[]>([]);
   const [weeklyResults, setWeeklyResults] = useState<WeeklyResult[]>([]);
@@ -79,9 +69,9 @@ export default function ParentExams() {
     }
   }, [user, userRole, loading, navigate]);
 
-  // Fetch all children
+  // Fetch active child
   useEffect(() => {
-    async function fetchChildren() {
+    async function fetchChild() {
       if (!user) return;
       const { data: parentData } = await supabase
         .from('parents').select('id').eq('user_id', user.id).maybeSingle();
@@ -93,20 +83,21 @@ export default function ParentExams() {
         if (links && links.length > 0) {
           const { data: studentsData } = await supabase
             .from('students')
-            .select('id, full_name, admission_number, status, class_id, classes(name, section)')
+            .select('id, full_name, class_id, classes(name, section)')
             .in('id', links.map(l => l.student_id))
-            .order('status', { ascending: true });
+            .eq('status', 'active')
+            .limit(1)
+            .maybeSingle();
 
           if (studentsData) {
-            const children = studentsData as ChildOption[];
-            setAllChildren(children);
-            const active = children.find(c => c.status === 'active') || children[0];
-            if (active) setSelectedStudentId(active.id);
+            setSelectedStudentId(studentsData.id);
+            setChildName(studentsData.full_name);
+            setChildClassIds(studentsData.class_id ? [studentsData.class_id] : []);
           }
         }
       }
     }
-    fetchChildren();
+    fetchChild();
   }, [user]);
 
   // Fetch marks when selected student changes
@@ -114,10 +105,6 @@ export default function ParentExams() {
     async function fetchMarks() {
       if (!selectedStudentId) return;
       setLoadingData(true);
-
-      const child = allChildren.find(c => c.id === selectedStudentId);
-      setChildName(child?.full_name || '');
-      setChildClassIds(child?.class_id ? [child.class_id] : []);
 
       const [marksRes, weeklyRes] = await Promise.all([
         supabase.from('exam_marks')
@@ -135,7 +122,7 @@ export default function ParentExams() {
       setLoadingData(false);
     }
     fetchMarks();
-  }, [selectedStudentId, allChildren]);
+  }, [selectedStudentId]);
 
   const examNames = useMemo(() => 
     [...new Set(marks.map(m => m.exams?.name).filter(Boolean))] as string[], [marks]);
@@ -260,8 +247,6 @@ export default function ParentExams() {
           <h1 className="font-display text-lg sm:text-2xl font-bold">Exams</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{childName}'s exam schedule & results</p>
         </div>
-
-        <ChildSelector children={allChildren} selectedId={selectedStudentId} onSelect={(id) => { setSelectedStudentId(id); setSelectedExam('all'); }} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 h-8 sm:h-10">

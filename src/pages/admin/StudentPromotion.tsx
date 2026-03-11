@@ -114,70 +114,36 @@ export default function StudentPromotion() {
     try {
       const selectedStudents = students.filter(s => selectedIds.has(s.id));
       const retainedStudents = students.filter(s => !selectedIds.has(s.id));
-
-      // Generate academic year suffix for new admission numbers
       const targetClass = classes.find(c => c.id === toClass);
-      const yearSuffix = targetClass?.academic_year
-        ? targetClass.academic_year.replace('-', '').slice(-4)
-        : new Date().getFullYear().toString().slice(-2) + (new Date().getFullYear() + 1).toString().slice(-2);
 
       let promotedCount = 0;
 
       for (const student of selectedStudents) {
-        // 1. Create new student record for the new class
-        // Extract serial number: strip class/section prefix and year suffix
-        const serial = student.admission_number
-          .replace(/^[A-Za-z0-9]+[A-Za-z]\//, '') // strip leading class prefix like "5A/"
-          .replace(/\/\d{4}$/, '')                 // strip trailing year suffix like "/2526"
-          .replace(/-\d{4}$/, '');                 // strip old dash-year suffix like "-2526"
-        const newAdmissionNumber = `${targetClass?.name || ''}${targetClass?.section || ''}/${serial}/${yearSuffix}`;
+        // Extract base name from admission number (e.g., "KALYAN-2-A" → "KALYAN")
+        // Supports formats: NAME-CLASS-SECTION, or CLASS/NAME/YEAR, or plain text
+        let baseName = student.admission_number;
+        // Strip class-section suffix like "-2-A"
+        baseName = baseName.replace(/-[^-]+-[^-]+$/, '');
+        // Strip class prefix like "5A/"
+        baseName = baseName.replace(/^[A-Za-z0-9]+[A-Za-z]\//, '');
+        // Strip year suffix like "/2526"
+        baseName = baseName.replace(/\/\d{4}$/, '');
+        // If nothing useful remains, use full_name
+        if (!baseName.trim()) baseName = student.full_name.toUpperCase().replace(/\s+/g, '');
 
-        const { data: newStudent, error: insertError } = await supabase
+        const newAdmissionNumber = `${baseName}-${targetClass?.name || ''}-${targetClass?.section || ''}`;
+
+        // UPDATE existing student record in-place
+        const { error: updateError } = await supabase
           .from('students')
-          .insert({
-            full_name: student.full_name,
-            admission_number: newAdmissionNumber,
+          .update({
             class_id: toClass,
-            photo_url: student.photo_url,
-            date_of_birth: student.date_of_birth,
-            blood_group: student.blood_group,
-            address: student.address,
-            parent_name: student.parent_name,
-            parent_phone: student.parent_phone,
-            emergency_contact: student.emergency_contact,
-            emergency_contact_name: student.emergency_contact_name,
+            admission_number: newAdmissionNumber,
             login_id: newAdmissionNumber,
-            user_id: student.user_id,
-            status: 'active',
           })
-          .select('id')
-          .single();
-
-        if (insertError) throw insertError;
-
-        // 2. Link same parent(s) to the new student record
-        if (newStudent) {
-          const { data: parentLinks } = await supabase
-            .from('student_parents')
-            .select('parent_id, relationship')
-            .eq('student_id', student.id);
-
-          if (parentLinks && parentLinks.length > 0) {
-            const newLinks = parentLinks.map(pl => ({
-              student_id: newStudent.id,
-              parent_id: pl.parent_id,
-              relationship: pl.relationship,
-            }));
-            await supabase.from('student_parents').insert(newLinks);
-          }
-        }
-
-        // 3. Mark old student record as promoted and clear login_id to avoid unique constraint conflicts
-        await supabase
-          .from('students')
-          .update({ status: 'promoted', login_id: null })
           .eq('id', student.id);
 
+        if (updateError) throw updateError;
         promotedCount++;
       }
 
@@ -190,7 +156,7 @@ export default function StudentPromotion() {
       }
 
       setResult({ promoted: promotedCount, retained: retainedStudents.length });
-      toast.success(`${promotedCount} students promoted successfully with new records`);
+      toast.success(`${promotedCount} students promoted successfully`);
       
       setStudents([]);
       setSelectedIds(new Set());
@@ -215,7 +181,7 @@ export default function StudentPromotion() {
             <ArrowUpCircle className="h-6 w-6 text-primary" />
             Student Promotion
           </h1>
-          <p className="text-muted-foreground mt-1">Promote students to the next class. A new student record is created per class — all old data (attendance, marks, fees) stays preserved on the previous record.</p>
+          <p className="text-muted-foreground mt-1">Promote students to the next class. The student record is updated in-place — all data (attendance, marks, fees) stays linked.</p>
         </div>
 
         {result && (
@@ -229,7 +195,7 @@ export default function StudentPromotion() {
                     {result.promoted} student{result.promoted !== 1 ? 's' : ''} promoted with new records
                     {result.retained > 0 && `, ${result.retained} retained`}
                   </p>
-                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Parents can now see both current and previous year data.</p>
+                  <p className="text-xs text-green-600 dark:text-green-500 mt-1">Student records updated with new class, admission number & login ID.</p>
                 </div>
               </div>
               <Button variant="outline" className="mt-4" onClick={() => setResult(null)}>
@@ -358,9 +324,9 @@ export default function StudentPromotion() {
                       <p className="text-sm text-muted-foreground">
                         From <strong>{fromClassData?.name} - {fromClassData?.section}</strong> → <strong>{toClassData?.name} - {toClassData?.section}</strong>
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        New student records will be created. Old records with attendance, marks & fees will be preserved.
-                      </p>
+                       <p className="text-xs text-muted-foreground mt-1">
+                        Student records will be updated in-place with new class, admission number & login ID.
+                       </p>
                       {students.length - selectedIds.size > 0 && (
                         <p className="text-sm text-amber-600 mt-1">
                           <AlertTriangle className="h-3 w-3 inline mr-1" />
@@ -393,7 +359,7 @@ export default function StudentPromotion() {
                 <strong>{fromClassData?.name} - {fromClassData?.section}</strong> to{' '}
                 <strong>{toClassData?.name} - {toClassData?.section}</strong>.
                 <br /><br />
-                New student records will be created in the target class. The old records (with all attendance, marks, and fees) will be preserved with status "promoted". Parents will be able to see both current and historical data.
+                Student records will be updated in-place. Admission numbers and login IDs will reflect the new class.
                 {students.length - selectedIds.size > 0 && (
                   <> {students.length - selectedIds.size} student{students.length - selectedIds.size !== 1 ? 's' : ''} will be marked as retained.</>
                 )}

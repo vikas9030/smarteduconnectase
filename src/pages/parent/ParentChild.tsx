@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle, History } from 'lucide-react';
+import { Loader2, User, GraduationCap, Phone, MapPin, Calendar, Droplet, AlertCircle } from 'lucide-react';
 import AttendanceSummary from '@/components/AttendanceSummary';
 import { useParentSidebar } from '@/hooks/useParentSidebar';
 
@@ -74,12 +74,9 @@ export default function ParentChild() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
-  const activeChildren = children.filter(c => c.status === 'active');
-  const historicalChildren = children.filter(c => c.status === 'promoted');
-
-  const renderChildCard = (child: ChildData, isHistorical = false) => (
+  const renderChildCard = (child: ChildData) => (
     <div key={child.id} className="space-y-4">
-      <Card className={`card-elevated ${isHistorical ? 'opacity-80 border-dashed' : ''}`}>
+      <Card className="card-elevated">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex flex-col items-center">
@@ -161,20 +158,7 @@ export default function ParentChild() {
           </Card>
         ) : (
           <>
-            {/* Active children */}
-            {activeChildren.map(child => renderChildCard(child))}
-
-            {/* Historical (promoted) children */}
-            {historicalChildren.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 pt-4">
-                  <History className="h-5 w-5 text-muted-foreground" />
-                  <h2 className="font-display text-lg font-semibold text-muted-foreground">Previous Academic Years</h2>
-                </div>
-                <p className="text-xs text-muted-foreground -mt-2">Historical records from past classes. Attendance, marks & fees data is preserved.</p>
-                {historicalChildren.map(child => renderChildCard(child, true))}
-              </div>
-            )}
+            {children.map(child => renderChildCard(child))}
           </>
         )}
       </div>
