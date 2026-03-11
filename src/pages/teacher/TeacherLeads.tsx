@@ -28,7 +28,7 @@ export default function TeacherLeads() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { hasAccess, loading: permLoading } = useLeadPermissions();
-  const sidebarItems = getTeacherSidebarItems(hasAccess);
+  const sidebarItems = useTeacherSidebar();
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
