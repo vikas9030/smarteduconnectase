@@ -1,37 +1,70 @@
 
 
-# Auto-Update Admission Number & Login ID on Promotion
+## Convert SmartEduConnect to a Native Mobile App using Capacitor
 
-## Problem
-When a student is promoted, the new admission number is generated with a year suffix (e.g., `STU001-2526`), but the `login_id` is still copied from the old record unchanged. The user wants the new admission number to also become the new `login_id`, so the student/parent can log in with the updated class-specific ID.
+Your app will be wrapped as a native mobile app that can be published to the Apple App Store and Google Play Store using Capacitor.
 
-## Change
+### What You'll Get
+- A real native app for both iPhone and Android
+- Full access to phone features (push notifications, camera, etc.)
+- Can be published to Apple App Store and Google Play Store
+- Your existing web app stays intact -- Capacitor wraps it as a native app
 
-**`src/pages/admin/StudentPromotion.tsx`** — Line 145
+### What Lovable Will Do (Code Changes)
 
-Currently:
-```typescript
-login_id: student.login_id,
-```
+1. **Install Capacitor dependencies** -- Add the required packages (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`) to your project
 
-Change to:
-```typescript
-login_id: newAdmissionNumber,
-```
+2. **Create Capacitor configuration** -- Set up `capacitor.config.ts` with:
+   - App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
+   - App Name: `smarteduconnectase`
+   - Live reload from your preview URL for development
 
-This single change ensures:
-1. The new student record's `login_id` matches the new admission number (which includes the target class/year info)
-2. The parent login flow (`get_parent_login_email` RPC) already checks both `admission_number` and `login_id`, so the parent can log in with either the new admission number or the new login ID — they are the same value
-3. The old record retains its original `login_id` and `admission_number`, so historical lookups still work
+### What You'll Need to Do (On Your Computer)
 
-### Admission Number Format
-The current format is `{baseNumber}-{yearSuffix}` (e.g., `STU001-2526`). To also include the class and section info, the format will change to: `{className}{section}/{serialNumber}/{yearSuffix}` — e.g., `6A/001/2526`. This makes the admission number self-descriptive of the student's current class.
+After Lovable makes the code changes, you'll need to follow these steps on your computer:
 
-Updated logic:
-- Extract the serial/base number from the old admission number
-- Build new format: `{targetClassName}{targetSection}/{serial}/{yearSuffix}`
-- Set both `admission_number` and `login_id` to this new value
+1. **Connect to GitHub** -- Go to Settings, then the GitHub tab, and transfer your project to your GitHub account
 
-## Files to Modify
-- `src/pages/admin/StudentPromotion.tsx` — Update admission number generation to include class+section, and set `login_id = newAdmissionNumber`
+2. **Clone and set up locally**
+   ```
+   git clone <your-repo-url>
+   cd <your-project>
+   npm install
+   ```
+
+3. **Add mobile platforms**
+   ```
+   npx cap add ios        (for iPhone -- requires a Mac with Xcode)
+   npx cap add android    (for Android -- requires Android Studio)
+   ```
+
+4. **Build and sync**
+   ```
+   npm run build
+   npx cap sync
+   ```
+
+5. **Run on your device or emulator**
+   ```
+   npx cap run ios        (opens in Xcode/iPhone simulator)
+   npx cap run android    (opens in Android Studio/emulator)
+   ```
+
+### Requirements
+- **For iPhone**: A Mac computer with Xcode installed (free from Mac App Store)
+- **For Android**: Android Studio installed (free, works on Mac/Windows/Linux)
+- **For App Store publishing**: Apple Developer account ($99/year) and/or Google Play Developer account ($25 one-time)
+
+### Important Notes
+- After any future code changes in Lovable, you'll need to `git pull`, then run `npx cap sync` to update the native app
+- During development, the app connects to your live preview URL for instant updates
+- For production/publishing, you'll build standalone app bundles
+
+### Technical Details
+
+New/modified files:
+- `package.json` -- Add Capacitor dependencies
+- `capacitor.config.ts` -- Capacitor configuration with live reload server pointing to preview URL
+
+For a detailed guide, check out: https://docs.lovable.dev/tips-tricks/mobile-development
 
