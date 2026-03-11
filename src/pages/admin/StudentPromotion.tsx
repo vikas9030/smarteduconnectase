@@ -359,7 +359,7 @@ export default function StudentPromotion() {
                 <strong>{fromClassData?.name} - {fromClassData?.section}</strong> to{' '}
                 <strong>{toClassData?.name} - {toClassData?.section}</strong>.
                 <br /><br />
-                New student records will be created in the target class. The old records (with all attendance, marks, and fees) will be preserved with status "promoted". Parents will be able to see both current and historical data.
+                Student records will be updated in-place. Admission numbers and login IDs will reflect the new class.
                 {students.length - selectedIds.size > 0 && (
                   <> {students.length - selectedIds.size} student{students.length - selectedIds.size !== 1 ? 's' : ''} will be marked as retained.</>
                 )}
