@@ -69,9 +69,9 @@ export default function ParentExams() {
     }
   }, [user, userRole, loading, navigate]);
 
-  // Fetch all children
+  // Fetch active child
   useEffect(() => {
-    async function fetchChildren() {
+    async function fetchChild() {
       if (!user) return;
       const { data: parentData } = await supabase
         .from('parents').select('id').eq('user_id', user.id).maybeSingle();
@@ -83,20 +83,21 @@ export default function ParentExams() {
         if (links && links.length > 0) {
           const { data: studentsData } = await supabase
             .from('students')
-            .select('id, full_name, admission_number, status, class_id, classes(name, section)')
+            .select('id, full_name, class_id, classes(name, section)')
             .in('id', links.map(l => l.student_id))
-            .order('status', { ascending: true });
+            .eq('status', 'active')
+            .limit(1)
+            .maybeSingle();
 
           if (studentsData) {
-            const children = studentsData as ChildOption[];
-            setAllChildren(children);
-            const active = children.find(c => c.status === 'active') || children[0];
-            if (active) setSelectedStudentId(active.id);
+            setSelectedStudentId(studentsData.id);
+            setChildName(studentsData.full_name);
+            setChildClassIds(studentsData.class_id ? [studentsData.class_id] : []);
           }
         }
       }
     }
-    fetchChildren();
+    fetchChild();
   }, [user]);
 
   // Fetch marks when selected student changes
