@@ -46,6 +46,7 @@ interface FeeRecord {
 }
 
 export default function FeesManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
