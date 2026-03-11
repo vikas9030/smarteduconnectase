@@ -146,7 +146,7 @@ export default function StudentPromotion() {
             parent_phone: student.parent_phone,
             emergency_contact: student.emergency_contact,
             emergency_contact_name: student.emergency_contact_name,
-            login_id: student.login_id,
+            login_id: newAdmissionNumber,
             user_id: student.user_id,
             status: 'active',
           })
