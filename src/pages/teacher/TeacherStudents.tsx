@@ -91,7 +91,9 @@ export default function TeacherStudents() {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string>('');
-
+  const [deleteStudent, setDeleteStudent] = useState<Student | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
