@@ -170,16 +170,31 @@ export default function FeesManagement() {
     setStudentFilter('');
   }, [classFilter]);
 
-  // Only show data when both class and student are selected
-  const filteredFees = (!classFilter || !studentFilter) ? [] : fees.filter((f) => {
-    const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
-    const matchesClass = (f.students?.classes as any)?.id === classFilter;
-    const matchesStudent = f.student_id === studentFilter;
-    return matchesSearch && matchesStatus && matchesClass && matchesStudent;
-  });
+  // Global search active = bypass class/student filters, show all matching fees
+  const isGlobalSearch = searchQuery.trim().length >= 2 && !classFilter;
+
+  const filteredFees = (() => {
+    if (isGlobalSearch) {
+      const q = searchQuery.trim().toLowerCase();
+      return fees.filter(f => {
+        const matchesSearch = f.students?.full_name?.toLowerCase().includes(q) ||
+          f.students?.admission_number?.toLowerCase().includes(q) ||
+          f.students?.login_id?.toLowerCase().includes(q);
+        const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+    }
+    if (!classFilter || !studentFilter) return [];
+    return fees.filter((f) => {
+      const matchesSearch = f.students?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.students?.admission_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.fee_type.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || f.payment_status === statusFilter;
+      const matchesClass = (f.students?.classes as any)?.id === classFilter;
+      const matchesStudent = f.student_id === studentFilter;
+      return matchesSearch && matchesStatus && matchesClass && matchesStudent;
+    });
+  })();
 
   const classFeeCount = classFilter ? fees.filter(f => (f.students?.classes as any)?.id === classFilter).length : 0;
 
@@ -365,7 +380,7 @@ export default function FeesManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div className="relative sm:col-span-2 lg:col-span-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search..." className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                    <Input placeholder="Search student (all classes)..." className="pl-10" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); if (e.target.value.trim().length >= 2) { setClassFilter(''); setStudentFilter(''); } }} />
                   </div>
                   <Select value={classFilter} onValueChange={setClassFilter}>
                     <SelectTrigger><SelectValue placeholder="Select Class" /></SelectTrigger>
