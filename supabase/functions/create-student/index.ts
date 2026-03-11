@@ -41,7 +41,7 @@ serve(async (req) => {
 
     // Check if calling user is admin or teacher
     const { data: roleData } = await userClient.from("user_roles").select("role").eq("user_id", callingUser.id).single();
-    if (!roleData || !["admin", "teacher"].includes(roleData.role)) {
+    if (!roleData || !["admin", "teacher", "super_admin"].includes(roleData.role)) {
       return new Response(JSON.stringify({ error: "Only admins and teachers can create students" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -95,13 +95,13 @@ serve(async (req) => {
 
     const userId = newUser.user.id;
 
-    // Create profile for the new user
-    const { error: profileError } = await adminClient.from("profiles").insert({
+    // Upsert profile (handle_new_user trigger may have already created it)
+    const { error: profileError } = await adminClient.from("profiles").upsert({
       user_id: userId,
       full_name: fullName,
       email: email,
       phone: phone || null,
-    });
+    }, { onConflict: "user_id" });
 
     if (profileError) {
       console.error("Error creating profile:", profileError);
