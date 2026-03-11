@@ -47,6 +47,7 @@ interface Announcement {
 }
 
 export default function AnnouncementsManagement() {
+  const adminSidebarItems = useAdminSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
