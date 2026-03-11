@@ -23,8 +23,8 @@ import {
   FlaskConical,
 } from 'lucide-react';
 
-// Sidebar items from shared config with permission check
 import { useTeacherSidebar } from '@/hooks/useTeacherSidebar';
+import { useModuleVisibility } from '@/hooks/useModuleVisibility';
 
 interface DashboardStats {
   myClasses: number;
@@ -65,6 +65,7 @@ interface CompExam {
 
 export default function TeacherDashboard() {
   const teacherSidebarItems = useTeacherSidebar();
+  const { isModuleEnabled } = useModuleVisibility();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
@@ -332,13 +333,13 @@ export default function TeacherDashboard() {
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: <Clock className="h-5 w-5" />, label: 'Mark Attendance', path: '/teacher/attendance' },
-                  { icon: <BookOpen className="h-5 w-5" />, label: 'Add Homework', path: '/teacher/homework' },
-                  { icon: <FileText className="h-5 w-5" />, label: 'Enter Marks', path: '/teacher/exams' },
-                  { icon: <ClipboardList className="h-5 w-5" />, label: 'Student Report', path: '/teacher/reports' },
-                  { icon: <Users className="h-5 w-5" />, label: 'Add Student', path: '/teacher/students' },
-                  { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages' },
-                ].map((action, index) => (
+                  { icon: <Clock className="h-5 w-5" />, label: 'Mark Attendance', path: '/teacher/attendance', moduleKey: 'attendance' },
+                  { icon: <BookOpen className="h-5 w-5" />, label: 'Add Homework', path: '/teacher/homework', moduleKey: 'homework' },
+                  { icon: <FileText className="h-5 w-5" />, label: 'Enter Marks', path: '/teacher/exams', moduleKey: 'exams' },
+                  { icon: <ClipboardList className="h-5 w-5" />, label: 'Student Report', path: '/teacher/reports', moduleKey: 'reports' },
+                  { icon: <Users className="h-5 w-5" />, label: 'Add Student', path: '/teacher/students', moduleKey: 'students' },
+                  { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', path: '/teacher/messages', moduleKey: 'messages' },
+                ].filter(a => !a.moduleKey || isModuleEnabled(a.moduleKey)).map((action, index) => (
                   <button
                     key={index}
                     onClick={() => navigate(action.path)}
