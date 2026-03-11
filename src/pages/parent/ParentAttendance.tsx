@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Loader2 } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { BackButton } from '@/components/ui/back-button';
 import AttendanceCalendar from '@/components/attendance/AttendanceCalendar';
@@ -18,6 +18,7 @@ interface AttendanceRecord {
 }
 
 export default function ParentAttendance() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);

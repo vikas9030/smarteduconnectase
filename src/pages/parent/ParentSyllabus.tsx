@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { BackButton } from '@/components/ui/back-button';
 import { Loader2, BookOpen, Filter, FlaskConical, User, ChevronDown, CheckCircle2, Calendar, Clock, GraduationCap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,7 @@ interface SyllabusItem {
 }
 
 export default function ParentSyllabus() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [syllabus, setSyllabus] = useState<SyllabusItem[]>([]);

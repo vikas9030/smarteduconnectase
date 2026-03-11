@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Bell, Calendar } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 
 interface Announcement {
   id: string;
@@ -17,6 +17,7 @@ interface Announcement {
 }
 
 export default function ParentAnnouncements() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);

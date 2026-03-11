@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,6 +35,7 @@ interface Complaint {
 }
 
 export default function ParentComplaints() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, TrendingUp, AlertCircle, Star, MessageSquare, Award, BookOpen, BarChart3 } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import StudentProgressView from '@/components/exams/StudentProgressView';
 
 interface Report {
@@ -39,6 +39,7 @@ interface AttendanceSummary {
 }
 
 export default function ParentProgress() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);

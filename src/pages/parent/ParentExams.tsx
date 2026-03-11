@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Calendar, FileText, RotateCcw, FlaskConical, Award, BookOpen } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import StudentProgressView from '@/components/exams/StudentProgressView';
 import ExamScheduleView from '@/components/exams/ExamScheduleView';
 import WeeklyExamCalendarView from '@/components/exams/WeeklyExamCalendarView';
@@ -48,6 +48,7 @@ interface WeeklyResult {
 }
 
 export default function ParentExams() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [marks, setMarks] = useState<ExamMark[]>([]);

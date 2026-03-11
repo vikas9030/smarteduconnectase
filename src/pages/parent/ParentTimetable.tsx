@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Calendar, Clock, FileText, Table } from 'lucide-react';
-import { parentSidebarItems } from '@/config/parentSidebar';
+import { useParentSidebar } from '@/hooks/useParentSidebar';
 import { downloadTimetableAsCSV, downloadTimetableAsPDF } from '@/utils/timetableDownload';
 
 interface TimetableEntry {
@@ -22,6 +22,7 @@ interface TimetableEntry {
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function ParentTimetable() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const [timetable, setTimetable] = useState<TimetableEntry[]>([]);

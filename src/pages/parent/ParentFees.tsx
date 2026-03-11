@@ -105,6 +105,7 @@ function PaymentHistorySection({ studentId, studentName }: { studentId: string; 
 }
 
 export default function ParentFees() {
+  const parentSidebarItems = useParentSidebar();
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
