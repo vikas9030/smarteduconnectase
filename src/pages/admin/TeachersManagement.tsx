@@ -300,6 +300,10 @@ export default function TeachersManagement() {
   };
 
   const handleDeleteTeacher = async (teacherId: string, userId: string) => {
+    // Clear class_teacher_id references first to avoid FK constraint violation
+    await supabase.from('classes').update({ class_teacher_id: null }).eq('class_teacher_id', teacherId);
+    // Remove teacher_classes links
+    await supabase.from('teacher_classes').delete().eq('teacher_id', teacherId);
     // Remove teacher record (profile and role will remain for audit)
     const { error } = await supabase.from('teachers').delete().eq('id', teacherId);
     if (error) {
