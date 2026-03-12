@@ -72,7 +72,17 @@ serve(async (req) => {
 
     if (!orderRes.ok) {
       const errBody = await orderRes.text();
-      throw new Error(`Razorpay order creation failed [${orderRes.status}]: ${errBody}`);
+      let userMessage = 'Payment gateway error. Please try again.';
+      try {
+        const errJson = JSON.parse(errBody);
+        if (errJson?.error?.description) {
+          userMessage = errJson.error.description;
+        }
+      } catch {}
+      return new Response(JSON.stringify({ error: userMessage }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const order = await orderRes.json();
