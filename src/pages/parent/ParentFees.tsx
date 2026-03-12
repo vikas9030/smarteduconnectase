@@ -193,8 +193,8 @@ export default function ParentFees() {
         },
       });
 
-      if (error || !data?.order_id) {
-        throw new Error(error?.message || 'Failed to create order');
+      if (error || data?.error || !data?.order_id) {
+        throw new Error(data?.error || error?.message || 'Failed to create order');
       }
 
       const options = {
