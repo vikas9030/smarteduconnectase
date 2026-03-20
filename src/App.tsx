@@ -76,6 +76,7 @@ import ParentGallery from "./pages/parent/ParentGallery";
 import ParentNotifications from "./pages/parent/ParentNotifications";
 import ParentSettings from "./pages/parent/ParentSettings";
 import ParentComplaints from "./pages/parent/ParentComplaints";
+import ParentStudentHistory from "./pages/parent/ParentStudentHistory";
 
 const queryClient = new QueryClient();
 
