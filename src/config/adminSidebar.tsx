@@ -16,6 +16,7 @@ import {
   UserPlus,
   Image,
   ArrowUpCircle,
+  History,
 } from 'lucide-react';
 
 interface SidebarItem {
