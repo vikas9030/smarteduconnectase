@@ -57,6 +57,7 @@ import TeacherSyllabus from "./pages/teacher/TeacherSyllabus";
 import TeacherWeeklyExams from "./pages/teacher/TeacherWeeklyExams";
 import TeacherNotifications from "./pages/teacher/TeacherNotifications";
 import TeacherSettings from "./pages/teacher/TeacherSettings";
+import TeacherStudentHistory from "./pages/teacher/TeacherStudentHistory";
 // Parent Pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ParentChild from "./pages/parent/ParentChild";
