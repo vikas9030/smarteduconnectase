@@ -53,7 +53,8 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
   const [assignMode, setAssignMode] = useState<'class' | 'student'>('class');
   const [selectedClassName, setSelectedClassName] = useState('');
   const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [studentSearch, setStudentSearch] = useState('');
   const [feeEntries, setFeeEntries] = useState<FeeEntry[]>([]);
   const [customFeeType, setCustomFeeType] = useState('');
   const [customFeeAmount, setCustomFeeAmount] = useState('');
@@ -122,7 +123,8 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     setAssignMode('class');
     setSelectedClassName('');
     setSelectedSectionIds([]);
-    setSelectedStudentId('');
+    setSelectedStudentIds(new Set());
+    setStudentSearch('');
     setFeeEntries([]);
     setCustomFeeType('');
     setCustomFeeAmount('');
@@ -241,12 +243,12 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
       let studentIds: string[] = [];
 
       if (assignMode === 'student') {
-        if (!selectedStudentId) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Please select a student' });
+        if (selectedStudentIds.size === 0) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Please select at least one student' });
           setLoading(false);
           return;
         }
-        studentIds = [selectedStudentId];
+        studentIds = [...selectedStudentIds];
       } else {
         const { data: classStudents } = await supabase
           .from('students')
@@ -314,7 +316,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             <Button
               variant={assignMode === 'class' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => { setAssignMode('class'); setSelectedStudentId(''); }}
+              onClick={() => { setAssignMode('class'); setSelectedStudentIds(new Set()); }}
               className="flex items-center gap-1"
             >
               <Users className="h-4 w-4" /> Entire Class
@@ -368,25 +370,88 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             </div>
           )}
 
-          {/* Student (individual mode) */}
+          {/* Student multi-select (individual mode) */}
           {assignMode === 'student' && selectedSectionIds.length > 0 && (
             <div className="space-y-1.5">
-              <Label>Student *</Label>
+              <div className="flex items-center justify-between">
+                <Label>Students * <span className="text-muted-foreground text-xs">({selectedStudentIds.size} selected)</span></Label>
+                {students.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const filtered = students.filter(s =>
+                        !studentSearch ||
+                        s.full_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                        s.admission_number.toLowerCase().includes(studentSearch.toLowerCase())
+                      );
+                      if (selectedStudentIds.size === filtered.length && filtered.every(s => selectedStudentIds.has(s.id))) {
+                        setSelectedStudentIds(new Set());
+                      } else {
+                        setSelectedStudentIds(new Set(filtered.map(s => s.id)));
+                      }
+                    }}
+                  >
+                    {selectedStudentIds.size === students.length ? 'Deselect All' : 'Select All'}
+                  </Button>
+                )}
+              </div>
               {loadingStudents ? (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
                   <Loader2 className="h-4 w-4 animate-spin" /> Loading students...
                 </div>
               ) : (
-                <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                  <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
-                  <SelectContent>
-                    {students.map(s => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.full_name} ({s.admission_number})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <>
+                  <Input
+                    placeholder="Search students..."
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  <div className="space-y-1 max-h-48 overflow-y-auto border rounded-md p-2">
+                    {students
+                      .filter(s =>
+                        !studentSearch ||
+                        s.full_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                        s.admission_number.toLowerCase().includes(studentSearch.toLowerCase())
+                      )
+                      .map(s => (
+                        <div
+                          key={s.id}
+                          className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+                            selectedStudentIds.has(s.id) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => {
+                            setSelectedStudentIds(prev => {
+                              const next = new Set(prev);
+                              if (next.has(s.id)) next.delete(s.id); else next.add(s.id);
+                              return next;
+                            });
+                          }}
+                        >
+                          <Checkbox checked={selectedStudentIds.has(s.id)} onCheckedChange={() => {
+                            setSelectedStudentIds(prev => {
+                              const next = new Set(prev);
+                              if (next.has(s.id)) next.delete(s.id); else next.add(s.id);
+                              return next;
+                            });
+                          }} />
+                          <span className="text-sm flex-1 truncate">{s.full_name}</span>
+                          <span className="text-xs text-muted-foreground font-mono">{s.admission_number}</span>
+                        </div>
+                      ))
+                    }
+                    {students.filter(s =>
+                      !studentSearch ||
+                      s.full_name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                      s.admission_number.toLowerCase().includes(studentSearch.toLowerCase())
+                    ).length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-2">No students found</p>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -622,7 +687,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                 {feeEntries.length} fee type(s){totalAmount > 0 ? ` totalling ₹${totalAmount.toLocaleString()}` : ''} →{' '}
                 {assignMode === 'class'
                   ? `all students in ${selectedClassName} (${selectedSectionsLabel})`
-                  : students.find(s => s.id === selectedStudentId)?.full_name || 'selected student'
+                  : `${selectedStudentIds.size} selected student(s)`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
@@ -644,7 +709,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
-            {assignMode === 'class' ? 'Assign to Entire Class' : 'Assign to Student'}
+            {assignMode === 'class' ? 'Assign to Entire Class' : `Assign to ${selectedStudentIds.size} Student(s)`}
           </Button>
         </div>
       </DialogContent>

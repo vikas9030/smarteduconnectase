@@ -30,6 +30,7 @@ import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
 import StudentPromotion from "./pages/admin/StudentPromotion";
+import StudentHistory from "./pages/admin/StudentHistory";
 
 // Super Admin Pages
 import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
@@ -56,6 +57,7 @@ import TeacherSyllabus from "./pages/teacher/TeacherSyllabus";
 import TeacherWeeklyExams from "./pages/teacher/TeacherWeeklyExams";
 import TeacherNotifications from "./pages/teacher/TeacherNotifications";
 import TeacherSettings from "./pages/teacher/TeacherSettings";
+import TeacherStudentHistory from "./pages/teacher/TeacherStudentHistory";
 // Parent Pages
 import ParentDashboard from "./pages/parent/ParentDashboard";
 import ParentChild from "./pages/parent/ParentChild";
@@ -116,6 +118,7 @@ const App = () => (
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/weekly-exams" element={<WeeklyExamsManagement />} />
             <Route path="/admin/promotion" element={<StudentPromotion />} />
+            <Route path="/admin/student-history" element={<StudentHistory />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
             
             {/* Teacher Routes */}
@@ -135,6 +138,7 @@ const App = () => (
             <Route path="/teacher/weekly-exams" element={<TeacherWeeklyExams />} />
             <Route path="/teacher/notifications" element={<TeacherNotifications />} />
             <Route path="/teacher/messages" element={<TeacherMessages />} />
+            <Route path="/teacher/student-history" element={<TeacherStudentHistory />} />
             <Route path="/teacher/settings" element={<TeacherSettings />} />
             
             {/* Parent Routes */}
