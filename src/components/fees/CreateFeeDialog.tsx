@@ -53,7 +53,8 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
   const [assignMode, setAssignMode] = useState<'class' | 'student'>('class');
   const [selectedClassName, setSelectedClassName] = useState('');
   const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [studentSearch, setStudentSearch] = useState('');
   const [feeEntries, setFeeEntries] = useState<FeeEntry[]>([]);
   const [customFeeType, setCustomFeeType] = useState('');
   const [customFeeAmount, setCustomFeeAmount] = useState('');
