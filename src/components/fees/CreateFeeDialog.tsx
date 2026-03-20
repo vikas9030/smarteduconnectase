@@ -316,7 +316,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
             <Button
               variant={assignMode === 'class' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => { setAssignMode('class'); setSelectedStudentId(''); }}
+              onClick={() => { setAssignMode('class'); setSelectedStudentIds(new Set()); }}
               className="flex items-center gap-1"
             >
               <Users className="h-4 w-4" /> Entire Class
