@@ -76,6 +76,7 @@ import ParentGallery from "./pages/parent/ParentGallery";
 import ParentNotifications from "./pages/parent/ParentNotifications";
 import ParentSettings from "./pages/parent/ParentSettings";
 import ParentComplaints from "./pages/parent/ParentComplaints";
+import ParentStudentHistory from "./pages/parent/ParentStudentHistory";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,7 @@ const App = () => (
             <Route path="/parent/notifications" element={<ParentNotifications />} />
             <Route path="/parent/fees" element={<ParentFees />} />
             <Route path="/parent/complaints" element={<ParentComplaints />} />
+            <Route path="/parent/student-history" element={<ParentStudentHistory />} />
             <Route path="/parent/settings" element={<ParentSettings />} />
             
             {/* Catch-all */}
