@@ -13,6 +13,7 @@ import {
   Image,
   LibraryBig,
   Settings,
+  History,
 } from 'lucide-react';
 
 interface SidebarItem {
