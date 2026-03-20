@@ -13,7 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { BackButton } from '@/components/ui/back-button';
-import { ArrowUpCircle, ArrowRight, Loader2, Users, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowUpCircle, ArrowRight, Loader2, Users, CheckCircle2, AlertTriangle, History } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Student {
   id: string;
