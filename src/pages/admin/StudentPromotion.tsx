@@ -177,12 +177,20 @@ export default function StudentPromotion() {
     <DashboardLayout sidebarItems={adminSidebarItems} roleColor="admin">
       <div className="space-y-6 animate-fade-in">
         <BackButton to="/admin" />
-        <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <ArrowUpCircle className="h-6 w-6 text-primary" />
-            Student Promotion
-          </h1>
-          <p className="text-muted-foreground mt-1">Promote students to the next class. The student record is updated in-place — all data (attendance, marks, fees) stays linked.</p>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+              <ArrowUpCircle className="h-6 w-6 text-primary" />
+              Student Promotion
+            </h1>
+            <p className="text-muted-foreground mt-1">Promote students to the next class. The student record is updated in-place — all data (attendance, marks, fees) stays linked.</p>
+          </div>
+          <Link to="/admin/student-history">
+            <Button variant="outline" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              View Student History
+            </Button>
+          </Link>
         </div>
 
         {result && (

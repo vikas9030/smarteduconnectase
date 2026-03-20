@@ -33,6 +33,7 @@ const allTeacherSidebarItems: SidebarItem[] = [
   { icon: <LibraryBig className="h-5 w-5" />, label: 'Syllabus', path: '/teacher/syllabus', moduleKey: 'syllabus' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Weekly Exams', path: '/teacher/weekly-exams', moduleKey: 'weekly-exams' },
   { icon: <ClipboardList className="h-5 w-5" />, label: 'Reports', path: '/teacher/reports', moduleKey: 'reports' },
+  { icon: <History className="h-5 w-5" />, label: 'Student History', path: '/teacher/student-history', moduleKey: 'students' },
   { icon: <Bell className="h-5 w-5" />, label: 'Announcements', path: '/teacher/announcements', moduleKey: 'announcements' },
   { icon: <Clock className="h-5 w-5" />, label: 'Timetable', path: '/teacher/timetable', moduleKey: 'timetable' },
   { icon: <Calendar className="h-5 w-5" />, label: 'Leave Request', path: '/teacher/leave', moduleKey: 'leave' },

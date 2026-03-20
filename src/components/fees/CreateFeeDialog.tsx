@@ -709,7 +709,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
-            {assignMode === 'class' ? 'Assign to Entire Class' : 'Assign to Student'}
+            {assignMode === 'class' ? 'Assign to Entire Class' : `Assign to ${selectedStudentIds.size} Student(s)`}
           </Button>
         </div>
       </DialogContent>
