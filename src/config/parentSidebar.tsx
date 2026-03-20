@@ -14,6 +14,7 @@ import {
   LibraryBig,
   Settings,
   AlertTriangle,
+  History,
 } from 'lucide-react';
 
 interface SidebarItem {
