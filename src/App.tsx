@@ -30,6 +30,7 @@ import SyllabusManagement from "./pages/admin/SyllabusManagement";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import WeeklyExamsManagement from "./pages/admin/WeeklyExamsManagement";
 import StudentPromotion from "./pages/admin/StudentPromotion";
+import StudentHistory from "./pages/admin/StudentHistory";
 
 // Super Admin Pages
 import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
