@@ -1,70 +1,83 @@
 
 
-## Convert SmartEduConnect to a Native Mobile App using Capacitor
+# Multi-Student Fee Selection + Student History Viewer
 
-Your app will be wrapped as a native mobile app that can be published to the Apple App Store and Google Play Store using Capacitor.
+## Overview
+Three changes: (1) allow selecting multiple students in fee creation's individual mode, (2) add a "Student History" page accessible from admin and teacher panels to view a student's complete historical data (attendance, marks, fees), and (3) add a "View Old Data" button on the promotion page.
 
-### What You'll Get
-- A real native app for both iPhone and Android
-- Full access to phone features (push notifications, camera, etc.)
-- Can be published to Apple App Store and Google Play Store
-- Your existing web app stays intact -- Capacitor wraps it as a native app
+## Changes
 
-### What Lovable Will Do (Code Changes)
+### 1. CreateFeeDialog: Multi-Student Selection
+**File: `src/components/fees/CreateFeeDialog.tsx`**
+- Replace `selectedStudentId` (string) with `selectedStudentIds` (Set\<string\>)
+- Replace the single `<Select>` dropdown with a scrollable checkbox list (same pattern as StudentPromotion page)
+- Add Select All / Deselect All button
+- Update `handleSubmit` to iterate over all selected student IDs
+- Show selected count in summary
 
-1. **Install Capacitor dependencies** -- Add the required packages (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`) to your project
+### 2. New Student History Page
+**New file: `src/pages/admin/StudentHistory.tsx`**
+- A dedicated page at `/admin/student-history` where admin can:
+  - Search/select any student (including promoted ones) by name or admission number
+  - View tabs: Attendance, Exam Marks, Fees — all queried by `student_id` (no class filter)
+  - Each tab shows ALL historical records regardless of current class
+- Reuse existing components where possible (tables, badges)
 
-2. **Create Capacitor configuration** -- Set up `capacitor.config.ts` with:
-   - App ID: `app.lovable.c153f9895e3d4f089502710552fea44e`
-   - App Name: `smarteduconnectase`
-   - Live reload from your preview URL for development
+**New file: `src/pages/teacher/TeacherStudentHistory.tsx`**
+- Same concept at `/teacher/student-history`, but scoped to teacher's assigned classes' students
+- Shows attendance, marks history for selected student
 
-### What You'll Need to Do (On Your Computer)
+### 3. Navigation & Routing
+**Files: `src/config/adminSidebar.tsx`, `src/config/teacherSidebar.tsx`, `src/App.tsx`**
+- Add "Student History" sidebar item with `History` icon in both admin and teacher sidebars
+- Add routes `/admin/student-history` and `/teacher/student-history`
 
-After Lovable makes the code changes, you'll need to follow these steps on your computer:
+### 4. Promotion Page: View Old Data Button
+**File: `src/pages/admin/StudentPromotion.tsx`**
+- Add a "View Student History" button that links to `/admin/student-history`
+- Shown in the header area near the title
 
-1. **Connect to GitHub** -- Go to Settings, then the GitHub tab, and transfer your project to your GitHub account
+## Technical Details
 
-2. **Clone and set up locally**
-   ```
-   git clone <your-repo-url>
-   cd <your-project>
-   npm install
-   ```
+### Student History Page Query Pattern
+```typescript
+// Fetch ALL attendance for a student (no class filter)
+const { data } = await supabase
+  .from('attendance')
+  .select('*, students(full_name, admission_number)')
+  .eq('student_id', selectedStudentId)
+  .order('date', { ascending: false });
 
-3. **Add mobile platforms**
-   ```
-   npx cap add ios        (for iPhone -- requires a Mac with Xcode)
-   npx cap add android    (for Android -- requires Android Studio)
-   ```
+// Fetch ALL fees
+const { data } = await supabase
+  .from('fees')
+  .select('*')
+  .eq('student_id', selectedStudentId);
 
-4. **Build and sync**
-   ```
-   npm run build
-   npx cap sync
-   ```
+// Fetch ALL exam marks
+const { data } = await supabase
+  .from('exam_marks')
+  .select('*, exams(name, exam_date, max_marks, subjects(name), classes(name, section))')
+  .eq('student_id', selectedStudentId);
+```
 
-5. **Run on your device or emulator**
-   ```
-   npx cap run ios        (opens in Xcode/iPhone simulator)
-   npx cap run android    (opens in Android Studio/emulator)
-   ```
+### Multi-Student Selection in CreateFeeDialog
+```typescript
+// Replace single select with checkbox list
+const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
 
-### Requirements
-- **For iPhone**: A Mac computer with Xcode installed (free from Mac App Store)
-- **For Android**: Android Studio installed (free, works on Mac/Windows/Linux)
-- **For App Store publishing**: Apple Developer account ($99/year) and/or Google Play Developer account ($25 one-time)
+// In handleSubmit, use all selected IDs
+studentIds = [...selectedStudentIds];
+```
 
-### Important Notes
-- After any future code changes in Lovable, you'll need to `git pull`, then run `npx cap sync` to update the native app
-- During development, the app connects to your live preview URL for instant updates
-- For production/publishing, you'll build standalone app bundles
+## Files to Create
+- `src/pages/admin/StudentHistory.tsx`
+- `src/pages/teacher/TeacherStudentHistory.tsx`
 
-### Technical Details
-
-New/modified files:
-- `package.json` -- Add Capacitor dependencies
-- `capacitor.config.ts` -- Capacitor configuration with live reload server pointing to preview URL
-
-For a detailed guide, check out: https://docs.lovable.dev/tips-tricks/mobile-development
+## Files to Modify
+- `src/components/fees/CreateFeeDialog.tsx` — Multi-student checkbox selection
+- `src/config/adminSidebar.tsx` — Add Student History link
+- `src/config/teacherSidebar.tsx` — Add Student History link
+- `src/App.tsx` — Add routes
+- `src/pages/admin/StudentPromotion.tsx` — Add "View History" button
 
