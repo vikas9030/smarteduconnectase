@@ -687,7 +687,7 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
                 {feeEntries.length} fee type(s){totalAmount > 0 ? ` totalling ₹${totalAmount.toLocaleString()}` : ''} →{' '}
                 {assignMode === 'class'
                   ? `all students in ${selectedClassName} (${selectedSectionsLabel})`
-                  : students.find(s => s.id === selectedStudentId)?.full_name || 'selected student'
+                  : `${selectedStudentIds.size} selected student(s)`
                 }
               </p>
               <p className="text-xs text-muted-foreground">
