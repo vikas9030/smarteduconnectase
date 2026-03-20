@@ -243,12 +243,12 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
       let studentIds: string[] = [];
 
       if (assignMode === 'student') {
-        if (!selectedStudentId) {
-          toast({ variant: 'destructive', title: 'Error', description: 'Please select a student' });
+        if (selectedStudentIds.size === 0) {
+          toast({ variant: 'destructive', title: 'Error', description: 'Please select at least one student' });
           setLoading(false);
           return;
         }
-        studentIds = [selectedStudentId];
+        studentIds = [...selectedStudentIds];
       } else {
         const { data: classStudents } = await supabase
           .from('students')
