@@ -123,7 +123,8 @@ export default function CreateFeeDialog({ open, onOpenChange, onSuccess }: Props
     setAssignMode('class');
     setSelectedClassName('');
     setSelectedSectionIds([]);
-    setSelectedStudentId('');
+    setSelectedStudentIds(new Set());
+    setStudentSearch('');
     setFeeEntries([]);
     setCustomFeeType('');
     setCustomFeeAmount('');
